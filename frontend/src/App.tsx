@@ -3,7 +3,9 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
 
+const MarketingLayout = lazy(() => import("@/pages/marketing/MarketingLayout"));
 const Landing = lazy(() => import("@/pages/marketing/Landing"));
+const PricingPage = lazy(() => import("@/pages/marketing/PricingPage"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Signup = lazy(() => import("@/pages/auth/Signup"));
 const AppShell = lazy(() =>
@@ -16,7 +18,7 @@ const Settings = lazy(() => import("@/pages/app/Settings"));
 
 function FullScreenLoader() {
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-3">
+    <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
       <Logo withWordmark={false} />
       <p className="font-mono text-2xs uppercase tracking-widest text-muted-foreground">
         loading
@@ -41,7 +43,11 @@ export default function App() {
   return (
     <Suspense fallback={<FullScreenLoader />}>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route element={<MarketingLayout />}>
+          <Route path="/" element={<Landing />} />
+          <Route path="/pricing" element={<PricingPage />} />
+        </Route>
+
         <Route
           path="/login"
           element={
@@ -58,6 +64,7 @@ export default function App() {
             </RedirectIfAuthed>
           }
         />
+
         <Route
           path="/app"
           element={
@@ -71,6 +78,7 @@ export default function App() {
           <Route path="collections" element={<Collections />} />
           <Route path="settings" element={<Settings />} />
         </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

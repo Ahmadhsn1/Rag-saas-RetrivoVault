@@ -41,6 +41,15 @@ describe("App routing", () => {
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
   });
 
+  it("renders the pricing page at /pricing", async () => {
+    renderWithProviders(<App />, { route: "/pricing" });
+    expect(
+      await screen.findByRole("heading", { name: /priced for one person/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Pro")).toBeInTheDocument();
+    expect(screen.getByText("Max")).toBeInTheDocument();
+  });
+
   it("renders the signup page at /signup", async () => {
     renderWithProviders(<App />, { route: "/signup" });
     expect(

@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-accordion": "^1.2.20",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-dropdown-menu": "^2.1.4",
@@ -52,9 +53,9 @@
     "globals": "^15.14.0",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
-    "typescript-eslint": "^8.18.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1",
     "vite": "^6.0.5",
     "vitest": "^2.1.8"
   },

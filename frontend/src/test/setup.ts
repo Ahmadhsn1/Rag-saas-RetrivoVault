@@ -36,6 +36,11 @@ vi.mock("@/lib/motion", () => {
     },
     ScrollTrigger: { refresh: noop },
     revealOnScroll: noop,
+    splitReveal: noop,
+    parallax: noop,
+    countUp: (el: HTMLElement, to: number) => {
+      el.textContent = String(to);
+    },
     prefersReducedMotion: () => true,
   };
 });
@@ -86,6 +91,7 @@ const w = window as unknown as Record<string, unknown>;
 w.IntersectionObserver = Observer;
 w.ResizeObserver = Observer;
 
+window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 window.HTMLElement.prototype.scrollTo = vi.fn();
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 Element.prototype.hasPointerCapture = vi.fn();
