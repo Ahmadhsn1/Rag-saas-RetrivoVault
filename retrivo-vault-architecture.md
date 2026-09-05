@@ -1,6 +1,11 @@
 # Retrivo Vault — System Architecture
 
-Multi-user Retrieval Augmented Generation (RAG) platform. Users register, upload documents, and query their own private knowledge base through an LLM-backed chat interface.
+A production-grade, **individual-focused** Retrieval-Augmented Generation (RAG) SaaS.
+Users sign up, verify their email, upload documents into a private knowledge base,
+and query it through a streaming, citation-backed chat. Free / Pro / Max plans with
+usage quotas, Stripe billing, personal API keys, and bring-your-own Gemini key.
+
+> Individuals only — there are no teams, workspaces, or org roles by design.
 
 ---
 
@@ -8,26 +13,34 @@ Multi-user Retrieval Augmented Generation (RAG) platform. Users register, upload
 
 | Layer | Technology | Reason |
 |---|---|---|
-| Frontend | React (Vite) + Tailwind CSS | Fast dev server, utility-first styling for polish |
-| Backend | Node.js + Express | REST API, middleware-based auth |
-| Database | MongoDB Atlas | Documents + vectors in one place |
-| Vector Search | MongoDB Atlas Vector Search | Native `$vectorSearch` aggregation stage, no separate vector DB |
-| Embeddings | Google Gemini `text-embedding-004` | Free tier, 768-dim vectors |
-| LLM | Google Gemini `gemini-2.5-flash` | Free tier, fast, supports streaming |
-| Auth | JWT (access + refresh tokens) | Stateless, standard for REST APIs |
-| File parsing | `pdf-parse` (PDF), native read (`.txt`) | Extract raw text before chunking |
-| Deployment | Docker + Docker Compose | Reproducible environment, portfolio-ready (recruiter can run it) |
-| Hosting (suggested) | Render / Railway (backend), Vercel (frontend) | Free tiers available |
+| Frontend | React + Vite + **TypeScript**, Tailwind, shadcn/ui (Radix), React Router, GSAP, Recharts | Fast dev, typed, accessible primitives, animation, charts |
+| Backend | Node.js + Express (ESM) | REST API + SSE, middleware auth/quota |
+| Database | MongoDB Atlas | Documents, vectors, users, billing state in one place |
+| Vector search | MongoDB Atlas Vector Search | Native `$vectorSearch`; `userId` filter enforces isolation |
+| Embeddings | Google Gemini `text-embedding-004` | 768-dim, free tier; per-user key supported |
+| LLM | Google Gemini `gemini-2.5-flash` | Fast, streaming |
+| Auth | JWT access + httpOnly refresh cookie; bcrypt; personal API keys (`x-api-key`) | Stateless web + programmatic access |
+| Email | Nodemailer (SMTP), console fallback in dev | Verification + password reset |
+| Billing | Stripe (Checkout + Customer Portal + webhooks) | Plan upgrades; disabled gracefully when unconfigured |
+| Ingestion | In-process job queue (bounded concurrency, priority, retry) | Dependency-free; swappable for BullMQ + Redis |
+| File parsing | `pdf-parse`, `mammoth` (DOCX), native (TXT/MD), CSV flattener | Raw text before chunking |
+| Deployment | Docker + Docker Compose; CI on GitHub Actions | Reproducible, tested |
 
 ---
 
 ## 2. High-Level Flow
 
-**Ingestion (once per document):**
-Upload → extract text → chunk → embed each chunk → store `{ text, embedding, documentId, userId }` in MongoDB.
+**Ingestion (queued, once per document):**
+Upload → quota check → create `Document{status:processing}` → **enqueue** →
+extract text → chunk (overlap, sentence-aware) → embed each chunk (user key or platform key)
+→ insert `Chunk{ text, embedding, userId, documentId, collectionId }` → `status:ready`
+→ record a `UsageEvent{kind:ingest}`. Paid plans jump the queue.
 
-**Query (every time user asks something):**
-User question → embed question → `$vectorSearch` against user's chunks → top-k chunks retrieved → chunks + question sent to Gemini LLM → answer streamed back with source citations.
+**Query (per message, SSE stream):**
+Question → **query-quota check** → embed question → `$vectorSearch` filtered by `userId`
+(+ optional `collectionId`) → top-k chunks → prompt + chunks + history → Gemini stream →
+`sources` then `token` events → persist both turns → increment monthly counter +
+`UsageEvent{kind:query}` → `done`.
 
 ---
 
@@ -35,158 +48,162 @@ User question → embed question → `$vectorSearch` against user's chunks → t
 
 ```
 retrivo-vault/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   ├── db.js                 # MongoDB connection
-│   │   │   └── gemini.js             # Gemini client setup
-│   │   ├── models/
-│   │   │   ├── User.js
-│   │   │   ├── Document.js
-│   │   │   ├── Chunk.js
-│   │   │   └── ChatSession.js
-│   │   ├── middleware/
-│   │   │   ├── auth.js               # JWT verify
-│   │   │   ├── errorHandler.js
-│   │   │   └── rateLimiter.js
-│   │   ├── services/
-│   │   │   ├── chunkingService.js    # split text into chunks
-│   │   │   ├── embeddingService.js   # call Gemini embedding API
-│   │   │   ├── retrievalService.js   # $vectorSearch query
-│   │   │   └── generationService.js  # call Gemini LLM, build prompt
-│   │   ├── controllers/
-│   │   │   ├── authController.js
-│   │   │   ├── documentController.js
-│   │   │   ├── collectionController.js
-│   │   │   └── chatController.js
-│   │   ├── routes/
-│   │   │   ├── authRoutes.js
-│   │   │   ├── documentRoutes.js
-│   │   │   ├── collectionRoutes.js
-│   │   │   └── chatRoutes.js
-│   │   ├── utils/
-│   │   │   └── textExtractor.js      # PDF/txt → raw text
-│   │   ├── app.js                    # express app, middleware wiring
-│   │   └── server.js                 # entry point
-│   ├── .env
-│   ├── Dockerfile
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── UploadPanel.jsx
-│   │   │   ├── ChatWindow.jsx
-│   │   │   ├── CollectionSidebar.jsx
-│   │   │   └── CitationBadge.jsx
-│   │   ├── pages/
-│   │   │   ├── Login.jsx
-│   │   │   ├── Signup.jsx
-│   │   │   └── Dashboard.jsx
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── api/
-│   │   │   └── axiosClient.js
-│   │   └── App.jsx
-│   ├── Dockerfile
-│   └── package.json
+├── backend/src/
+│   ├── config/        env.js · db.js · gemini.js (modelsFor) · plans.js
+│   ├── models/        User · Document · Chunk · Collection · ChatSession
+│   │                  Token · ApiKey · UsageEvent
+│   ├── middleware/     auth.js (JWT + x-api-key) · quota.js · rateLimiter.js
+│   │                  upload.js · errorHandler.js
+│   ├── services/       chunking · embedding · retrieval · generation
+│   │                  ingestion (+ jobQueue) · usage · billing · mailer · authTokens
+│   ├── controllers/    auth · account · document · collection · chat · billing · usage · apiKey
+│   ├── routes/         one router per controller
+│   ├── utils/          textExtractor (pdf/docx/md/csv) · ApiError
+│   ├── scripts/        createVectorIndex.js
+│   ├── test/           setup.js (memory-server + Gemini mock) · helpers.js
+│   ├── app.js · server.js
+├── frontend/src/
+│   ├── lib/            api.ts · motion.ts · plans.ts · notifyApiError.ts · utils.ts
+│   ├── context/        AuthContext · AppContext (collections + usage)
+│   ├── hooks/          useDocuments · useCollections · useChatSessions
+│   │                  useUsage · useBilling · useGsapReveal · useTypewriter
+│   ├── components/
+│   │   ├── ui/          shadcn primitives
+│   │   ├── marketing/   Hero · BentoFeatures · RetrievalDemo · StatsBand
+│   │   │               Pricing · FAQ · SecurityPanel · nav/footer · AuroraBackground
+│   │   ├── auth/        AuthLayout · FormError
+│   │   ├── app/         AppShell · sidebar · topbar · UploadDialog · chat/*
+│   │   │               VerifyEmailBanner · settings/{Profile,Billing,ApiKeys,Account}Tab
+│   │   └── rag/         PipelineStrip · CitationBadge · AnswerText · SourceDrawer · StatusChip
+│   ├── pages/           marketing/{Landing,PricingPage,MarketingLayout}
+│   │                  auth/{Login,Signup,ForgotPassword,ResetPassword,VerifyEmail}
+│   │                  app/{Chat,Documents,Collections,Settings}
+│   └── design-system/retrivo-vault/   MASTER.md + pages/*  (internal design spec output)
 ├── docker-compose.yml
-└── README.md
+└── .github/workflows/ci.yml
 ```
 
 ---
 
-## 4. Data Models
+## 4. Data Models (additions in **bold**)
 
-**User**
-```
-{
-  _id, name, email, passwordHash,
-  createdAt
-}
-```
+**User** — `name, email, passwordHash, **emailVerified**, **plan** (free|pro|max),
+**subscriptionStatus**, **planRenewsAt**, **stripeCustomerId**, **stripeSubscriptionId**,
+**geminiApiKey** (select:false) / **hasGeminiKey**, **usage{ queriesThisPeriod, periodStart }**`
 
-**Document**
-```
-{
-  _id, userId, filename, collectionId,
-  status: "processing" | "ready" | "failed",
-  uploadedAt
-}
-```
+**Document** — `userId, collectionId, filename, mimeType, sizeBytes, status, chunkCount, error, uploadedAt`
 
-**Chunk**
-```
-{
-  _id, userId, documentId,
-  text: String,
-  embedding: [Number]   // 768-dim vector, indexed for $vectorSearch
-}
-```
+**Chunk** — `userId, documentId, collectionId, order, text, embedding[768]`
 
-**Collection** (folder/category)
-```
-{
-  _id, userId, name, createdAt
-}
-```
+**Collection** — `userId, name`
 
-**ChatSession**
-```
-{
-  _id, userId, title,
-  messages: [{ role: "user"|"assistant", content, citedChunkIds, createdAt }]
-}
-```
+**ChatSession** — `userId, title, messages[{ role, content, citedChunkIds, createdAt }]`
+
+**Token** — `userId, type (email_verify|password_reset), tokenHash (sha256), expiresAt, usedAt` — TTL-indexed
+
+**ApiKey** — `userId, name, keyHash (sha256), prefix, lastUsedAt, revokedAt`
+
+**UsageEvent** — `userId, kind (query|ingest), amount, meta, createdAt` — TTL 400d; feeds the usage chart
 
 ---
 
-## 5. MongoDB Atlas Vector Search Index
+## 5. Plans & Quotas
 
-Created on the `chunks` collection:
+| | Free | Pro | Max |
+|---|---|---|---|
+| Documents | 20 | 500 | 5,000 |
+| Storage | 50 MB | 2 GB | 20 GB |
+| Questions / month | 100 | 3,000 | 20,000 |
+| Collections | 3 | 50 | 500 |
+| Bring-your-own Gemini key | — | ✓ | ✓ |
+| Priority ingestion | — | ✓ | ✓ |
+| Personal API keys | — | — | up to 10 |
+
+Enforced by `middleware/quota.js` (`enforceDocumentQuota`, `enforceCollectionQuota`,
+`enforceQueryQuota`, `requireFeature`). Over-limit responses are `402` /
+`403` with `details.code` = `quota_exceeded` / `feature_locked`; the frontend turns
+those into an "Upgrade" toast. The monthly query window rolls forward automatically.
+
+---
+
+## 6. MongoDB Atlas Vector Search Index
+
+`chunks` collection (`npm run create-index`):
 ```json
 {
   "fields": [
     { "type": "vector", "path": "embedding", "numDimensions": 768, "similarity": "cosine" },
-    { "type": "filter", "path": "userId" }
+    { "type": "filter", "path": "userId" },
+    { "type": "filter", "path": "collectionId" }
   ]
 }
 ```
-The `filter` field on `userId` is what enforces **per-user isolation** — every query restricts the vector search to the requesting user's own chunks only.
+The `userId` filter is what enforces **per-user isolation** on every retrieval.
 
 ---
 
-## 6. API Endpoints
+## 7. API Endpoints
 
 | Method | Route | Purpose |
 |---|---|---|
-| POST | `/api/auth/signup` | Create account |
-| POST | `/api/auth/login` | Get JWT tokens |
-| POST | `/api/auth/refresh` | Refresh access token |
-| POST | `/api/documents` | Upload + trigger ingestion |
-| GET | `/api/documents` | List user's documents |
-| DELETE | `/api/documents/:id` | Remove document + its chunks |
-| POST | `/api/collections` | Create a collection |
-| GET | `/api/collections` | List collections |
-| POST | `/api/chat/:sessionId/message` | Send a query, stream answer back |
-| GET | `/api/chat` | List chat sessions |
-| GET | `/api/chat/:sessionId` | Get one session's history |
+| POST | `/api/auth/signup` · `/login` · `/refresh` · `/logout` | Session |
+| GET | `/api/auth/me` | Current user |
+| POST | `/api/auth/verify-email` · `/resend-verification` | Email verification |
+| POST | `/api/auth/forgot-password` · `/reset-password` | Password reset |
+| DELETE | `/api/auth/account` | Delete account (password-confirmed, cascade) |
+| PATCH | `/api/account/profile` | Rename |
+| PUT/DELETE | `/api/account/gemini-key` | BYO Gemini key (paid) |
+| POST/GET/DELETE | `/api/documents` (+`/:id`) | Upload (quota) / list / get / delete |
+| POST/GET/PATCH/DELETE | `/api/collections` (+`/:id`) | CRUD (quota on create) |
+| POST/GET/DELETE | `/api/chat` (+`/:id`) | Sessions |
+| POST | `/api/chat/:id/message` | Ask — SSE, query quota |
+| GET | `/api/usage` · `/api/usage/chart` | Snapshot + 30-day series |
+| GET | `/api/billing` | Plan, status, catalog |
+| POST | `/api/billing/checkout` · `/api/billing/portal` | Stripe redirects |
+| POST | `/api/billing/webhook` | Stripe events → subscription sync (raw body) |
+| GET/POST/DELETE | `/api/keys` (+`/:id`) | Personal API keys (Max) |
+| GET | `/api/health` · `/api/health/deep` | Liveness / DB + queue + feature flags |
+
+`/api/documents` and `/api/chat` also accept `x-api-key`.
 
 ---
 
-## 7. Security / Production Considerations
+## 8. Security / Production Considerations
 
-- Passwords hashed with bcrypt, never stored plain
-- JWT access token short-lived (15 min), refresh token longer-lived, stored httpOnly cookie
-- Rate limiting on `/api/chat` and `/api/documents` (prevent abuse of Gemini free tier quota)
-- File upload size limit + MIME-type validation before parsing
-- Every DB query scoped by `userId` — no cross-user data leakage
-- Centralized error handler — no raw stack traces sent to client
-- Environment secrets (`GEMINI_API_KEY`, `MONGO_URI`, `JWT_SECRET`) only in `.env`, never committed
+- bcrypt (cost 12); JWT access 15 min + httpOnly refresh cookie scoped to `/api/auth`
+- `helmet`; CORS with credentials + configurable origin
+- Rate limiting on auth / upload / chat
+- Upload MIME allowlist + size cap **before** parsing; in-memory only, never written to disk
+- Every DB query scoped by `userId`; vector index carries the `userId` filter
+- One-time tokens stored as SHA-256 hashes, TTL-indexed; API keys likewise
+- Stripe webhook signature verified against the raw body
+- Password-reset responses never reveal whether an address exists
+- Centralized error handler — no stack traces to clients in production
+- Secrets only via env; optional integrations degrade gracefully when unset
 
 ---
 
-## 8. Deployment
+## 9. Testing & CI
 
-`docker-compose.yml` runs backend + frontend as two services. MongoDB stays on Atlas (managed, not containerized). Backend Dockerfile builds Node image, frontend Dockerfile builds a static Vite bundle served via nginx.
+- **Backend:** Vitest + `mongodb-memory-server` + `supertest`; the Gemini SDK is
+  mocked. 33 tests: auth, email/reset/delete flows, quota enforcement, billing
+  (disabled path + webhook signature + `syncSubscription`), API keys, ingestion
+  queue end-to-end, format extraction.
+- **Frontend:** Vitest + Testing Library (jsdom); GSAP + api mocked. 27 tests:
+  every route renders, auth flows, chat streaming + citations, settings tabs,
+  full landing render + interactive demo.
+- **CI** (`.github/workflows/ci.yml`): backend `npm test`; frontend
+  `typecheck` + `lint` + `test` + `build`.
 
-Suggested free hosting: backend on Render/Railway, frontend on Vercel, database on Atlas free tier (M0 cluster).
+---
+
+## 10. Deployment
+
+`docker-compose.yml` runs backend + frontend (nginx). MongoDB stays on Atlas.
+Backend serves the API; nginx serves the static bundle and proxies `/api`
+(SSE-friendly). Optional: `SMTP_URL` for real email, `STRIPE_SECRET_KEY` +
+price IDs + `STRIPE_WEBHOOK_SECRET` for billing, `DEMO_MODE=true` for a
+zero-config portfolio demo (auto-verified emails, billing stubbed).
+
+Suggested free hosting: backend on Render/Railway, frontend on Vercel, DB on
+Atlas M0.

@@ -11,6 +11,7 @@ Dark-locked SaaS UI: a marketing landing page and the authenticated application.
 | `npm run build` | `tsc -b` then `vite build` → `dist/` |
 | `npm run typecheck` | type check only |
 | `npm run lint` | eslint (flat config) |
+| `npm run test` | Vitest (jsdom) — 27 tests |
 | `npm run preview` | serve the production build locally |
 
 `VITE_API_BASE` (default `/api`) sets the API root; `VITE_API_TARGET` sets the dev proxy target.
@@ -40,17 +41,19 @@ src/
 ├── hooks/                   # useCollections, useDocuments (polls while processing),
 │                            #   useChatSessions, useGsapReveal, useMediaQuery
 ├── components/
-│   ├── ui/                  # shadcn primitives (button, dialog, sheet, table, tabs, …)
-│   ├── marketing/           # SiteNav, Hero, TrustStrip, FeatureGrid, HowItWorks,
-│   │                        #   SecurityPanel, CTASection, SiteFooter
+│   ├── ui/                  # shadcn primitives (button, dialog, sheet, table, tabs, accordion, …)
+│   ├── marketing/           # SiteNav, Hero, AuroraBackground, TrustStrip, StatsBand,
+│   │                        #   BentoFeatures, RetrievalDemo, HowItWorks, SecurityPanel,
+│   │                        #   Pricing, FAQ, CTASection, SiteFooter, HashScroll
 │   ├── auth/                # AuthLayout (terminal side-panel), FormError (a11y summary)
-│   ├── app/                 # AppShell, AppSidebar, AppTopbar, UserMenu, UploadDialog,
-│   │                        #   ConfirmDialog, EmptyState, chat/{SessionRail,Composer}
+│   ├── app/                 # AppShell, AppSidebar, AppTopbar, UserMenu, VerifyEmailBanner,
+│   │                        #   UploadDialog, ConfirmDialog, EmptyState, chat/{SessionRail,Composer},
+│   │                        #   settings/{Profile,Billing,ApiKeys,Account}Tab, settings/{UsageBars,UsageChart}
 │   ├── rag/                 # PipelineStrip, CitationBadge, AnswerText, SourceDrawer, StatusChip
 │   └── Logo.tsx
 └── pages/
-    ├── marketing/Landing.tsx
-    ├── auth/{Login,Signup}.tsx
+    ├── marketing/{MarketingLayout,Landing,PricingPage}.tsx
+    ├── auth/{Login,Signup,ForgotPassword,ResetPassword,VerifyEmail}.tsx
     └── app/{Chat,Documents,Collections,Settings}.tsx
 ```
 

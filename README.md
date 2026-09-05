@@ -1,10 +1,15 @@
 # Retrivo Vault
 
-Multi-user Retrieval-Augmented Generation (RAG) platform. Users register, upload
-documents (PDF / TXT), and query their own private knowledge base through an
-LLM-backed chat interface with source citations.
+A production-grade, **individual-focused** Retrieval-Augmented Generation (RAG) SaaS.
+Sign up, verify your email, upload documents (PDF · TXT · Markdown · DOCX · CSV) into a
+private knowledge base, and query it through a streaming, citation-backed chat.
+Free / Pro / Max plans with usage quotas, Stripe billing, personal API keys, and
+bring-your-own Gemini key.
 
-See [`retrivo-vault-architecture.md`](./retrivo-vault-architecture.md) for the full design.
+> Individuals only — no teams, workspaces, or org roles, by design.
+
+See [`retrivo-vault-architecture.md`](./retrivo-vault-architecture.md) for the full design
+and [`features.md`](./features.md) for the feature list.
 
 ---
 
@@ -12,143 +17,124 @@ See [`retrivo-vault-architecture.md`](./retrivo-vault-architecture.md) for the f
 
 | Layer | Tech |
 |---|---|
-| Frontend | React + Vite + **TypeScript**, Tailwind CSS, shadcn/ui (Radix), React Router, GSAP |
-| Design system | `frontend/design-system/retrivo-vault/` — generated with the `internal design spec` skill, refined against the covis.ai reference. Dark-locked, JetBrains Mono + IBM Plex Sans. |
-| Backend | Node.js + Express (ESM) |
-| Database | MongoDB Atlas |
-| Vector search | Atlas `$vectorSearch` (768-dim, cosine) |
-| Embeddings | Google Gemini `text-embedding-004` |
-| LLM | Google Gemini `gemini-2.5-flash` (streamed via SSE) |
-| Auth | JWT access token + httpOnly refresh cookie, bcrypt password hashing |
+| Frontend | React + Vite + **TypeScript**, Tailwind, shadcn/ui (Radix), React Router, GSAP, Recharts |
+| Design system | `frontend/design-system/retrivo-vault/` — `internal design spec` skill output, refined against the covis.ai reference. Dark, JetBrains Mono + IBM Plex Sans. |
+| Backend | Node.js + Express (ESM), SSE streaming |
+| Database | MongoDB Atlas + Atlas Vector Search (`$vectorSearch`, 768-dim cosine) |
+| AI | Google Gemini `text-embedding-004` + `gemini-2.5-flash` |
+| Auth | JWT access + httpOnly refresh cookie · bcrypt · personal API keys (`x-api-key`) |
+| Email | Nodemailer (SMTP; console fallback in dev) |
+| Billing | Stripe Checkout + Customer Portal + webhooks (degrades gracefully when unset) |
+| Ingestion | In-process job queue (concurrency, priority, retry) |
+| Tests / CI | Vitest (60 tests) · GitHub Actions |
 | Deploy | Docker + Docker Compose |
 
 ---
 
 ## Prerequisites
 
-1. **MongoDB Atlas cluster** (M0 free tier works). Atlas is required — Vector
-   Search is not available in a local `mongod`.
+1. **MongoDB Atlas cluster** (M0 free tier works) — Vector Search is Atlas-only.
 2. **Google Gemini API key** — https://aistudio.google.com/apikey
-3. Node.js 20+ (for local dev) or Docker (for the compose setup).
+3. Node.js 20+ (local dev) or Docker.
+4. *(optional)* Stripe test keys for billing; an SMTP URL for real email.
 
 ---
 
-## Local development
-
-### Backend
+## Quick start
 
 ```bash
+# backend
 cd backend
-cp .env.example .env          # fill in MONGO_URI, GEMINI_API_KEY, JWT secrets
+cp .env.example .env        # MONGO_URI, GEMINI_API_KEY, JWT secrets (min)
 npm install
-npm run create-index          # one-time: creates the Atlas Vector Search index
-npm run dev                    # http://localhost:5000
-```
+npm run create-index        # one-time: Atlas Vector Search index
+npm test                    # 33 tests (spins up an in-memory MongoDB)
+npm run dev                 # http://localhost:5000
 
-### Frontend
-
-```bash
+# frontend (new terminal)
 cd frontend
 cp .env.example .env
 npm install
-npm run dev                    # http://localhost:5173 (proxies /api -> :5000)
-npm run typecheck              # tsc, no emit
-npm run build                  # tsc -b + vite build
-npm run lint                   # eslint (flat config)
+npm run dev                 # http://localhost:5173  (proxies /api -> :5000)
+npm test                    # 27 tests
+npm run typecheck && npm run lint && npm run build
 ```
 
-Routes: `/` marketing landing · `/login` `/signup` · `/app` (Chat) · `/app/documents`
-· `/app/collections` · `/app/settings`. See
-[`frontend/README.md`](./frontend/README.md) for the component map.
+For a zero-config demo (auto-verified emails, billing stubbed) set `DEMO_MODE=true`
+in `backend/.env`.
+
+### Routes
+
+`/` landing · `/pricing` · `/login` · `/signup` · `/forgot-password` ·
+`/reset-password` · `/verify-email` · `/app` (Chat) · `/app/documents` ·
+`/app/collections` · `/app/settings` (`?tab=profile|billing|keys|account`).
 
 ---
 
 ## Docker
 
 ```bash
-cp backend/.env.example backend/.env   # fill in real values
+cp backend/.env.example backend/.env      # fill in real values
 docker compose up --build
+docker compose run --rm backend npm run create-index   # once
 ```
 
-- Frontend: http://localhost:8080
-- Backend API: http://localhost:5000/api
-- nginx in the frontend container proxies `/api` to the backend service.
-
-Run the index creation once against your Atlas cluster:
-
-```bash
-docker compose run --rm backend npm run create-index
-```
+- App: http://localhost:8080  ·  API: http://localhost:5000/api
+- nginx serves the static bundle and proxies `/api` (SSE-friendly).
 
 ---
 
-## Vector Search index
+## Plans & quotas
 
-The `chunks` collection needs this index (created by `npm run create-index`, or
-manually in the Atlas UI):
+| | Free | Pro | Max |
+|---|---|---|---|
+| Documents · storage | 20 · 50 MB | 500 · 2 GB | 5,000 · 20 GB |
+| Questions / month | 100 | 3,000 | 20,000 |
+| Collections | 3 | 50 | 500 |
+| BYO Gemini key · priority queue | — | ✓ | ✓ |
+| Personal API keys | — | — | up to 10 |
 
-```json
-{
-  "fields": [
-    { "type": "vector", "path": "embedding", "numDimensions": 768, "similarity": "cosine" },
-    { "type": "filter", "path": "userId" },
-    { "type": "filter", "path": "collectionId" }
-  ]
-}
+Over-limit requests return `402`/`403` with `details.code` (`quota_exceeded` /
+`feature_locked`); the UI turns these into an "Upgrade" prompt.
+
+---
+
+## Stripe (optional)
+
+Set in `backend/.env`: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and the four
+price IDs (`STRIPE_PRICE_{PRO,MAX}_{MONTHLY,ANNUAL}`). Locally:
+
+```bash
+stripe listen --forward-to localhost:8080/api/billing/webhook
 ```
 
-The `userId` filter is what enforces **per-user isolation** — every retrieval
-query restricts the vector search to the requesting user's own chunks.
+Without a secret key, billing endpoints report `billingEnabled:false` and everyone
+stays on Free.
 
 ---
 
 ## API
 
-| Method | Route | Purpose |
-|---|---|---|
-| POST | `/api/auth/signup` | Create account (returns access token, sets refresh cookie) |
-| POST | `/api/auth/login` | Log in |
-| POST | `/api/auth/refresh` | Rotate tokens from the refresh cookie |
-| POST | `/api/auth/logout` | Clear refresh cookie |
-| GET  | `/api/auth/me` | Current user |
-| POST | `/api/documents` | Upload a file, trigger async ingestion (`202`) |
-| GET  | `/api/documents` | List documents (`?collectionId=`) |
-| GET  | `/api/documents/:id` | One document (status) |
-| DELETE | `/api/documents/:id` | Delete document + its chunks |
-| POST | `/api/collections` | Create a collection |
-| GET  | `/api/collections` | List collections + document counts |
-| PATCH | `/api/collections/:id` | Rename a collection |
-| DELETE | `/api/collections/:id` | Delete collection (documents detached, not deleted) |
-| POST | `/api/chat` | Create a chat session |
-| GET  | `/api/chat` | List sessions |
-| GET  | `/api/chat/:sessionId` | Session history |
-| DELETE | `/api/chat/:sessionId` | Delete session |
-| POST | `/api/chat/:sessionId/message` | Ask a question — **SSE stream** (`sources`, `token`, `done`, `error` events) |
+Auth: `POST /api/auth/{signup,login,refresh,logout,verify-email,resend-verification,
+forgot-password,reset-password}` · `GET /api/auth/me` · `DELETE /api/auth/account`
+Account: `PATCH /api/account/profile` · `PUT|DELETE /api/account/gemini-key`
+Documents: `POST|GET /api/documents` · `GET|DELETE /api/documents/:id`  *(upload is quota-checked, returns `202`)*
+Collections: `POST|GET /api/collections` · `PATCH|DELETE /api/collections/:id`
+Chat: `POST|GET /api/chat` · `GET|DELETE /api/chat/:id` · `POST /api/chat/:id/message` *(SSE: `sources`, `token`, `done`, `error`)*
+Usage: `GET /api/usage` · `GET /api/usage/chart`
+Billing: `GET /api/billing` · `POST /api/billing/{checkout,portal}` · `POST /api/billing/webhook`
+Keys: `GET|POST /api/keys` · `DELETE /api/keys/:id`
+Health: `GET /api/health` · `GET /api/health/deep`
+
+`/api/documents` and `/api/chat` also accept an `x-api-key` header (Max plan keys).
 
 ---
 
-## Ingestion pipeline
+## Security
 
-`upload → extract text (pdf-parse / utf-8) → chunk (overlapping, sentence-aware)
-→ embed each chunk (Gemini) → insert { text, embedding, userId, documentId }`
-
-Ingestion runs in the background after the upload response; the client polls
-`GET /api/documents` and watches `status`: `processing → ready | failed`.
-
-## Query pipeline
-
-`question → embed → $vectorSearch (filtered by userId) → top-k chunks →
-prompt + chunks → Gemini stream → answer with [n] citations → persist both turns`
-
----
-
-## Security notes
-
-- Passwords hashed with bcrypt (cost 12), never stored plaintext.
-- Access token 15 min; refresh token 7 days in an httpOnly, SameSite cookie
-  scoped to `/api/auth`.
-- Rate limiting on auth, upload, and chat routes (protects Gemini free-tier quota).
-- Upload size limit + MIME allowlist (`application/pdf`, `text/plain`) before parsing.
-- Every DB query scoped by `userId` — no cross-user data access.
-- Centralized error handler — no stack traces sent to clients in production.
-- Secrets only via `.env` (git-ignored).
+bcrypt (cost 12) · JWT access 15m + httpOnly refresh cookie · `helmet` · credentialed
+CORS · rate limiting (auth/upload/chat) · MIME + size checks before parsing, in-memory
+only · every query scoped by `userId` (vector index included) · one-time tokens & API
+keys stored as SHA-256 hashes, TTL-indexed · Stripe webhook signature verified against
+the raw body · no user enumeration on password reset · no stack traces to clients in
+production · secrets via env, optional integrations degrade gracefully.
