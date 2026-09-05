@@ -9,6 +9,11 @@ export const fakeUser: User = {
   _id: "u_test",
   name: "Ada Lovelace",
   email: "ada@example.com",
+  emailVerified: true,
+  plan: "free",
+  subscriptionStatus: "none",
+  planRenewsAt: null,
+  hasGeminiKey: false,
   createdAt: new Date("2026-01-01").toISOString(),
 };
 

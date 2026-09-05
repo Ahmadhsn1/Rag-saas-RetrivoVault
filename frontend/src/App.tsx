@@ -8,6 +8,9 @@ const Landing = lazy(() => import("@/pages/marketing/Landing"));
 const PricingPage = lazy(() => import("@/pages/marketing/PricingPage"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Signup = lazy(() => import("@/pages/auth/Signup"));
+const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
+const VerifyEmail = lazy(() => import("@/pages/auth/VerifyEmail"));
 const AppShell = lazy(() =>
   import("@/components/app/AppShell").then((m) => ({ default: m.AppShell })),
 );
@@ -64,6 +67,9 @@ export default function App() {
             </RedirectIfAuthed>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route
           path="/app"

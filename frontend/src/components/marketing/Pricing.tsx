@@ -3,14 +3,23 @@ import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PLANS } from "@/lib/plans";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGsapReveal } from "@/hooks/useGsapReveal";
 
 export function Pricing({ standalone = false }: { standalone?: boolean }) {
   const [annual, setAnnual] = useState(true);
+  const { user } = useAuth();
   const gridRef = useRef<HTMLDivElement>(null);
   useGsapReveal(gridRef, "> *", { stagger: 0.08 });
+
+  const ctaTo = (planId: string) =>
+    user
+      ? planId === "free"
+        ? "/app"
+        : "/app/settings?tab=billing"
+      : "/signup";
 
   return (
     <section id="pricing" className={cn("scroll-mt-24", standalone ? "pt-36 pb-24" : "py-24 md:py-32")}>
@@ -89,7 +98,9 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
                   variant={plan.highlight ? "brand" : "outline"}
                   className="mt-5 w-full"
                 >
-                  <Link to="/signup">{plan.cta}</Link>
+                  <Link to={ctaTo(plan.id)}>
+                    {user && plan.id !== "free" ? "Choose " + plan.name : plan.cta}
+                  </Link>
                 </Button>
 
                 <ul className="mt-6 space-y-2.5 text-sm">

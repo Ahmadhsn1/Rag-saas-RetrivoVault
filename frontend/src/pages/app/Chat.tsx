@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiErrorMessage, streamChat } from "@/lib/api";
+import { notifyApiError } from "@/lib/notifyApiError";
 import { useChatSessions } from "@/hooks/useChatSessions";
 import { useAppState } from "@/context/AppContext";
 import { AnswerText } from "@/components/rag/AnswerText";
@@ -19,7 +20,7 @@ import type {
 
 export default function Chat() {
   const { sessions, refetch: refetchSessions, setSessions } = useChatSessions();
-  const { activeCollectionId } = useAppState();
+  const { activeCollectionId, refetchUsage } = useAppState();
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -130,16 +131,20 @@ export default function Chat() {
           void refetchSessions();
         },
         onError: (err) => {
+          notifyApiError(err, "Generation failed");
           setMessages((m) => [
             ...m,
             { role: "assistant", content: `⚠ ${err.message}`, sources: [] },
           ]);
           setLiveAnswer("");
           setStreaming(false);
+          void refetchUsage();
         },
       });
+
+      void refetchUsage();
     },
-    [activeId, activeCollectionId, refetchSessions, setSessions],
+    [activeId, activeCollectionId, refetchSessions, setSessions, refetchUsage],
   );
 
   const showEmpty = !activeId && messages.length === 0 && !streaming;

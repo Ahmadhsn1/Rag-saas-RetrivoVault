@@ -6,7 +6,8 @@ import {
   type ReactNode,
 } from "react";
 import { useCollections } from "@/hooks/useCollections";
-import type { Collection } from "@/types/api";
+import { useUsage } from "@/hooks/useUsage";
+import type { Collection, UsageSnapshot } from "@/types/api";
 
 interface AppContextValue {
   collections: Collection[];
@@ -15,6 +16,8 @@ interface AppContextValue {
   activeCollectionId: string | null;
   setActiveCollectionId: (id: string | null) => void;
   activeCollection: Collection | null;
+  usage: UsageSnapshot | null;
+  refetchUsage: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -25,6 +28,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loading: collectionsLoading,
     refetch: refetchCollections,
   } = useCollections();
+  const { usage, refetch: refetchUsage } = useUsage();
   const [activeCollectionId, setActiveCollectionId] = useState<string | null>(
     null,
   );
@@ -42,6 +46,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       activeCollectionId,
       setActiveCollectionId,
       activeCollection,
+      usage,
+      refetchUsage,
     }),
     [
       collections,
@@ -49,6 +55,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       refetchCollections,
       activeCollectionId,
       activeCollection,
+      usage,
+      refetchUsage,
     ],
   );
 

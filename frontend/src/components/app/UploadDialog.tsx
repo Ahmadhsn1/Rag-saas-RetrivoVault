@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { UploadCloud, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
-import { api, apiErrorMessage } from "@/lib/api";
+import { api } from "@/lib/api";
+import { notifyApiError } from "@/lib/notifyApiError";
 import { cn, formatBytes } from "@/lib/utils";
 import {
   Dialog,
@@ -26,7 +27,8 @@ export function UploadDialog({
   onUploaded: (doc: VaultDocument) => void;
   trigger: React.ReactNode;
 }) {
-  const { collections, activeCollectionId, refetchCollections } = useAppState();
+  const { collections, activeCollectionId, refetchCollections, refetchUsage } =
+    useAppState();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [collectionId, setCollectionId] = useState<string>(
@@ -68,11 +70,12 @@ export function UploadDialog({
       );
       onUploaded(data.document);
       void refetchCollections();
+      void refetchUsage();
       toast.success(`"${file.name}" queued for ingestion.`);
       setOpen(false);
       reset();
     } catch (err) {
-      toast.error(apiErrorMessage(err, "Upload failed"));
+      notifyApiError(err, "Upload failed");
       setBusy(false);
     }
   };

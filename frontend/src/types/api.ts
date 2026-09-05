@@ -1,7 +1,82 @@
+export type PlanId = "free" | "pro" | "max";
+
+export type SubscriptionStatus =
+  | "none"
+  | "active"
+  | "trialing"
+  | "past_due"
+  | "canceled"
+  | "incomplete"
+  | "unpaid";
+
 export interface User {
   _id: string;
   name: string;
   email: string;
+  emailVerified: boolean;
+  plan: PlanId;
+  subscriptionStatus: SubscriptionStatus;
+  planRenewsAt: string | null;
+  hasGeminiKey: boolean;
+  createdAt: string;
+}
+
+export interface PlanLimits {
+  documents: number;
+  storageBytes: number;
+  queriesPerMonth: number;
+  collections: number;
+  apiKeys: number;
+}
+
+export interface UsageSnapshot {
+  plan: PlanId;
+  limits: PlanLimits;
+  current: {
+    documents: number;
+    storageBytes: number;
+    collections: number;
+    queries: number;
+  };
+  remaining: {
+    documents: number;
+    storageBytes: number;
+    collections: number;
+    queries: number;
+  };
+  periodStart: string;
+}
+
+export interface UsagePoint {
+  date: string;
+  query: number;
+  ingest: number;
+}
+
+export interface BillingInfo {
+  billingEnabled: boolean;
+  plan: {
+    id: PlanId;
+    name: string;
+    limits: PlanLimits;
+    features: { byoKey: boolean; apiAccess: boolean; priorityQueue: boolean };
+  };
+  subscriptionStatus: SubscriptionStatus;
+  planRenewsAt: string | null;
+  hasBillingAccount: boolean;
+  catalog: {
+    id: PlanId;
+    name: string;
+    limits: PlanLimits;
+    prices: { monthly?: string; annual?: string } | null;
+  }[];
+}
+
+export interface ApiKey {
+  _id: string;
+  name: string;
+  prefix: string;
+  lastUsedAt: string | null;
   createdAt: string;
 }
 

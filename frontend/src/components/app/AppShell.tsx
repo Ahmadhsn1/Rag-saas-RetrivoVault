@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { AppProvider } from "@/context/AppContext";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppTopbar } from "@/components/app/AppTopbar";
+import { VerifyEmailBanner } from "@/components/app/VerifyEmailBanner";
 
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -31,6 +32,7 @@ export function AppShell() {
         )}
 
         <div className={cn("flex min-w-0 flex-1 flex-col")}>
+          <VerifyEmailBanner />
           <AppTopbar onMenu={() => setMobileOpen(true)} />
           <main className="min-h-0 flex-1 overflow-hidden">
             <Outlet />

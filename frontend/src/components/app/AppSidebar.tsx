@@ -28,14 +28,12 @@ const NAV: NavItem[] = [
 ];
 
 export function AppSidebar({ onClose }: { onClose?: () => void }) {
-  const { collections, activeCollectionId, setActiveCollectionId } =
+  const { collections, activeCollectionId, setActiveCollectionId, usage } =
     useAppState();
 
-  const totalDocs = collections.reduce(
-    (sum, c) => sum + (c.documentCount ?? 0),
-    0,
-  );
-  const quota = 100;
+  const queriesUsed = usage?.current.queries ?? 0;
+  const queriesLimit = usage?.limits.queriesPerMonth ?? 100;
+  const planLabel = usage?.plan ?? "free";
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -122,15 +120,21 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
       </div>
 
       <div className="border-t border-sidebar-border p-3">
-        <div className="mb-3 px-1">
+        <NavLink
+          to="/app/settings?tab=billing"
+          onClick={onClose}
+          className="mb-3 block rounded-md px-1 py-1 transition-colors hover:bg-sidebar-accent"
+        >
           <div className="mb-1.5 flex items-center justify-between font-mono text-2xs text-muted-foreground">
-            <span>documents</span>
+            <span className="uppercase">{planLabel} · questions</span>
             <span>
-              {totalDocs} / {quota}
+              {queriesUsed} / {queriesLimit}
             </span>
           </div>
-          <Progress value={Math.min((totalDocs / quota) * 100, 100)} />
-        </div>
+          <Progress
+            value={Math.min((queriesUsed / queriesLimit) * 100, 100)}
+          />
+        </NavLink>
         <UserMenu />
       </div>
     </div>

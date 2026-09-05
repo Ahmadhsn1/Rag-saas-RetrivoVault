@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { FolderTree, Plus, Check, X, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
+import { notifyApiError } from "@/lib/notifyApiError";
 import { formatRelativeTime } from "@/lib/utils";
 import { useAppState } from "@/context/AppContext";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -29,7 +30,7 @@ export default function Collections() {
       await refetchCollections();
       toast.success(`Collection "${name}" created.`);
     } catch (err) {
-      toast.error(apiErrorMessage(err, "Could not create collection"));
+      notifyApiError(err, "Could not create collection");
     } finally {
       setCreating(false);
     }

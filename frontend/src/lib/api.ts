@@ -30,6 +30,21 @@ export function apiErrorMessage(err: unknown, fallback = "Something went wrong")
   return fallback;
 }
 
+/** Machine-readable error code the API attaches (e.g. "quota_exceeded"). */
+export function apiErrorCode(err: unknown): string | null {
+  if (axios.isAxiosError(err)) {
+    const details = (err.response?.data as ApiErrorBody | undefined)?.details as
+      | { code?: string }
+      | undefined;
+    return details?.code ?? null;
+  }
+  return null;
+}
+
+export function apiErrorStatus(err: unknown): number | null {
+  return axios.isAxiosError(err) ? (err.response?.status ?? null) : null;
+}
+
 api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -113,13 +128,19 @@ export async function streamChat({
 
   if (!res.ok || !res.body) {
     let message = `Chat request failed (${res.status})`;
+    let code: string | null = null;
     try {
-      const body = (await res.json()) as ApiErrorBody;
+      const body = (await res.json()) as ApiErrorBody & {
+        details?: { code?: string };
+      };
       if (body?.error) message = body.error;
+      code = body?.details?.code ?? null;
     } catch {
       /* ignore */
     }
-    onError?.(new Error(message));
+    const err = new Error(message) as Error & { code?: string | null };
+    err.code = code;
+    onError?.(err);
     return;
   }
 
