@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { requireAuth } from "../middleware/auth.js";
+import { authenticateFlexible } from "../middleware/auth.js";
 import { uploadLimiter } from "../middleware/rateLimiter.js";
 import { uploadSingle } from "../middleware/upload.js";
+import { enforceDocumentQuota } from "../middleware/quota.js";
 import {
   uploadDocument,
   listDocuments,
@@ -11,9 +12,15 @@ import {
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(authenticateFlexible);
 
-router.post("/", uploadLimiter, uploadSingle, uploadDocument);
+router.post(
+  "/",
+  uploadLimiter,
+  uploadSingle,
+  enforceDocumentQuota,
+  uploadDocument
+);
 router.get("/", listDocuments);
 router.get("/:id", getDocument);
 router.delete("/:id", deleteDocument);

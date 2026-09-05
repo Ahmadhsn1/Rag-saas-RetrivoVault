@@ -1,4 +1,4 @@
-import { llmModel } from "../config/gemini.js";
+import { llmModel as sharedLlmModel } from "../config/gemini.js";
 
 const SYSTEM_PROMPT = `You are Retrivo Vault's assistant. Answer the user's question using ONLY the numbered context passages provided.
 Rules:
@@ -27,9 +27,9 @@ Answer:`;
 }
 
 // Streams the answer token-by-token. Yields text deltas.
-export async function* streamAnswer({ question, chunks, history }) {
+export async function* streamAnswer({ question, chunks, history, model }) {
   const prompt = buildPrompt({ question, chunks, history });
-  const result = await llmModel.generateContentStream(prompt);
+  const result = await (model || sharedLlmModel).generateContentStream(prompt);
   for await (const part of result.stream) {
     const delta = part.text();
     if (delta) yield delta;
@@ -37,16 +37,16 @@ export async function* streamAnswer({ question, chunks, history }) {
 }
 
 // Non-streaming variant (used for tests / fallback).
-export async function generateAnswer({ question, chunks, history }) {
+export async function generateAnswer({ question, chunks, history, model }) {
   const prompt = buildPrompt({ question, chunks, history });
-  const result = await llmModel.generateContent(prompt);
+  const result = await (model || sharedLlmModel).generateContent(prompt);
   return result.response.text();
 }
 
 // Short title for a fresh chat session, derived from the first question.
-export async function generateSessionTitle(question) {
+export async function generateSessionTitle(question, model) {
   try {
-    const result = await llmModel.generateContent(
+    const result = await (model || sharedLlmModel).generateContent(
       `Give a 3-6 word title (no quotes) for a chat that starts with this question:\n"${question}"`
     );
     return result.response.text().trim().replace(/^["']|["']$/g, "").slice(0, 80);

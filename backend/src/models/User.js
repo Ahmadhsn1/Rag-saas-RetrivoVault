@@ -12,12 +12,50 @@ const userSchema = new mongoose.Schema(
       index: true,
     },
     passwordHash: { type: String, required: true },
+
+    emailVerified: { type: Boolean, default: false },
+
+    // --- Billing / plan ---
+    plan: {
+      type: String,
+      enum: ["free", "pro", "max"],
+      default: "free",
+      index: true,
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: [
+        "none",
+        "active",
+        "trialing",
+        "past_due",
+        "canceled",
+        "incomplete",
+        "unpaid",
+      ],
+      default: "none",
+    },
+    planRenewsAt: { type: Date, default: null },
+    stripeCustomerId: { type: String, default: null, index: true },
+    stripeSubscriptionId: { type: String, default: null },
+
+    // Bring-your-own Gemini key (paid plans). Stored as-is; treat as a secret.
+    // Never selected by default; load explicitly with .select("+geminiApiKey").
+    geminiApiKey: { type: String, default: null, select: false },
+    hasGeminiKey: { type: Boolean, default: false },
+
+    // --- Usage counters (rolling monthly window) ---
+    usage: {
+      queriesThisPeriod: { type: Number, default: 0 },
+      periodStart: { type: Date, default: () => new Date() },
+    },
   },
-  { timestamps: { createdAt: true, updatedAt: false } }
+  { timestamps: { createdAt: true, updatedAt: true } }
 );
 
 userSchema.methods.toJSON = function () {
-  const { passwordHash, __v, ...rest } = this.toObject();
+  const { passwordHash, geminiApiKey, __v, ...rest } = this.toObject();
+  void geminiApiKey;
   return rest;
 };
 

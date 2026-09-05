@@ -5,6 +5,9 @@ import {
   streamAnswer,
   generateSessionTitle,
 } from "../services/generationService.js";
+import { incrementQueryCount, recordEvent } from "../services/usage.js";
+import { User } from "../models/User.js";
+import { modelsFor } from "../config/gemini.js";
 
 export const createSession = asyncHandler(async (req, res) => {
   const session = await ChatSession.create({
@@ -52,10 +55,17 @@ export const sendMessage = asyncHandler(async (req, res) => {
   });
   if (!session) throw ApiError.notFound("Chat session not found");
 
+  // Use the user's own Gemini key when they've provided one.
+  const keyed = await User.findById(req.user.id)
+    .select("+geminiApiKey")
+    .lean();
+  const { embeddingModel, llmModel } = modelsFor(keyed?.geminiApiKey);
+
   const retrieved = await retrieveChunks({
     userId: req.user.id,
     question,
     collectionId,
+    embeddingModel,
   });
 
   const sources = retrieved.map((c, i) => ({
@@ -85,6 +95,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
       question,
       chunks: retrieved,
       history: session.messages,
+      model: llmModel,
     })) {
       answer += delta;
       send("token", { delta });
@@ -103,9 +114,16 @@ export const sendMessage = asyncHandler(async (req, res) => {
     citedChunkIds: retrieved.map((c) => c._id),
   });
   if (session.messages.length === 2 || session.title === "New chat") {
-    session.title = await generateSessionTitle(question);
+    session.title = await generateSessionTitle(question, llmModel);
   }
   await session.save();
+
+  // Meter the query (quota was checked by enforceQueryQuota before streaming).
+  await incrementQueryCount(req.user.id);
+  await recordEvent(req.user.id, "query", 1, {
+    sessionId: String(session._id),
+    chunks: retrieved.length,
+  });
 
   send("done", { title: session.title });
   res.end();

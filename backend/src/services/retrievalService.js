@@ -13,8 +13,9 @@ export async function retrieveChunks({
   question,
   collectionId = null,
   topK = env.rag.topK,
+  embeddingModel = undefined,
 }) {
-  const queryVector = await embedQuery(question);
+  const queryVector = await embedQuery(question, embeddingModel);
 
   const filter = { userId: toObjectId(userId) };
   if (collectionId) filter.collectionId = toObjectId(collectionId);

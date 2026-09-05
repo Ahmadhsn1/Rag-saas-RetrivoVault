@@ -1,8 +1,32 @@
+import path from "node:path";
 import { Document } from "../models/Document.js";
 import { Chunk } from "../models/Chunk.js";
 import { Collection } from "../models/Collection.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
-import { ingestDocument } from "../services/ingestionService.js";
+import { queueIngestion } from "../services/ingestionService.js";
+
+const EXT_MIME = {
+  ".pdf": "application/pdf",
+  ".txt": "text/plain",
+  ".md": "text/markdown",
+  ".markdown": "text/markdown",
+  ".csv": "text/csv",
+  ".docx":
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+};
+
+function normalizeMime(file) {
+  const known = [
+    "application/pdf",
+    "text/plain",
+    "text/markdown",
+    "text/csv",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+  if (known.includes(file.mimetype)) return file.mimetype;
+  const ext = path.extname(file.originalname).toLowerCase();
+  return EXT_MIME[ext] || file.mimetype;
+}
 
 export const uploadDocument = asyncHandler(async (req, res) => {
   if (!req.file) throw ApiError.badRequest("No file uploaded (field name: 'file')");
@@ -18,21 +42,22 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     collectionId = null;
   }
 
+  const mimeType = normalizeMime(req.file);
+
   const doc = await Document.create({
     userId: req.user.id,
     collectionId,
     filename: req.file.originalname,
-    mimeType: req.file.mimetype,
+    mimeType,
     sizeBytes: req.file.size,
     status: "processing",
   });
 
-  // Fire-and-forget ingestion; client polls GET /api/documents for status.
-  ingestDocument({
+  await queueIngestion({
     documentId: doc._id,
     userId: req.user.id,
     collectionId,
-    file: req.file,
+    file: { ...req.file, mimetype: mimeType },
   });
 
   res.status(202).json({ document: doc });
