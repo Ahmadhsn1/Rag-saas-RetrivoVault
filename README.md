@@ -12,7 +12,8 @@ See [`retrivo-vault-architecture.md`](./retrivo-vault-architecture.md) for the f
 
 | Layer | Tech |
 |---|---|
-| Frontend | React (Vite) + Tailwind CSS + React Router |
+| Frontend | React + Vite + **TypeScript**, Tailwind CSS, shadcn/ui (Radix), React Router, GSAP |
+| Design system | `frontend/design-system/retrivo-vault/` — generated with the `internal design spec` skill, refined against the covis.ai reference. Dark-locked, JetBrains Mono + IBM Plex Sans. |
 | Backend | Node.js + Express (ESM) |
 | Database | MongoDB Atlas |
 | Vector search | Atlas `$vectorSearch` (768-dim, cosine) |
@@ -51,7 +52,14 @@ cd frontend
 cp .env.example .env
 npm install
 npm run dev                    # http://localhost:5173 (proxies /api -> :5000)
+npm run typecheck              # tsc, no emit
+npm run build                  # tsc -b + vite build
+npm run lint                   # eslint (flat config)
 ```
+
+Routes: `/` marketing landing · `/login` `/signup` · `/app` (Chat) · `/app/documents`
+· `/app/collections` · `/app/settings`. See
+[`frontend/README.md`](./frontend/README.md) for the component map.
 
 ---
 
@@ -109,6 +117,7 @@ query restricts the vector search to the requesting user's own chunks.
 | DELETE | `/api/documents/:id` | Delete document + its chunks |
 | POST | `/api/collections` | Create a collection |
 | GET  | `/api/collections` | List collections + document counts |
+| PATCH | `/api/collections/:id` | Rename a collection |
 | DELETE | `/api/collections/:id` | Delete collection (documents detached, not deleted) |
 | POST | `/api/chat` | Create a chat session |
 | GET  | `/api/chat` | List sessions |

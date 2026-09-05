@@ -31,6 +31,20 @@ export const listCollections = asyncHandler(async (req, res) => {
   });
 });
 
+export const renameCollection = asyncHandler(async (req, res) => {
+  const name = (req.body?.name || "").trim();
+  if (!name) throw ApiError.badRequest("name is required");
+
+  const collection = await Collection.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user.id },
+    { name },
+    { new: true, runValidators: true }
+  );
+  if (!collection) throw ApiError.notFound("Collection not found");
+
+  res.json({ collection });
+});
+
 export const deleteCollection = asyncHandler(async (req, res) => {
   const collection = await Collection.findOneAndDelete({
     _id: req.params.id,

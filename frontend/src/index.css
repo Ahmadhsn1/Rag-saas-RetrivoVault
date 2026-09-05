@@ -1,13 +1,132 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  height: 100%;
+@layer base {
+  :root {
+    /* Dark-locked. Values are HSL triplets consumed as hsl(var(--x)). */
+    --background: 240 6% 4%;
+    --surface: 240 8% 7%;
+    --foreground: 60 11% 96%;
+
+    --card: 240 8% 9%;
+    --card-foreground: 60 11% 96%;
+
+    --popover: 240 7% 9%;
+    --popover-foreground: 60 11% 96%;
+
+    --primary: 249 74% 64%;
+    --primary-hover: 249 82% 69%;
+    --primary-foreground: 0 0% 100%;
+
+    --brand: 42 40% 87%;
+    --brand-foreground: 240 6% 4%;
+
+    --secondary: 240 6% 14%;
+    --secondary-foreground: 60 11% 96%;
+
+    --muted: 240 6% 13%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 240 6% 14%;
+    --accent-foreground: 60 11% 96%;
+
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 0 0% 100%;
+    --ok: 142 69% 58%;
+    --warn: 43 96% 56%;
+
+    --border: 240 5% 16%;
+    --border-strong: 240 5% 27%;
+    --input: 240 5% 18%;
+    --ring: 249 83% 72%;
+
+    --radius: 0.625rem;
+
+    --sidebar: 240 8% 6%;
+    --sidebar-foreground: 60 11% 96%;
+    --sidebar-accent: 240 6% 13%;
+    --sidebar-accent-foreground: 60 11% 96%;
+    --sidebar-border: 240 5% 14%;
+  }
 }
 
-body {
-  @apply bg-vault-bg text-gray-200 antialiased;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.3);
+  }
+
+  /* Visible focus everywhere */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-mono tracking-tight;
+    text-wrap: balance;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border-strong));
+    border-radius: 9999px;
+    border: 3px solid hsl(var(--background));
+  }
+}
+
+@layer components {
+  .glow-hero {
+    background-image: radial-gradient(
+      600px 320px at 50% -10%,
+      hsl(var(--primary) / 0.16),
+      transparent 70%
+    );
+  }
+
+  .grid-fade {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.6) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(600px 400px at 50% 0%, #000 20%, transparent 80%);
+  }
+
+  .terminal-panel {
+    background: #0c0c0e;
+    @apply border border-border rounded-lg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
