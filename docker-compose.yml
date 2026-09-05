@@ -7,6 +7,7 @@ services:
       NODE_ENV: production
       PORT: 5000
       CLIENT_ORIGIN: http://localhost:8080
+      APP_URL: http://localhost:8080
     ports:
       - "5000:5000"
     restart: unless-stopped
@@ -27,5 +28,12 @@ services:
       - "8080:80"
     restart: unless-stopped
 
-# MongoDB is NOT containerized — it runs on MongoDB Atlas (Vector Search
-# is an Atlas-only feature). Point MONGO_URI in backend/.env at your cluster.
+# MongoDB is NOT containerized — it runs on MongoDB Atlas (Vector Search is an
+# Atlas-only feature). Point MONGO_URI in backend/.env at your cluster.
+#
+# Optional integrations, all configured via backend/.env:
+#   - SMTP_URL           email verification + password reset (else logged to console)
+#   - STRIPE_SECRET_KEY  billing/plans (else everyone stays on Free)
+#   - STRIPE_WEBHOOK_SECRET + `stripe listen --forward-to
+#       localhost:8080/api/billing/webhook` for local webhook testing
+#   - DEMO_MODE=true     auto-verify emails, no real billing (portfolio demos)
