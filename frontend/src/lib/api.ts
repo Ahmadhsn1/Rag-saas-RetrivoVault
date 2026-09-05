@@ -72,7 +72,7 @@ api.interceptors.response.use(
   },
 );
 
-interface StreamChatArgs {
+export interface StreamChatArgs {
   sessionId: string;
   content: string;
   collectionId?: string | null;

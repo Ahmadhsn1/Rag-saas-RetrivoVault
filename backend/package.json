@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "create-index": "node src/scripts/createVectorIndex.js"
+    "create-index": "node src/scripts/createVectorIndex.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -21,5 +23,15 @@
     "mongoose": "^8.9.0",
     "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.2",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.8"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "fsevents@2.3.3": true,
+    "mongodb-memory-server@10.4.3": true
   }
 }

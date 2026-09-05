@@ -29,4 +29,14 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ["**/*.{test,spec}.{ts,tsx}", "src/test/**"],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "react-refresh/only-export-components": "off",
+    },
+  },
 );

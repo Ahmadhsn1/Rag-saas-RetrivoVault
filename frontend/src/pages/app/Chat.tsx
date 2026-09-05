@@ -30,6 +30,9 @@ export default function Chat() {
   const [selected, setSelected] = useState<RetrievedSource | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  // A session id we just created locally — its history is known-empty, so skip the fetch
+  // that would otherwise clobber the answer currently streaming into it.
+  const skipHistoryFor = useRef<string | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -42,6 +45,10 @@ export default function Chat() {
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
+      return;
+    }
+    if (skipHistoryFor.current === activeId) {
+      skipHistoryFor.current = null;
       return;
     }
     setLoadingHistory(true);
@@ -78,6 +85,7 @@ export default function Chat() {
         try {
           const { data } = await api.post<{ session: ChatSession }>("/chat", {});
           sessionId = data.session._id;
+          skipHistoryFor.current = sessionId;
           setActiveId(sessionId);
           setSessions((s) => [
             { ...data.session, title: "New chat" },
