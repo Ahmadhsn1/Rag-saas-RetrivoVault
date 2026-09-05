@@ -4,10 +4,11 @@ import { toast } from "sonner";
 import { api, apiErrorMessage, streamChat } from "@/lib/api";
 import { notifyApiError } from "@/lib/notifyApiError";
 import { useChatSessions } from "@/hooks/useChatSessions";
+import { useDocuments } from "@/hooks/useDocuments";
 import { useAppState } from "@/context/AppContext";
 import { AnswerText } from "@/components/rag/AnswerText";
-import { PipelineStrip } from "@/components/rag/PipelineStrip";
 import { SourceDrawer } from "@/components/rag/SourceDrawer";
+import { OnboardingChecklist } from "@/components/app/OnboardingChecklist";
 import { SessionRail } from "@/components/app/chat/SessionRail";
 import { Composer } from "@/components/app/chat/Composer";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,8 @@ import type {
 export default function Chat() {
   const { sessions, refetch: refetchSessions, setSessions } = useChatSessions();
   const { activeCollectionId, refetchUsage } = useAppState();
+  const { documents, refetch: refetchDocuments } = useDocuments();
+  const hasReadyDoc = documents.some((d) => d.status === "ready");
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -165,18 +168,10 @@ export default function Chat() {
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-4 py-6">
             {showEmpty ? (
-              <div className="flex flex-col items-center gap-6 py-16 text-center">
-                <PipelineStrip />
-                <div>
-                  <p className="font-mono text-sm font-semibold">
-                    Ask your knowledge base
-                  </p>
-                  <p className="mt-1.5 text-sm text-muted-foreground">
-                    Upload a document, then ask a question. Answers come back with
-                    a source behind every claim.
-                  </p>
-                </div>
-              </div>
+              <OnboardingChecklist
+                hasReadyDoc={hasReadyDoc}
+                onUploaded={() => void refetchDocuments()}
+              />
             ) : loadingHistory ? (
               <div className="space-y-4">
                 <Skeleton className="ml-auto h-10 w-2/3" />

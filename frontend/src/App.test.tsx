@@ -14,6 +14,27 @@ function signedIn() {
     if (url === "/collections") return Promise.resolve({ data: { collections: [] } });
     if (url === "/chat") return Promise.resolve({ data: { sessions: [] } });
     if (url === "/documents") return Promise.resolve({ data: { documents: [] } });
+    if (url === "/usage")
+      return Promise.resolve({
+        data: {
+          plan: "free",
+          limits: {
+            documents: 20,
+            storageBytes: 1,
+            queriesPerMonth: 100,
+            collections: 3,
+            apiKeys: 0,
+          },
+          current: { documents: 0, storageBytes: 0, collections: 0, queries: 0 },
+          remaining: {
+            documents: 20,
+            storageBytes: 1,
+            collections: 3,
+            queries: 100,
+          },
+          periodStart: new Date().toISOString(),
+        },
+      });
     if (url === "/auth/me") return Promise.resolve({ data: { user: fakeUser } });
     return Promise.reject(new Error(`unstubbed GET ${url}`));
   });
@@ -64,11 +85,11 @@ describe("App routing", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the app shell + chat empty state when signed in", async () => {
+  it("renders the app shell + chat onboarding when signed in", async () => {
     signedIn();
     renderWithProviders(<App />, { route: "/app" });
     expect(
-      await screen.findByText(/ask your knowledge base/i),
+      await screen.findByText(/get set up in three steps/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("navigation", { name: "Main" }),
