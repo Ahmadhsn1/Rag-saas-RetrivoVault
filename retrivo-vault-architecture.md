@@ -170,30 +170,38 @@ The `userId` filter is what enforces **per-user isolation** on every retrieval.
 
 ## 8. Security / Production Considerations
 
-- bcrypt (cost 12); JWT access 15 min + httpOnly refresh cookie scoped to `/api/auth`
+- bcrypt (cost 12); JWT access 15 min (bearer) + opaque **rotating** refresh token
+  in an httpOnly cookie scoped to `/api/auth`
+- Refresh tokens: SHA-256-hashed, `family`-grouped, rotated every use; a replayed
+  rotated token (past a 15s retry grace) revokes the whole family. Logout / password
+  reset / delete-account revoke sessions server-side (`RefreshToken` model)
+- Login: per-account lockout after 8 failures (15 min) + IP rate limiting
 - `helmet`; CORS with credentials + configurable origin
-- Rate limiting on auth / upload / chat
+- Rate limiting on auth / refresh / upload / chat (no-op under test)
 - Upload MIME allowlist + size cap **before** parsing; in-memory only, never written to disk
 - Every DB query scoped by `userId`; vector index carries the `userId` filter
-- One-time tokens stored as SHA-256 hashes, TTL-indexed; API keys likewise
+- One-time tokens + API keys stored as SHA-256 hashes, TTL-indexed
+- Transient upstream errors (429/503/timeout) retried with exponential backoff + jitter
 - Stripe webhook signature verified against the raw body
 - Password-reset responses never reveal whether an address exists
-- Centralized error handler — no stack traces to clients in production
+- Centralized error handler + structured logging (pino) with secret redaction
 - Secrets only via env; optional integrations degrade gracefully when unset
+- Zero-config dev: no `.env` → ephemeral in-memory MongoDB + demo mode (`env.autoMongo`)
 
 ---
 
 ## 9. Testing & CI
 
 - **Backend:** Vitest + `mongodb-memory-server` + `supertest`; the Gemini SDK is
-  mocked. 33 tests: auth, email/reset/delete flows, quota enforcement, billing
-  (disabled path + webhook signature + `syncSubscription`), API keys, ingestion
-  queue end-to-end, format extraction.
-- **Frontend:** Vitest + Testing Library (jsdom); GSAP + api mocked. 27 tests:
-  every route renders, auth flows, chat streaming + citations, settings tabs,
-  full landing render + interactive demo.
-- **CI** (`.github/workflows/ci.yml`): backend `npm test`; frontend
-  `typecheck` + `lint` + `test` + `build`.
+  mocked. ~47 tests: auth + refresh-token rotation/reuse + login lockout,
+  email/reset/delete flows, quota enforcement, billing (disabled path + webhook
+  signature + `syncSubscription`), API keys, documents pagination/search, chat
+  session rename, ingestion queue end-to-end, format extraction, retry helper.
+- **Frontend:** Vitest + Testing Library (jsdom); GSAP + api mocked. ~30 tests:
+  every route renders (incl. 404 + error boundary), auth + password flows, chat
+  streaming + citations, settings tabs, full landing render + interactive demo.
+- **CI** (`.github/workflows/ci.yml`): backend `npm test` (mongo binary cached);
+  frontend `typecheck` + `lint` + `test` + `build`.
 
 ---
 

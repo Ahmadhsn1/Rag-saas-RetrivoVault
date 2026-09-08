@@ -85,13 +85,41 @@ export const signup = asyncHandler(async (req, res) => {
   res.status(201).json({ user: user.toJSON(), accessToken });
 });
 
+const MAX_FAILED = 8;
+const LOCK_MS = 15 * 60 * 1000;
+
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) throw ApiError.badRequest("email and password required");
 
   const user = await User.findOne({ email: email.toLowerCase() });
+
+  if (user?.isLocked()) {
+    const mins = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+    throw new ApiError(
+      429,
+      `Too many failed attempts. Try again in ${mins} minute${mins === 1 ? "" : "s"}.`
+    );
+  }
+
   const ok = user && (await bcrypt.compare(password, user.passwordHash));
-  if (!ok) throw ApiError.unauthorized("Invalid credentials");
+  if (!ok) {
+    if (user) {
+      user.failedLoginAttempts += 1;
+      if (user.failedLoginAttempts >= MAX_FAILED) {
+        user.lockedUntil = new Date(Date.now() + LOCK_MS);
+        user.failedLoginAttempts = 0;
+      }
+      await user.save();
+    }
+    throw ApiError.unauthorized("Invalid credentials");
+  }
+
+  if (user.failedLoginAttempts || user.lockedUntil) {
+    user.failedLoginAttempts = 0;
+    user.lockedUntil = null;
+    await user.save();
+  }
 
   const accessToken = signAccessToken(user._id);
   const { raw } = await startSession(user._id, req);
@@ -190,7 +218,11 @@ export const resetPassword = asyncHandler(async (req, res) => {
   if (!userId) throw ApiError.badRequest("Invalid or expired reset link");
 
   const passwordHash = await bcrypt.hash(password, 12);
-  await User.findByIdAndUpdate(userId, { passwordHash });
+  await User.findByIdAndUpdate(userId, {
+    passwordHash,
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+  });
   // A password reset invalidates every existing session.
   await revokeAllForUser(userId);
   res.json({ ok: true });

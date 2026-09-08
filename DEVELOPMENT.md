@@ -13,7 +13,7 @@ See `retrivo-vault-architecture.md` and `features.md` for the full picture.
 
 ```bash
 # backend
-cd backend && npm test              # 33 tests
+cd backend && npm test              # ~47 tests
 node --check src/server.js
 
 # frontend
@@ -25,7 +25,8 @@ CI (`.github/workflows/ci.yml`) runs all of the above on push/PR.
 ## Conventions
 
 - Backend: every DB query is scoped by `req.user.id`. Quota checks live in `middleware/quota.js` and return `402`/`403` with `details.code` (`quota_exceeded` / `feature_locked`).
-- Backend: the Gemini SDK is **mocked in tests** (`src/test/setup.js`) — never call it directly in a test.
+- Backend: the Gemini SDK is **mocked in tests** (`src/test/setup.js`) — never call it directly in a test. Rate limiters and retries are also skipped/fast under test.
+- Backend: refresh tokens rotate (`services/refreshTokens.js` + `RefreshToken` model). Wrap every external model call in `withRetry()` (`utils/retry.js`).
 - Backend: optional integrations (Stripe, SMTP) must degrade gracefully when their env vars are unset. Guard with `billingEnabled` / `mailEnabled` from `config/env.js`.
 - Frontend: dark theme only. Use Tailwind token classes (`bg-card`, `text-muted-foreground`, …), never raw hex. Lucide icons only, never emoji.
 - Frontend: all motion must respect `prefers-reduced-motion` — use the helpers in `lib/motion.ts`, which already guard.

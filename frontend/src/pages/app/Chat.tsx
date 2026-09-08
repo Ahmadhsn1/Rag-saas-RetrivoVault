@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, Copy } from "lucide-react";
+import { Sparkles, Copy, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { api, apiErrorMessage, streamChat } from "@/lib/api";
@@ -33,6 +33,7 @@ export default function Chat() {
   const [liveAnswer, setLiveAnswer] = useState("");
   const [liveSources, setLiveSources] = useState<RetrievedSource[]>([]);
   const [selected, setSelected] = useState<RetrievedSource | null>(null);
+  const [failedQuestion, setFailedQuestion] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   // A session id we just created locally — its history is known-empty, so skip the fetch
@@ -128,6 +129,7 @@ export default function Chat() {
       setStreaming(true);
       setLiveAnswer("");
       setLiveSources([]);
+      setFailedQuestion(null);
 
       let answer = "";
       let sources: RetrievedSource[] = [];
@@ -164,6 +166,7 @@ export default function Chat() {
           ]);
           setLiveAnswer("");
           setStreaming(false);
+          setFailedQuestion(content);
           void refetchUsage();
         },
       });
@@ -172,6 +175,20 @@ export default function Chat() {
     },
     [activeId, activeCollectionId, refetchSessions, setSessions, refetchUsage],
   );
+
+  const retry = useCallback(() => {
+    if (!failedQuestion) return;
+    const q = failedQuestion;
+    setFailedQuestion(null);
+    // drop the trailing error bubble + the user message we're re-sending
+    setMessages((m) => {
+      const next = [...m];
+      if (next.at(-1)?.content.startsWith("⚠")) next.pop();
+      if (next.at(-1)?.role === "user") next.pop();
+      return next;
+    });
+    void send(q);
+  }, [failedQuestion, send]);
 
   const showEmpty = !activeId && messages.length === 0 && !streaming;
 
@@ -270,6 +287,21 @@ export default function Chat() {
             )}
           </div>
         </div>
+
+        {failedQuestion && !streaming && (
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 pb-1">
+            <span className="font-mono text-2xs text-muted-foreground">
+              That answer didn't complete.
+            </span>
+            <button
+              onClick={retry}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 font-mono text-2xs text-foreground hover:bg-secondary"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Retry
+            </button>
+          </div>
+        )}
 
         <Composer onSend={send} disabled={streaming} streaming={streaming} />
       </div>

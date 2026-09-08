@@ -49,13 +49,30 @@ const userSchema = new mongoose.Schema(
       queriesThisPeriod: { type: Number, default: 0 },
       periodStart: { type: Date, default: () => new Date() },
     },
+
+    // --- Brute-force protection ---
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockedUntil: { type: Date, default: null },
   },
   { timestamps: { createdAt: true, updatedAt: true } }
 );
 
+userSchema.methods.isLocked = function () {
+  return this.lockedUntil && this.lockedUntil.getTime() > Date.now();
+};
+
 userSchema.methods.toJSON = function () {
-  const { passwordHash, geminiApiKey, __v, ...rest } = this.toObject();
+  const {
+    passwordHash,
+    geminiApiKey,
+    failedLoginAttempts,
+    lockedUntil,
+    __v,
+    ...rest
+  } = this.toObject();
   void geminiApiKey;
+  void failedLoginAttempts;
+  void lockedUntil;
   return rest;
 };
 

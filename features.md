@@ -6,9 +6,12 @@ An individual-focused RAG SaaS: a private, cited knowledge base for one person.
 ## Authentication & Account
 
 - Email/password signup and login with JWT access + httpOnly refresh cookie
-- Access + refresh token rotation; silent restore on load
+- **Rotating** refresh tokens with reuse detection (replay → whole session family revoked)
+- Server-side revocation: logout, "sign out everywhere", password reset, account deletion
+- Per-account login lockout after repeated failures (on top of IP rate limiting)
+- Silent session restore on load (single-flighted)
 - Email verification (one-time hashed token, 24h) with in-app resend + banner
-- Password reset (one-time hashed token, 1h; no user enumeration)
+- Password reset (one-time hashed token, 1h; no user enumeration; revokes sessions)
 - Profile editing; account deletion (password-confirmed, cascades every resource)
 - Per-user data isolation across every resource and the vector index
 
@@ -65,8 +68,10 @@ An individual-focused RAG SaaS: a private, cited knowledge base for one person.
 
 ## Testing & DevOps
 
-- 60 automated tests (33 backend, 27 frontend)
+- ~77 automated tests (~47 backend, ~30 frontend)
 - Backend: Vitest + mongodb-memory-server + supertest (Gemini mocked)
-- Frontend: Vitest + Testing Library (jsdom)
-- GitHub Actions CI; Dockerised backend + frontend; `docker-compose` for local runs
+- Frontend: Vitest + Testing Library (jsdom); render, error-boundary and 404 coverage
+- GitHub Actions CI (mongo binary cached); hardened Dockerfiles (npm ci, non-root,
+  healthchecks); `docker-compose` for local runs
+- Zero-config local dev (`npm run dev` with no `.env`)
 - Cloud-deployable (Render/Railway + Vercel + Atlas)
