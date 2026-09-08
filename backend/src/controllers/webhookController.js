@@ -2,18 +2,10 @@ import { Webhook, newWebhookSecret, WEBHOOK_EVENTS } from "../models/Webhook.js"
 import { User } from "../models/User.js";
 import { planFor } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
+import { str } from "../middleware/sanitize.js";
+import { assertPublicHttpsUrl } from "../utils/safeUrl.js";
 
-function assertHttps(url) {
-  let u;
-  try {
-    u = new URL(url);
-  } catch {
-    throw ApiError.badRequest("Invalid URL");
-  }
-  if (u.protocol !== "https:" && u.hostname !== "localhost") {
-    throw ApiError.badRequest("Webhook URL must be https");
-  }
-}
+const assertHttps = (url) => assertPublicHttpsUrl(str(url));
 
 export const listWebhooks = asyncHandler(async (req, res) => {
   const webhooks = await Webhook.find({ userId: req.user.id }).sort({

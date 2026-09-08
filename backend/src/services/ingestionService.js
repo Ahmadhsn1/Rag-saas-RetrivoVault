@@ -5,7 +5,8 @@ import { extractText } from "../utils/textExtractor.js";
 import { chunkText } from "./chunkingService.js";
 import { embedDocumentBatch } from "./embeddingService.js";
 import { summarizeDocument } from "./generationService.js";
-import { registerHandler, enqueue } from "./jobQueue.js";
+import { registerHandler, enqueue, queueIsFull } from "./jobQueue.js";
+import { ApiError } from "../utils/ApiError.js";
 import { recordEvent } from "./usage.js";
 import { notify } from "./notifications.js";
 import { dispatchWebhook } from "./webhooks.js";
@@ -130,6 +131,14 @@ registerHandler(INGEST, runIngestion);
 
 /** Enqueue an uploaded file for ingestion. Paid plans get queue priority. */
 export async function queueIngestion({ documentId, userId, collectionId, file }) {
+  if (queueIsFull()) {
+    await Document.findByIdAndUpdate(documentId, {
+      status: "failed",
+      error: "The ingestion queue is full — please retry in a few minutes.",
+    });
+    throw new ApiError(503, "Ingestion is busy right now — please retry shortly.");
+  }
+
   let priority = 0;
   try {
     const user = await User.findById(userId).select("plan trialPlan trialEndsAt");

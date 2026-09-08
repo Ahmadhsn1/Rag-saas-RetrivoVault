@@ -1,5 +1,6 @@
 import { User } from "../models/User.js";
 import { Notification } from "../models/Notification.js";
+import { UsageEvent } from "../models/UsageEvent.js";
 import { getUsageSnapshot } from "./usage.js";
 import { notify } from "./notifications.js";
 import { logger } from "../config/logger.js";
@@ -36,8 +37,17 @@ async function notifyTrialsEnding() {
 }
 
 async function notifyQuotaWarnings() {
-  // Users who have used >= 85% of their monthly query allowance.
-  const users = await User.find({}).select("_id notificationPrefs").limit(5000);
+  // Only look at users who actually ran queries in the last 2 days — the rest
+  // can't be near their monthly limit.
+  const activeIds = await UsageEvent.distinct("userId", {
+    kind: "query",
+    createdAt: { $gt: new Date(Date.now() - 2 * DAY) },
+  });
+  if (activeIds.length === 0) return;
+
+  const users = await User.find({ _id: { $in: activeIds } })
+    .select("_id notificationPrefs")
+    .limit(2000);
   for (const u of users) {
     if (u.notificationPrefs?.quotaWarnings === false) continue;
     const snap = await getUsageSnapshot(u._id).catch(() => null);

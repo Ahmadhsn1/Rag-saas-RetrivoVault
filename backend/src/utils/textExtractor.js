@@ -71,5 +71,11 @@ export async function extractText({ buffer, mimeType, filename }) {
   if (!text) {
     throw ApiError.badRequest(`No extractable text found in "${filename}"`);
   }
+
+  // Cap extracted text (a small file can expand to gigabytes; e.g. a PDF bomb).
+  const MAX_CHARS = Number(process.env.MAX_EXTRACTED_CHARS || 5_000_000);
+  if (text.length > MAX_CHARS) {
+    text = text.slice(0, MAX_CHARS);
+  }
   return text;
 }

@@ -41,6 +41,7 @@ export async function dispatchWebhook(userId, event, data) {
               method: "POST",
               headers,
               body,
+              redirect: "error",
               signal: AbortSignal.timeout(8000),
             });
             if (r.status >= 500) throw new Error(`upstream ${r.status}`);

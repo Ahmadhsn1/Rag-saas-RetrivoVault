@@ -21,6 +21,16 @@ export function setConcurrency(n) {
   pump();
 }
 
+const MAX_PENDING = Number(process.env.MAX_QUEUE_DEPTH || 500);
+
+export function queueIsFull() {
+  return queue.length >= MAX_PENDING;
+}
+
+export function pendingForType(type) {
+  return queue.filter((j) => j.type === type).length;
+}
+
 export function enqueue(type, data, { priority = 0, maxAttempts = 3 } = {}) {
   const job = {
     id: `${type}:${++seq}`,

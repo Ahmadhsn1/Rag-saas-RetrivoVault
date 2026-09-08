@@ -4,6 +4,7 @@ import { Chunk } from "../models/Chunk.js";
 import { Collection } from "../models/Collection.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { queueIngestion } from "../services/ingestionService.js";
+import { queueIsFull } from "../services/jobQueue.js";
 import { str } from "../middleware/sanitize.js";
 
 const asId = (v) => (typeof v === "string" && /^[a-f\d]{24}$/i.test(v) ? v : null);
@@ -33,6 +34,9 @@ function normalizeMime(file) {
 
 export const uploadDocument = asyncHandler(async (req, res) => {
   if (!req.file) throw ApiError.badRequest("No file uploaded (field name: 'file')");
+  if (queueIsFull()) {
+    throw new ApiError(503, "Ingestion is busy right now — please retry shortly.");
+  }
 
   let collectionId = asId(req.body?.collectionId);
   if (collectionId) {
