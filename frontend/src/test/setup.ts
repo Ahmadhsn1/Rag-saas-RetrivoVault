@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, vi, type Mock } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { api, streamChat } from "@/lib/api";
+
+// Lazy route chunks + parallel workers can push a first render past the 1s default.
+configure({ asyncUtilTimeout: 5000 });
 
 vi.mock("@/lib/api", () => ({
   api: {

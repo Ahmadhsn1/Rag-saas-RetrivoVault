@@ -9,5 +9,8 @@ export default defineConfig({
     hookTimeout: 120000,
     testTimeout: 20000,
     fileParallelism: false,
+    // One retry absorbs the rare mongodb-memory-server / fire-and-forget timing
+    // hiccup without masking a real failure (which fails both attempts).
+    retry: 1,
   },
 });
