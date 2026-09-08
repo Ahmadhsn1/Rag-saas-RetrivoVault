@@ -5,6 +5,7 @@ import { Collection } from "../models/Collection.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { queueIngestion } from "../services/ingestionService.js";
 import { queueIsFull } from "../services/jobQueue.js";
+import { fetchUrlForIngest } from "../services/urlFetch.js";
 import { str } from "../middleware/sanitize.js";
 
 const asId = (v) => (typeof v === "string" && /^[a-f\d]{24}$/i.test(v) ? v : null);
@@ -15,6 +16,8 @@ const EXT_MIME = {
   ".md": "text/markdown",
   ".markdown": "text/markdown",
   ".csv": "text/csv",
+  ".html": "text/html",
+  ".htm": "text/html",
   ".docx":
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 };
@@ -25,6 +28,7 @@ function normalizeMime(file) {
     "text/plain",
     "text/markdown",
     "text/csv",
+    "text/html",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
   if (known.includes(file.mimetype)) return file.mimetype;
@@ -63,6 +67,42 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     userId: req.user.id,
     collectionId,
     file: { ...req.file, mimetype: mimeType },
+  });
+
+  res.status(202).json({ document: doc });
+});
+
+// POST /api/documents/url  { url, collectionId? }
+export const ingestUrl = asyncHandler(async (req, res) => {
+  if (queueIsFull()) {
+    throw new ApiError(503, "Ingestion is busy right now — please retry shortly.");
+  }
+  const url = str(req.body?.url).trim();
+  if (!url) throw ApiError.badRequest("url is required");
+
+  let collectionId = asId(req.body?.collectionId);
+  if (collectionId) {
+    const owned = await Collection.exists({ _id: collectionId, userId: req.user.id });
+    if (!owned) throw ApiError.badRequest("Unknown collectionId");
+  }
+
+  const { buffer, mimeType, filename } = await fetchUrlForIngest(url);
+
+  const doc = await Document.create({
+    userId: req.user.id,
+    collectionId,
+    filename,
+    mimeType,
+    sizeBytes: buffer.length,
+    sourceUrl: url,
+    status: "processing",
+  });
+
+  await queueIngestion({
+    documentId: doc._id,
+    userId: req.user.id,
+    collectionId,
+    file: { buffer, mimetype: mimeType, originalname: filename },
   });
 
   res.status(202).json({ document: doc });

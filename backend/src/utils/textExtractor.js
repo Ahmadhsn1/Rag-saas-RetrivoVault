@@ -12,8 +12,28 @@ export const SUPPORTED_MIME = {
   "text/plain": "txt",
   "text/markdown": "md",
   "text/csv": "csv",
+  "text/html": "html",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
 };
+
+/** Very small HTML → readable text: drop script/style, tags, decode common entities. */
+export function htmlToText(html) {
+  return String(html)
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<(br|\/p|\/div|\/h[1-6]|\/li)>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
 
 export const SUPPORTED_EXT = [".pdf", ".txt", ".md", ".markdown", ".csv", ".docx"];
 
@@ -47,6 +67,8 @@ export async function extractText({ buffer, mimeType, filename }) {
     text = value;
   } else if (kind === "csv") {
     text = csvToText(buffer.toString("utf-8"));
+  } else if (kind === "html") {
+    text = htmlToText(buffer.toString("utf-8"));
   } else if (kind === "txt" || kind === "md") {
     text = buffer.toString("utf-8");
     if (kind === "md") {

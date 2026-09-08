@@ -52,6 +52,13 @@ export const openApiSpec = {
         responses: { 202: { description: "Queued for ingestion" } },
       },
     },
+    "/documents/url": {
+      post: {
+        summary: "Ingest a web page by URL",
+        description: "Body `{ url, collectionId? }`. Fetches an HTML / text / PDF page (https, public host, ≤ 8 MB) and runs it through the pipeline.",
+        responses: { 202: { description: "Queued for ingestion" } },
+      },
+    },
     "/documents/{id}": {
       get: { summary: "Get one document", responses: { 200: { description: "Document" } } },
       delete: { summary: "Delete a document", responses: { 204: { description: "Deleted" } } },

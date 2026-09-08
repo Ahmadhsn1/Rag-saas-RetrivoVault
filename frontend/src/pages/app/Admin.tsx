@@ -75,7 +75,7 @@ export default function Admin() {
 
   useEffect(() => {
     // ensure the role flag is fresh (self-heals server-side on first admin call)
-    if (!forbidden) void refreshUser();
+    if (!forbidden) void refreshUser().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forbidden]);
 

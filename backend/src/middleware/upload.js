@@ -10,7 +10,7 @@ export const uploadSingle = multer({
   fileFilter: (_req, file, cb) => {
     // Some browsers send octet-stream for .md / .csv — fall back to extension.
     const okMime = Boolean(SUPPORTED_MIME[file.mimetype]);
-    const okExt = /\.(pdf|txt|md|markdown|csv|docx)$/i.test(file.originalname);
+    const okExt = /\.(pdf|txt|md|markdown|csv|docx|html?)$/i.test(file.originalname);
     if (!okMime && !okExt) {
       return cb(ApiError.badRequest(`Unsupported file type: ${file.mimetype}`));
     }

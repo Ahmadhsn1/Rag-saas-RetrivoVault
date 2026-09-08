@@ -5,6 +5,7 @@ import { uploadSingle } from "../middleware/upload.js";
 import { enforceDocumentQuota } from "../middleware/quota.js";
 import {
   uploadDocument,
+  ingestUrl,
   listDocuments,
   getDocument,
   deleteDocument,
@@ -14,13 +15,8 @@ const router = Router();
 
 router.use(authenticateFlexible);
 
-router.post(
-  "/",
-  uploadLimiter,
-  uploadSingle,
-  enforceDocumentQuota,
-  uploadDocument
-);
+router.post("/", uploadLimiter, uploadSingle, enforceDocumentQuota, uploadDocument);
+router.post("/url", uploadLimiter, enforceDocumentQuota, ingestUrl);
 router.get("/", listDocuments);
 router.get("/:id", getDocument);
 router.delete("/:id", deleteDocument);
