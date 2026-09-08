@@ -51,13 +51,3 @@ export function signAccessToken(userId) {
     expiresIn: env.jwt.accessTtl,
   });
 }
-
-export function signRefreshToken(userId) {
-  return jwt.sign({ sub: String(userId) }, env.jwt.refreshSecret, {
-    expiresIn: env.jwt.refreshTtl,
-  });
-}
-
-export function verifyRefreshToken(token) {
-  return jwt.verify(token, env.jwt.refreshSecret);
-}

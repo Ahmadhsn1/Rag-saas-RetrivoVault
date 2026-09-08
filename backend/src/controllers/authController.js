@@ -8,14 +8,18 @@ import { ChatSession } from "../models/ChatSession.js";
 import { ApiKey } from "../models/ApiKey.js";
 import { Token } from "../models/Token.js";
 import { UsageEvent } from "../models/UsageEvent.js";
+import { RefreshToken } from "../models/RefreshToken.js";
 import { env, isProd, isTestEnv } from "../config/env.js";
+import ms from "../utils/ms.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
-import {
-  signAccessToken,
-  signRefreshToken,
-  verifyRefreshToken,
-} from "../middleware/auth.js";
+import { signAccessToken } from "../middleware/auth.js";
 import { issueToken, consumeToken } from "../services/authTokens.js";
+import {
+  startSession,
+  rotate,
+  revokeByToken,
+  revokeAllForUser,
+} from "../services/refreshTokens.js";
 import {
   sendMail,
   verifyEmailTemplate,
@@ -31,8 +35,12 @@ function setRefreshCookie(res, token) {
     secure: isProd,
     sameSite: isProd ? "none" : "lax",
     path: "/api/auth",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: ms(env.jwt.refreshTtl),
   });
+}
+
+function clearRefreshCookie(res) {
+  res.clearCookie(REFRESH_COOKIE, { path: "/api/auth" });
 }
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -71,7 +79,8 @@ export const signup = asyncHandler(async (req, res) => {
   }
 
   const accessToken = signAccessToken(user._id);
-  setRefreshCookie(res, signRefreshToken(user._id));
+  const { raw } = await startSession(user._id, req);
+  setRefreshCookie(res, raw);
 
   res.status(201).json({ user: user.toJSON(), accessToken });
 });
@@ -85,33 +94,45 @@ export const login = asyncHandler(async (req, res) => {
   if (!ok) throw ApiError.unauthorized("Invalid credentials");
 
   const accessToken = signAccessToken(user._id);
-  setRefreshCookie(res, signRefreshToken(user._id));
+  const { raw } = await startSession(user._id, req);
+  setRefreshCookie(res, raw);
 
   res.json({ user: user.toJSON(), accessToken });
 });
 
 export const refresh = asyncHandler(async (req, res) => {
   const token = req.cookies?.[REFRESH_COOKIE];
-  if (!token) throw ApiError.unauthorized("Missing refresh token");
 
-  let payload;
+  let rotated;
   try {
-    payload = verifyRefreshToken(token);
-  } catch {
-    throw ApiError.unauthorized("Invalid refresh token");
+    rotated = await rotate(token, req);
+  } catch (err) {
+    clearRefreshCookie(res);
+    if (err.code === "reuse") {
+      throw ApiError.unauthorized("Session invalidated — please sign in again");
+    }
+    throw ApiError.unauthorized("Session expired");
   }
 
-  const user = await User.findById(payload.sub);
-  if (!user) throw ApiError.unauthorized("User no longer exists");
+  const user = await User.findById(rotated.userId);
+  if (!user) {
+    clearRefreshCookie(res);
+    throw ApiError.unauthorized("User no longer exists");
+  }
 
-  const accessToken = signAccessToken(user._id);
-  setRefreshCookie(res, signRefreshToken(user._id));
-
-  res.json({ user: user.toJSON(), accessToken });
+  setRefreshCookie(res, rotated.raw);
+  res.json({ user: user.toJSON(), accessToken: signAccessToken(user._id) });
 });
 
-export const logout = asyncHandler(async (_req, res) => {
-  res.clearCookie(REFRESH_COOKIE, { path: "/api/auth" });
+export const logout = asyncHandler(async (req, res) => {
+  await revokeByToken(req.cookies?.[REFRESH_COOKIE]).catch(() => {});
+  clearRefreshCookie(res);
+  res.status(204).end();
+});
+
+export const logoutAll = asyncHandler(async (req, res) => {
+  await revokeAllForUser(req.user.id);
+  clearRefreshCookie(res);
   res.status(204).end();
 });
 
@@ -170,6 +191,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 12);
   await User.findByIdAndUpdate(userId, { passwordHash });
+  // A password reset invalidates every existing session.
+  await revokeAllForUser(userId);
   res.json({ ok: true });
 });
 
@@ -196,9 +219,10 @@ export const deleteAccount = asyncHandler(async (req, res) => {
     ApiKey.deleteMany({ userId: uid }),
     Token.deleteMany({ userId: uid }),
     UsageEvent.deleteMany({ userId: uid }),
+    RefreshToken.deleteMany({ userId: uid }),
   ]);
   await User.deleteOne({ _id: uid });
 
-  res.clearCookie(REFRESH_COOKIE, { path: "/api/auth" });
+  clearRefreshCookie(res);
   res.status(204).end();
 });

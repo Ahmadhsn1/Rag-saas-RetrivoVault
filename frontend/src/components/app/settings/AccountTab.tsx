@@ -80,22 +80,42 @@ export function AccountTab() {
         <CardHeader>
           <CardTitle>Sessions</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            Sign out and clear the refresh session on this device.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={signingOut}
-            onClick={async () => {
-              setSigningOut(true);
-              await logout();
-              navigate("/login", { replace: true });
-            }}
-          >
-            Sign out
-          </Button>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              Sign out on this device.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={signingOut}
+              onClick={async () => {
+                setSigningOut(true);
+                await logout();
+                navigate("/login", { replace: true });
+              }}
+            >
+              Sign out
+            </Button>
+          </div>
+          <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
+            <p className="text-sm text-muted-foreground">
+              Sign out everywhere — revokes every active session (use if a device
+              was lost).
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={signingOut}
+              onClick={async () => {
+                setSigningOut(true);
+                await logout(true);
+                navigate("/login", { replace: true });
+              }}
+            >
+              Sign out all
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

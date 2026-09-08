@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -12,6 +13,7 @@ import {
   registerAuthLostHandler,
   setAccessToken,
 } from "@/lib/api";
+import type { AxiosResponse } from "axios";
 import type { AuthResponse, User } from "@/types/api";
 
 interface AuthContextValue {
@@ -19,7 +21,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (everywhere?: boolean) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -28,15 +30,17 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // Single-flights the initial restore across a StrictMode double-mount.
+  const initialRefresh = useRef<Promise<AxiosResponse<AuthResponse>> | null>(null);
 
   const applySession = useCallback((data: AuthResponse) => {
     setAccessToken(data.accessToken);
     setUser(data.user);
   }, []);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (everywhere = false) => {
     try {
-      await api.post("/auth/logout");
+      await api.post(everywhere ? "/auth/logout-all" : "/auth/logout");
     } catch {
       /* ignore */
     }
@@ -52,16 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await api.post<AuthResponse>("/auth/refresh");
-        applySession(data);
-      } catch {
+    initialRefresh.current ??= api.post<AuthResponse>("/auth/refresh");
+    initialRefresh.current
+      .then(({ data }) => applySession(data))
+      .catch(() => {
         /* not signed in */
-      } finally {
-        setLoading(false);
-      }
-    })();
+      })
+      .finally(() => setLoading(false));
   }, [applySession]);
 
   const login = useCallback(

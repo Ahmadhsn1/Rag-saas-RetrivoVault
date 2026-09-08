@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { authLimiter } from "../middleware/rateLimiter.js";
+import { authLimiter, refreshLimiter } from "../middleware/rateLimiter.js";
 import {
   signup,
   login,
   refresh,
   logout,
+  logoutAll,
   me,
   verifyEmail,
   resendVerification,
@@ -18,8 +19,9 @@ const router = Router();
 
 router.post("/signup", authLimiter, signup);
 router.post("/login", authLimiter, login);
-router.post("/refresh", refresh);
+router.post("/refresh", refreshLimiter, refresh);
 router.post("/logout", logout);
+router.post("/logout-all", requireAuth, logoutAll);
 router.get("/me", requireAuth, me);
 
 router.post("/verify-email", verifyEmail);
