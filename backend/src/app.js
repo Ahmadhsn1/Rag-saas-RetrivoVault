@@ -3,8 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import pinoHttp from "pino-http";
 
-import { env, billingEnabled, mailEnabled } from "./config/env.js";
+import { env, billingEnabled, mailEnabled, isTestEnv } from "./config/env.js";
+import { logger } from "./config/logger.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import { handleWebhook } from "./controllers/billingController.js";
 import { queueStats } from "./services/jobQueue.js";
@@ -22,6 +24,14 @@ export function createApp() {
   const app = express();
 
   app.set("trust proxy", 1);
+  if (!isTestEnv) {
+    app.use(
+      pinoHttp({
+        logger,
+        autoLogging: { ignore: (req) => req.url === "/api/health" },
+      })
+    );
+  }
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(
     cors({

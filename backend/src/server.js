@@ -1,6 +1,7 @@
 import { createApp } from "./app.js";
 import { connectDB, disconnectDB } from "./config/db.js";
 import { env, billingEnabled, mailEnabled } from "./config/env.js";
+import { logger } from "./config/logger.js";
 import { Document } from "./models/Document.js";
 import "./services/ingestionService.js"; // registers the ingest job handler
 
@@ -12,25 +13,26 @@ async function requeueStuckDocuments() {
     { status: "failed", error: "Ingestion interrupted by a restart — re-upload to retry." }
   );
   if (stuck.modifiedCount) {
-    console.warn(`[server] marked ${stuck.modifiedCount} stuck document(s) as failed`);
+    logger.warn(`marked ${stuck.modifiedCount} stuck document(s) as failed`);
   }
 }
 
 async function main() {
   await connectDB();
   await requeueStuckDocuments().catch((e) =>
-    console.error("[server] stuck-doc sweep failed:", e.message)
+    logger.error({ err: e }, "stuck-doc sweep failed")
   );
 
   const app = createApp();
   const server = app.listen(env.port, () => {
-    console.log(
-      `[server] Retrivo Vault API on :${env.port} (${env.nodeEnv}) · billing=${billingEnabled} mail=${mailEnabled}`
+    logger.info(
+      { port: env.port, env: env.nodeEnv, billing: billingEnabled, mail: mailEnabled },
+      "Retrivo Vault API listening"
     );
   });
 
   const shutdown = async (signal) => {
-    console.log(`\n[server] ${signal} received, shutting down`);
+    logger.info({ signal }, "shutting down");
     server.close(async () => {
       await disconnectDB();
       process.exit(0);
@@ -43,6 +45,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("[server] fatal startup error:", err);
+  logger.fatal({ err }, "fatal startup error");
   process.exit(1);
 });

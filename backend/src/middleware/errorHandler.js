@@ -1,4 +1,5 @@
 import { isProd } from "../config/env.js";
+import { logger } from "../config/logger.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export function notFoundHandler(req, _res, next) {
@@ -7,7 +8,7 @@ export function notFoundHandler(req, _res, next) {
 
 // Centralized error handler — never leaks stack traces to the client.
 // eslint-disable-next-line no-unused-vars
-export function errorHandler(err, _req, res, _next) {
+export function errorHandler(err, req, res, _next) {
   let statusCode = err.statusCode || 500;
   let message = err.message || "Internal server error";
   let details = err.details;
@@ -28,7 +29,7 @@ export function errorHandler(err, _req, res, _next) {
   }
 
   if (statusCode >= 500) {
-    console.error("[error]", err);
+    (req?.log || logger).error({ err, path: req?.originalUrl }, "request failed");
     if (isProd) message = "Internal server error";
   }
 
