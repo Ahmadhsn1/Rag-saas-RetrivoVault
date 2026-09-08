@@ -34,6 +34,12 @@ export function createApp() {
       pinoHttp({
         logger,
         autoLogging: { ignore: (req) => req.url === "/api/health" },
+        customLogLevel: (_req, res, err) => {
+          if (res.statusCode >= 500 && res.statusCode < 502) return "error";
+          if (res.statusCode >= 500 || err) return "warn";
+          if (res.statusCode >= 400) return "info";
+          return "info";
+        },
       })
     );
   }

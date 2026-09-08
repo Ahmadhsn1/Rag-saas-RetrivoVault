@@ -67,9 +67,15 @@ export function errorHandler(err, req, res, _next) {
   }
 
   if (statusCode >= 500) {
-    (req?.log || logger).error({ err, path: req?.originalUrl }, "request failed");
+    const log = req?.log || logger;
+    // Operational upstream failures (502/503) are expected noise, not bugs.
+    if (err.isOperational && statusCode < 504) {
+      log.warn({ path: req?.originalUrl, cause: err.details?.cause }, message);
+    } else {
+      log.error({ err, path: req?.originalUrl }, "unhandled error");
+    }
     if (isProd) {
-      message = "Internal server error";
+      message = statusCode >= 500 && !err.isOperational ? "Internal server error" : message;
       details = undefined;
     }
   }

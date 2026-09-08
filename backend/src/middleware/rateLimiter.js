@@ -28,10 +28,11 @@ export const uploadLimiter = make({
   message: { error: "Too many uploads, slow down." },
 });
 
-// Login / signup / reset — protects against credential stuffing.
+// Login / signup / reset — a backstop against credential stuffing from one IP.
+// (Per-account lockout after 8 failures is the primary brute-force defense.)
 export const authLimiter = make({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: 40,
   message: { error: "Too many attempts, try again later." },
 });
 
