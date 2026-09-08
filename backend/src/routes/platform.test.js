@@ -159,6 +159,9 @@ describe("account: activity + export", () => {
       .set(auth(ctx.token))
       .send({ name: "Renamed" });
 
+    // logActivity() is fire-and-forget
+    await new Promise((r) => setTimeout(r, 80));
+
     const activity = await request(app)
       .get("/api/account/activity")
       .set(auth(ctx.token));
