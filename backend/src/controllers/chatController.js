@@ -61,12 +61,23 @@ export const sendMessage = asyncHandler(async (req, res) => {
     .lean();
   const { embeddingModel, llmModel } = modelsFor(keyed?.geminiApiKey);
 
-  const retrieved = await retrieveChunks({
-    userId: req.user.id,
-    question,
-    collectionId,
-    embeddingModel,
-  });
+  let retrieved;
+  try {
+    retrieved = await retrieveChunks({
+      userId: req.user.id,
+      question,
+      collectionId,
+      embeddingModel,
+    });
+  } catch (err) {
+    // Upstream (embedding provider / vector index) failure — don't 500 with a
+    // raw provider error; the SSE hasn't started yet so a JSON body is fine.
+    throw new ApiError(
+      502,
+      "Retrieval is temporarily unavailable. Check your Gemini API key and Atlas Vector Search index.",
+      { cause: err.message }
+    );
+  }
 
   const sources = retrieved.map((c, i) => ({
     index: i + 1,
