@@ -81,7 +81,7 @@ retrivo-vault/
 │   ├── pages/           marketing/{Landing,PricingPage,MarketingLayout}
 │   │                  auth/{Login,Signup,ForgotPassword,ResetPassword,VerifyEmail}
 │   │                  app/{Chat,Documents,Collections,Settings}
-│   └── design-system/retrivo-vault/   MASTER.md + pages/*  (internal design spec output)
+│   └── design-system/retrivo-vault/   MASTER.md + pages/*  (design spec)
 ├── docker-compose.yml
 └── .github/workflows/ci.yml
 ```

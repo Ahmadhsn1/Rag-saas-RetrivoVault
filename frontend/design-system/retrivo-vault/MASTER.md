@@ -5,10 +5,10 @@
 
 **Project:** Retrivo Vault
 **Category:** Developer Tool / RAG platform
-**Source:** internal design spec `--design-system` (Dark Mode OLED / Minimalism, Developer Mono
-typography, Standard motion) refined against the covis.ai reference (near-black canvas,
-warm bone accent used sparingly, monospace status chips, generous section rhythm,
-pipeline/flow visualizations, live pulse indicators).
+**Direction:** Dark Mode OLED / Minimalism, developer-mono typography, standard motion —
+refined against the covis.ai reference (near-black canvas, warm bone accent used sparingly,
+monospace status chips, generous section rhythm, pipeline/flow visualizations, live pulse
+indicators).
 **Dials:** Variance 6 · Motion 6 · Density 7
 
 ---

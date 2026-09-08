@@ -2,7 +2,7 @@
 
 Inherits MASTER.md. Overrides/specifics below.
 
-**Pattern:** Feature-Rich Showcase (internal design spec `--domain landing`)
+**Pattern:** Feature-Rich Showcase
 Section order: Hero (value prop) → trust strip → Feature grid (6) → How it works (3 steps)
 → Security/terminal panel → CTA → Footer.
 CTA placement: hero (primary + secondary), after features, bottom band. Primary CTA text

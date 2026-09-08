@@ -19,9 +19,10 @@ Dark-locked SaaS UI: a marketing landing page and the authenticated application.
 ## Design system
 
 `design-system/retrivo-vault/MASTER.md` is the source of truth (tokens, motion, component
-specs, anti-patterns, checklist). Per-page overrides live in `pages/`. It was generated with
-the `internal design spec` skill and refined against the covis.ai reference. Token values are
-mirrored into `tailwind.config.ts` and `src/index.css` (CSS custom properties, HSL triplets).
+specs, anti-patterns, checklist). Per-page overrides live in `pages/`. It captures a dark
+developer-tool aesthetic (OLED canvas, warm bone accent, monospace status chips), refined
+against the covis.ai reference. Token values are mirrored into `tailwind.config.ts` and
+`src/index.css` (CSS custom properties, HSL triplets).
 
 ## Layout
 

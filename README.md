@@ -22,7 +22,7 @@ and [`features.md`](./features.md) for the feature list.
 | Layer | Tech |
 |---|---|
 | Frontend | React + Vite + **TypeScript**, Tailwind, shadcn/ui (Radix), React Router, GSAP, Recharts |
-| Design system | `frontend/design-system/retrivo-vault/` — `internal design spec` skill output, refined against the covis.ai reference. Dark, JetBrains Mono + IBM Plex Sans. |
+| Design system | `frontend/design-system/retrivo-vault/` — dark developer-tool aesthetic (OLED canvas, warm bone accent, monospace status chips). Dark, JetBrains Mono + IBM Plex Sans. |
 | Backend | Node.js + Express (ESM), SSE streaming, pino logging |
 | Database | MongoDB Atlas + Atlas Vector Search (`$vectorSearch`, 768-dim cosine) |
 | AI | Google Gemini `text-embedding-004` + `gemini-2.5-flash` |
