@@ -1,10 +1,12 @@
 # Retrivo Vault
 
 A production-grade, **individual-focused** Retrieval-Augmented Generation (RAG) SaaS.
-Sign up, verify your email, upload documents (PDF · TXT · Markdown · DOCX · CSV) into a
-private knowledge base, and query it through a streaming, citation-backed chat.
-Free / Pro / Max plans with usage quotas, Stripe billing, personal API keys, and
-bring-your-own Gemini key.
+Sign up (14-day Pro trial, no card), verify your email, add documents (PDF · TXT ·
+Markdown · DOCX · CSV · **web pages by URL**) into a private knowledge base, and query
+it through a streaming, citation-backed chat with feedback, sharing and a ⌘K palette.
+Free / Pro / Max plans with trial-aware quotas, Stripe billing, in-app + email
+notifications, an activity log + data export, personal API keys, HMAC-signed webhooks,
+an OpenAPI spec, and a lightweight admin console.
 
 > Individuals only — no teams, workspaces, or org roles, by design.
 
@@ -19,60 +21,42 @@ and [`features.md`](./features.md) for the feature list.
 |---|---|
 | Frontend | React + Vite + **TypeScript**, Tailwind, shadcn/ui (Radix), React Router, GSAP, Recharts |
 | Design system | `frontend/design-system/retrivo-vault/` — `internal design spec` skill output, refined against the covis.ai reference. Dark, JetBrains Mono + IBM Plex Sans. |
-| Backend | Node.js + Express (ESM), SSE streaming |
+| Backend | Node.js + Express (ESM), SSE streaming, pino logging |
 | Database | MongoDB Atlas + Atlas Vector Search (`$vectorSearch`, 768-dim cosine) |
 | AI | Google Gemini `text-embedding-004` + `gemini-2.5-flash` |
-| Auth | JWT access + httpOnly refresh cookie · bcrypt · personal API keys (`x-api-key`) |
+| Auth | JWT access + **rotating** httpOnly refresh cookie · bcrypt · login lockout · `x-api-key` |
 | Email | Nodemailer (SMTP; console fallback in dev) |
 | Billing | Stripe Checkout + Customer Portal + webhooks (degrades gracefully when unset) |
-| Ingestion | In-process job queue (concurrency, priority, retry) |
-| Tests / CI | Vitest (60 tests) · GitHub Actions |
+| Ingestion | In-process job queue (concurrency, priority, retry, backpressure) |
+| Tests / CI | Vitest (~115 tests, incl. adversarial hardening suites) · GitHub Actions |
 | Deploy | Docker + Docker Compose |
-
----
-
-## Prerequisites
-
-1. **MongoDB Atlas cluster** (M0 free tier works) — Vector Search is Atlas-only.
-2. **Google Gemini API key** — https://aistudio.google.com/apikey
-3. Node.js 20+ (local dev) or Docker.
-4. *(optional)* Stripe test keys for billing; an SMTP URL for real email.
 
 ---
 
 ## Quick start
 
 ```bash
-# backend
-cd backend
-npm install
-npm run dev                 # http://localhost:5000  — works with ZERO config
-
-# frontend (new terminal)
-cd frontend
-npm install
-npm run dev                 # http://localhost:5173  (proxies /api -> :5000)
+cd backend  && npm install && npm run dev     # :5000 — works with ZERO config
+cd frontend && npm install && npm run dev     # :5173 — proxies /api -> :5000
 ```
 
 **Zero-config dev:** with no `backend/.env`, `npm run dev` starts an **ephemeral
 in-memory MongoDB** and runs in demo mode (emails auto-verified, billing stubbed).
 Every endpoint works except **vector retrieval** (needs Atlas) and **AI calls**
-(need a Gemini key) — you'll get a clear `502` there until you configure them.
+(need a Gemini key) — you get a clear `502` there until you configure them.
 
-**Real setup:** `cp .env.example .env`, fill in `MONGO_URI` (a MongoDB **Atlas**
-cluster — Vector Search is Atlas-only), `GEMINI_API_KEY`, and JWT secrets, then:
+**Real setup:** `cp backend/.env.example backend/.env`, fill in `MONGO_URI` (a MongoDB
+**Atlas** cluster — Vector Search is Atlas-only), `GEMINI_API_KEY`, and JWT secrets, then
+`cd backend && npm run create-index`. Set `ADMIN_EMAILS=you@example.com` to unlock `/app/admin`.
 
-```bash
-cd backend && npm run create-index   # one-time: Atlas Vector Search index
-```
-
-**Checks:** `npm test` (backend, 33) · `npm test && npm run typecheck && npm run lint && npm run build` (frontend, 27).
+**Checks:** `cd backend && npm test` · `cd frontend && npm run typecheck && npm run lint && npm test && npm run build`
 
 ### Routes
 
-`/` landing · `/pricing` · `/login` · `/signup` · `/forgot-password` ·
-`/reset-password` · `/verify-email` · `/app` (Chat) · `/app/documents` ·
-`/app/collections` · `/app/settings` (`?tab=profile|billing|keys|account`).
+Marketing: `/` · `/pricing` · `/docs` · `/terms` · `/privacy` · `/s/:shareId` (public shared chat)
+Auth: `/login` · `/signup` · `/forgot-password` · `/reset-password` · `/verify-email`
+App: `/app` (Chat) · `/app/documents` · `/app/collections` · `/app/admin` ·
+`/app/settings` (`?tab=profile|billing|notifications|keys|webhooks|activity|account`)
 
 ---
 
@@ -84,8 +68,8 @@ docker compose up --build
 docker compose run --rm backend npm run create-index   # once
 ```
 
-- App: http://localhost:8080  ·  API: http://localhost:5000/api
-- nginx serves the static bundle and proxies `/api` (SSE-friendly).
+App: http://localhost:8080 · API: http://localhost:5000/api. nginx serves the static
+bundle and proxies `/api` (SSE-friendly). Containers run non-root with healthchecks.
 
 ---
 
@@ -97,49 +81,42 @@ docker compose run --rm backend npm run create-index   # once
 | Questions / month | 100 | 3,000 | 20,000 |
 | Collections | 3 | 50 | 500 |
 | BYO Gemini key · priority queue | — | ✓ | ✓ |
-| Personal API keys | — | — | up to 10 |
+| API keys · webhooks · API access | — | — | ✓ |
 
-Over-limit requests return `402`/`403` with `details.code` (`quota_exceeded` /
-`feature_locked`); the UI turns these into an "Upgrade" prompt.
+Every signup gets a **14-day Pro trial** (`user.effectivePlan()`). Over-limit requests
+return `402`/`403` with `details.code` (`quota_exceeded` / `feature_locked`); the UI
+turns these into an "Upgrade" prompt.
 
 ---
 
-## Stripe (optional)
+## Optional integrations
 
-Set in `backend/.env`: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and the four
-price IDs (`STRIPE_PRICE_{PRO,MAX}_{MONTHLY,ANNUAL}`). Locally:
-
-```bash
-stripe listen --forward-to localhost:8080/api/billing/webhook
-```
-
-Without a secret key, billing endpoints report `billingEnabled:false` and everyone
-stays on Free.
+- **Stripe** — `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, four price IDs
+  (`STRIPE_PRICE_{PRO,MAX}_{MONTHLY,ANNUAL}`). Local: `stripe listen --forward-to
+  localhost:8080/api/billing/webhook`. Without a key, billing is disabled and everyone
+  stays on Free.
+- **Email** — `SMTP_URL`. Without it, emails print to the console.
+- **`DEMO_MODE=true`** — auto-verify emails, stub billing (portfolio demos).
+- **`ADMIN_EMAILS`** — comma-separated list granted `/api/admin/*`.
 
 ---
 
 ## API
 
-Auth: `POST /api/auth/{signup,login,refresh,logout,verify-email,resend-verification,
-forgot-password,reset-password}` · `GET /api/auth/me` · `DELETE /api/auth/account`
-Account: `PATCH /api/account/profile` · `PUT|DELETE /api/account/gemini-key`
-Documents: `POST|GET /api/documents` · `GET|DELETE /api/documents/:id`  *(upload is quota-checked, returns `202`)*
-Collections: `POST|GET /api/collections` · `PATCH|DELETE /api/collections/:id`
-Chat: `POST|GET /api/chat` · `GET|DELETE /api/chat/:id` · `POST /api/chat/:id/message` *(SSE: `sources`, `token`, `done`, `error`)*
-Usage: `GET /api/usage` · `GET /api/usage/chart`
-Billing: `GET /api/billing` · `POST /api/billing/{checkout,portal}` · `POST /api/billing/webhook`
-Keys: `GET|POST /api/keys` · `DELETE /api/keys/:id`
-Health: `GET /api/health` · `GET /api/health/deep`
-
-`/api/documents` and `/api/chat` also accept an `x-api-key` header (Max plan keys).
+Full surface in `retrivo-vault-architecture.md` §7, or the live spec at
+`GET /api/public/openapi.json` (rendered at `/docs`). `/api/documents` and `/api/chat`
+also accept an `x-api-key` header (Max plan keys).
 
 ---
 
 ## Security
 
-bcrypt (cost 12) · JWT access 15m + httpOnly refresh cookie · `helmet` · credentialed
-CORS · rate limiting (auth/upload/chat) · MIME + size checks before parsing, in-memory
-only · every query scoped by `userId` (vector index included) · one-time tokens & API
-keys stored as SHA-256 hashes, TTL-indexed · Stripe webhook signature verified against
-the raw body · no user enumeration on password reset · no stack traces to clients in
-production · secrets via env, optional integrations degrade gracefully.
+Rotating refresh tokens with reuse detection · per-account login lockout · `helmet` ·
+credentialed CORS · rate limiting (auth/refresh/upload/chat) · **NoSQL-injection
+sanitizer** + string/id coercion · every framework error mapped to a 4xx (no 500 on
+bad input) · webhook SSRF protection (private/metadata hosts blocked) · ingestion
+input caps (text length, chunk count, queue depth) · MIME + size checks before parsing,
+in-memory only · every query scoped by `userId` (vector index included) · one-time
+tokens & keys stored as SHA-256 hashes, TTL-indexed · Stripe webhook signature verified
+against the raw body · no user enumeration on password reset · pino logging with secret
+redaction · secrets via env. See `SECURITY.md`.
