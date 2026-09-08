@@ -9,15 +9,26 @@ export type SubscriptionStatus =
   | "incomplete"
   | "unpaid";
 
+export interface NotificationPrefs {
+  ingestComplete: boolean;
+  quotaWarnings: boolean;
+  weeklyDigest: boolean;
+  productUpdates: boolean;
+}
+
 export interface User {
   _id: string;
   name: string;
   email: string;
   emailVerified: boolean;
+  role: "user" | "admin";
   plan: PlanId;
+  trialPlan: PlanId | null;
+  trialEndsAt: string | null;
   subscriptionStatus: SubscriptionStatus;
   planRenewsAt: string | null;
   hasGeminiKey: boolean;
+  notificationPrefs: NotificationPrefs;
   createdAt: string;
 }
 
@@ -61,6 +72,7 @@ export interface BillingInfo {
     limits: PlanLimits;
     features: { byoKey: boolean; apiAccess: boolean; priorityQueue: boolean };
   };
+  trial: { plan: PlanId; endsAt: string } | null;
   subscriptionStatus: SubscriptionStatus;
   planRenewsAt: string | null;
   hasBillingAccount: boolean;
@@ -92,6 +104,9 @@ export interface VaultDocument {
   status: DocumentStatus;
   chunkCount: number;
   error: string | null;
+  summary: string | null;
+  suggestedQuestions: string[];
+  sourceUrl: string | null;
   uploadedAt: string;
   updatedAt: string;
 }
@@ -100,6 +115,7 @@ export interface Collection {
   _id: string;
   userId: string;
   name: string;
+  instructions?: string;
   createdAt: string;
   documentCount?: number;
 }
@@ -113,16 +129,22 @@ export interface RetrievedSource {
 }
 
 export interface ChatMessage {
+  _id?: string;
   role: "user" | "assistant";
   content: string;
   citedChunkIds?: string[];
   sources?: RetrievedSource[];
+  feedback?: "up" | "down" | null;
   createdAt?: string;
 }
 
 export interface ChatSessionSummary {
   _id: string;
   title: string;
+  pinned?: boolean;
+  archived?: boolean;
+  collectionId?: string | null;
+  shareId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -140,4 +162,66 @@ export interface AuthResponse {
 export interface ApiErrorBody {
   error: string;
   details?: unknown;
+}
+
+export type NotificationType =
+  | "ingest_complete"
+  | "ingest_failed"
+  | "quota_warning"
+  | "trial_ending"
+  | "plan_changed"
+  | "welcome"
+  | "system";
+
+export interface AppNotification {
+  _id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  link: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface Webhook {
+  _id: string;
+  url: string;
+  events: string[];
+  active: boolean;
+  lastStatus: number | null;
+  lastDeliveryAt: string | null;
+  failureCount: number;
+  createdAt: string;
+}
+
+export interface ActivityEntry {
+  _id: string;
+  action: string;
+  detail: string;
+  ip: string | null;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  users: number;
+  documents: number;
+  chats: number;
+  queriesLast30d: number;
+  newUsersLast30d: number;
+  planCounts: Record<string, number>;
+  estimatedMrr: number;
+  plans: string[];
+}
+
+export interface AdminUser {
+  _id: string;
+  name: string;
+  email: string;
+  plan: PlanId;
+  role: "user" | "admin";
+  subscriptionStatus: SubscriptionStatus;
+  emailVerified: boolean;
+  lockedUntil: string | null;
+  trialEndsAt: string | null;
+  createdAt: string;
 }

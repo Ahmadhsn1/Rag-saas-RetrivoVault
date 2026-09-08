@@ -93,7 +93,7 @@ export interface StreamChatArgs {
   collectionId?: string | null;
   onSources?: (sources: RetrievedSource[]) => void;
   onToken?: (delta: string) => void;
-  onDone?: (data: { title: string }) => void;
+  onDone?: (data: { title: string; messageId?: string }) => void;
   onError?: (err: Error) => void;
   signal?: AbortSignal;
 }

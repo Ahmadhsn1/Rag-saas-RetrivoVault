@@ -1,27 +1,55 @@
 import { useState } from "react";
-import { Plus, MessageSquare, Trash2, Pencil, Check, X } from "lucide-react";
+import {
+  Plus,
+  MessageSquare,
+  Trash2,
+  Pencil,
+  Check,
+  X,
+  MoreHorizontal,
+  Pin,
+  PinOff,
+  Archive,
+  ArchiveRestore,
+  Share2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { ChatSessionSummary } from "@/types/api";
 
 interface SessionRailProps {
   sessions: ChatSessionSummary[];
   activeId: string | null;
+  archivedView: boolean;
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
+  onPatch: (id: string, patch: { pinned?: boolean; archived?: boolean }) => void;
+  onShare: (session: ChatSessionSummary) => void;
+  onToggleArchivedView: () => void;
 }
 
 export function SessionRail({
   sessions,
   activeId,
+  archivedView,
   onSelect,
   onNew,
   onDelete,
   onRename,
+  onPatch,
+  onShare,
+  onToggleArchivedView,
 }: SessionRailProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -44,12 +72,12 @@ export function SessionRail({
           New chat
         </Button>
       </div>
-      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-3">
+      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
         {sessions.map((s) => (
           <div
             key={s._id}
             className={cn(
-              "group flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors",
+              "group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors",
               activeId === s._id
                 ? "bg-secondary text-foreground"
                 : "text-muted-foreground hover:bg-secondary/60",
@@ -88,45 +116,95 @@ export function SessionRail({
                 <button
                   onClick={() => onSelect(s._id)}
                   onDoubleClick={() => startEdit(s)}
-                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                  className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
                 >
-                  <MessageSquare
-                    className="h-3.5 w-3.5 shrink-0"
-                    aria-hidden="true"
-                  />
+                  {s.pinned ? (
+                    <Pin className="h-3 w-3 shrink-0 text-brand" aria-hidden="true" />
+                  ) : (
+                    <MessageSquare
+                      className="h-3.5 w-3.5 shrink-0"
+                      aria-hidden="true"
+                    />
+                  )}
                   <span className="truncate">{s.title}</span>
+                  {s.shareId && (
+                    <Share2 className="h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
+                  )}
                 </button>
-                <button
-                  onClick={() => startEdit(s)}
-                  className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 hover:text-foreground group-hover:opacity-100"
-                  aria-label={`Rename ${s.title}`}
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-                <ConfirmDialog
-                  title="Delete chat?"
-                  description={`"${s.title}" and its history will be permanently removed.`}
-                  confirmLabel="Delete"
-                  onConfirm={() => onDelete(s._id)}
-                  trigger={
-                    <button
-                      className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"
-                      aria-label={`Delete ${s.title}`}
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
+                    aria-label={`Actions for ${s.title}`}
+                  >
+                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => startEdit(s)}>
+                      <Pencil className="h-4 w-4" /> Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => onPatch(s._id, { pinned: !s.pinned })}
                     >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  }
-                />
+                      {s.pinned ? (
+                        <>
+                          <PinOff className="h-4 w-4" /> Unpin
+                        </>
+                      ) : (
+                        <>
+                          <Pin className="h-4 w-4" /> Pin
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onShare(s)}>
+                      <Share2 className="h-4 w-4" /> Share
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => onPatch(s._id, { archived: !s.archived })}
+                    >
+                      {s.archived ? (
+                        <>
+                          <ArchiveRestore className="h-4 w-4" /> Unarchive
+                        </>
+                      ) : (
+                        <>
+                          <Archive className="h-4 w-4" /> Archive
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <ConfirmDialog
+                      title="Delete chat?"
+                      description={`"${s.title}" and its history will be permanently removed.`}
+                      confirmLabel="Delete"
+                      onConfirm={() => onDelete(s._id)}
+                      trigger={
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      }
+                    />
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
           </div>
         ))}
         {sessions.length === 0 && (
           <p className="px-2 py-4 text-center text-2xs text-muted-foreground">
-            No chats yet
+            {archivedView ? "No archived chats" : "No chats yet"}
           </p>
         )}
       </div>
+      <button
+        onClick={onToggleArchivedView}
+        className="flex items-center gap-2 border-t border-border px-3 py-2 font-mono text-2xs text-muted-foreground hover:text-foreground"
+      >
+        <Archive className="h-3 w-3" />
+        {archivedView ? "Back to active" : "Archived"}
+      </button>
     </div>
   );
 }

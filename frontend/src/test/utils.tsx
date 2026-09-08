@@ -10,10 +10,19 @@ export const fakeUser: User = {
   name: "Ada Lovelace",
   email: "ada@example.com",
   emailVerified: true,
+  role: "user",
   plan: "free",
+  trialPlan: null,
+  trialEndsAt: null,
   subscriptionStatus: "none",
   planRenewsAt: null,
   hasGeminiKey: false,
+  notificationPrefs: {
+    ingestComplete: true,
+    quotaWarnings: true,
+    weeklyDigest: false,
+    productUpdates: true,
+  },
   createdAt: new Date("2026-01-01").toISOString(),
 };
 

@@ -54,7 +54,9 @@ describe("Chat", () => {
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
 
     await waitFor(() =>
-      expect(mockApi.post).toHaveBeenCalledWith("/chat", {}),
+      expect(mockApi.post).toHaveBeenCalledWith("/chat", {
+        collectionId: null,
+      }),
     );
     expect(await screen.findByText(/it renews annually/i)).toBeInTheDocument();
     expect(
