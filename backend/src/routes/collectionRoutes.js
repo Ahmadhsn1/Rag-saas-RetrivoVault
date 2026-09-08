@@ -4,7 +4,7 @@ import { enforceCollectionQuota } from "../middleware/quota.js";
 import {
   createCollection,
   listCollections,
-  renameCollection,
+  updateCollection,
   deleteCollection,
 } from "../controllers/collectionController.js";
 
@@ -14,7 +14,7 @@ router.use(requireAuth);
 
 router.post("/", enforceCollectionQuota, createCollection);
 router.get("/", listCollections);
-router.patch("/:id", renameCollection);
+router.patch("/:id", updateCollection);
 router.delete("/:id", deleteCollection);
 
 export default router;

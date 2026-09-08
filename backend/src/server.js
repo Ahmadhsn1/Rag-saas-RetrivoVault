@@ -3,6 +3,7 @@ import { connectDB, disconnectDB } from "./config/db.js";
 import { env, billingEnabled, mailEnabled } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { Document } from "./models/Document.js";
+import { startScheduler, stopScheduler } from "./services/scheduler.js";
 import "./services/ingestionService.js"; // registers the ingest job handler
 
 let memoryMongo = null;
@@ -48,6 +49,8 @@ async function main() {
     );
   }
 
+  startScheduler();
+
   const app = createApp();
   const server = app.listen(env.port, () => {
     logger.info(
@@ -66,6 +69,7 @@ async function main() {
 
   const shutdown = async (signal) => {
     logger.info({ signal }, "shutting down");
+    stopScheduler();
     server.close(async () => {
       await disconnectDB();
       await memoryMongo?.stop();

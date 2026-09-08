@@ -1,4 +1,6 @@
 import { ChatSession } from "../models/ChatSession.js";
+import { Collection } from "../models/Collection.js";
+import { User } from "../models/User.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { retrieveChunks } from "../services/retrievalService.js";
 import {
@@ -6,21 +8,26 @@ import {
   generateSessionTitle,
 } from "../services/generationService.js";
 import { incrementQueryCount, recordEvent } from "../services/usage.js";
-import { User } from "../models/User.js";
+import { dispatchWebhook } from "../services/webhooks.js";
 import { modelsFor } from "../config/gemini.js";
 
 export const createSession = asyncHandler(async (req, res) => {
   const session = await ChatSession.create({
     userId: req.user.id,
     title: req.body?.title?.trim() || "New chat",
+    collectionId: req.body?.collectionId || null,
   });
   res.status(201).json({ session });
 });
 
 export const listSessions = asyncHandler(async (req, res) => {
-  const sessions = await ChatSession.find({ userId: req.user.id })
-    .select("title createdAt updatedAt")
-    .sort({ updatedAt: -1 })
+  const filter = { userId: req.user.id };
+  if (req.query.archived === "true") filter.archived = true;
+  else filter.archived = { $ne: true };
+
+  const sessions = await ChatSession.find(filter)
+    .select("title createdAt updatedAt pinned archived collectionId shareId")
+    .sort({ pinned: -1, updatedAt: -1 })
     .lean();
   res.json({ sessions });
 });
@@ -34,15 +41,22 @@ export const getSession = asyncHandler(async (req, res) => {
   res.json({ session });
 });
 
-export const renameSession = asyncHandler(async (req, res) => {
-  const title = (req.body?.title || "").trim().slice(0, 120);
-  if (!title) throw ApiError.badRequest("title is required");
+export const updateSession = asyncHandler(async (req, res) => {
+  const patch = {};
+  if (typeof req.body?.title === "string") {
+    const t = req.body.title.trim().slice(0, 120);
+    if (!t) throw ApiError.badRequest("title cannot be empty");
+    patch.title = t;
+  }
+  if (typeof req.body?.pinned === "boolean") patch.pinned = req.body.pinned;
+  if (typeof req.body?.archived === "boolean") patch.archived = req.body.archived;
+  if (!Object.keys(patch).length) throw ApiError.badRequest("nothing to update");
 
   const session = await ChatSession.findOneAndUpdate(
     { _id: req.params.sessionId, userId: req.user.id },
-    { title },
+    patch,
     { new: true }
-  ).select("title createdAt updatedAt");
+  ).select("title createdAt updatedAt pinned archived collectionId shareId");
   if (!session) throw ApiError.notFound("Chat session not found");
   res.json({ session });
 });
@@ -56,10 +70,70 @@ export const deleteSession = asyncHandler(async (req, res) => {
   res.status(204).end();
 });
 
+// --- Sharing ---
+
+export const shareSession = asyncHandler(async (req, res) => {
+  const session = await ChatSession.findOne({
+    _id: req.params.sessionId,
+    userId: req.user.id,
+  });
+  if (!session) throw ApiError.notFound("Chat session not found");
+
+  if (req.body?.enabled === false) {
+    session.shareId = null;
+    session.sharedAt = null;
+    await session.save();
+    return res.json({ shareId: null });
+  }
+  const shareId = session.enableShare();
+  await session.save();
+  res.json({ shareId });
+});
+
+// Public, unauthenticated read of a shared chat.
+export const getSharedSession = asyncHandler(async (req, res) => {
+  const session = await ChatSession.findOne({ shareId: req.params.shareId })
+    .select("title messages sharedAt")
+    .lean();
+  if (!session) throw ApiError.notFound("This shared chat doesn't exist");
+  res.json({
+    session: {
+      title: session.title,
+      sharedAt: session.sharedAt,
+      messages: (session.messages || []).map((m) => ({
+        role: m.role,
+        content: m.content,
+        sources: m.sources,
+      })),
+    },
+  });
+});
+
+// --- Message feedback ---
+
+export const messageFeedback = asyncHandler(async (req, res) => {
+  const { rating } = req.body || {};
+  if (!["up", "down", null].includes(rating)) {
+    throw ApiError.badRequest("rating must be 'up', 'down' or null");
+  }
+  const session = await ChatSession.findOne({
+    _id: req.params.sessionId,
+    userId: req.user.id,
+  });
+  if (!session) throw ApiError.notFound("Chat session not found");
+
+  const msg = session.messages.id(req.params.messageId);
+  if (!msg || msg.role !== "assistant") {
+    throw ApiError.notFound("Message not found");
+  }
+  msg.feedback = rating;
+  await session.save();
+  res.json({ ok: true });
+});
+
 // POST /api/chat/:sessionId/message  — Server-Sent Events stream.
 export const sendMessage = asyncHandler(async (req, res) => {
   const question = (req.body?.content || "").trim();
-  const collectionId = req.body?.collectionId || null;
   if (!question) throw ApiError.badRequest("content is required");
 
   const session = await ChatSession.findOne({
@@ -68,10 +142,20 @@ export const sendMessage = asyncHandler(async (req, res) => {
   });
   if (!session) throw ApiError.notFound("Chat session not found");
 
+  const collectionId = req.body?.collectionId || session.collectionId || null;
+  let instructions = "";
+  if (collectionId) {
+    const col = await Collection.findOne({
+      _id: collectionId,
+      userId: req.user.id,
+    })
+      .select("instructions")
+      .lean();
+    instructions = col?.instructions || "";
+  }
+
   // Use the user's own Gemini key when they've provided one.
-  const keyed = await User.findById(req.user.id)
-    .select("+geminiApiKey")
-    .lean();
+  const keyed = await User.findById(req.user.id).select("+geminiApiKey").lean();
   const { embeddingModel, llmModel } = modelsFor(keyed?.geminiApiKey);
 
   let retrieved;
@@ -83,8 +167,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
       embeddingModel,
     });
   } catch (err) {
-    // Upstream (embedding provider / vector index) failure — don't 500 with a
-    // raw provider error; the SSE hasn't started yet so a JSON body is fine.
     throw new ApiError(
       502,
       "Retrieval is temporarily unavailable. Check your Gemini API key and Atlas Vector Search index.",
@@ -100,7 +182,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
     preview: c.text.slice(0, 240),
   }));
 
-  // --- SSE setup ---
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -114,13 +195,20 @@ export const sendMessage = asyncHandler(async (req, res) => {
   send("sources", { sources });
 
   let answer = "";
+  let aborted = false;
+  req.on("close", () => {
+    aborted = true;
+  });
+
   try {
     for await (const delta of streamAnswer({
       question,
       chunks: retrieved,
       history: session.messages,
       model: llmModel,
+      instructions,
     })) {
+      if (aborted) break;
       answer += delta;
       send("token", { delta });
     }
@@ -130,25 +218,30 @@ export const sendMessage = asyncHandler(async (req, res) => {
     return res.end();
   }
 
-  // Persist both turns.
   session.messages.push({ role: "user", content: question });
   session.messages.push({
     role: "assistant",
     content: answer,
     citedChunkIds: retrieved.map((c) => c._id),
+    sources,
   });
   if (session.messages.length === 2 || session.title === "New chat") {
     session.title = await generateSessionTitle(question, llmModel);
   }
   await session.save();
 
-  // Meter the query (quota was checked by enforceQueryQuota before streaming).
   await incrementQueryCount(req.user.id);
   await recordEvent(req.user.id, "query", 1, {
     sessionId: String(session._id),
     chunks: retrieved.length,
   });
+  void dispatchWebhook(req.user.id, "chat.answered", {
+    sessionId: String(session._id),
+    question,
+    chunks: retrieved.length,
+  });
 
-  send("done", { title: session.title });
+  const answerMsg = session.messages[session.messages.length - 1];
+  send("done", { title: session.title, messageId: String(answerMsg._id) });
   res.end();
 });

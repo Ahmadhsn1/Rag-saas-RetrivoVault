@@ -1,6 +1,6 @@
 import { ApiKey, generateApiKey } from "../models/ApiKey.js";
 import { User } from "../models/User.js";
-import { getPlan } from "../config/plans.js";
+import { planFor } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 
 export const listApiKeys = asyncHandler(async (req, res) => {
@@ -16,7 +16,7 @@ export const createApiKey = asyncHandler(async (req, res) => {
 
   const user = await User.findById(req.user.id);
   if (!user) throw ApiError.unauthorized();
-  const limit = getPlan(user.plan).limits.apiKeys;
+  const limit = planFor(user).limits.apiKeys;
   if (limit === 0) {
     throw new ApiError(403, "API keys require the Max plan.", {
       code: "feature_locked",

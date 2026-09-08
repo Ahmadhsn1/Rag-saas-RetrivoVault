@@ -31,13 +31,21 @@ export const listCollections = asyncHandler(async (req, res) => {
   });
 });
 
-export const renameCollection = asyncHandler(async (req, res) => {
-  const name = (req.body?.name || "").trim();
-  if (!name) throw ApiError.badRequest("name is required");
+export const updateCollection = asyncHandler(async (req, res) => {
+  const patch = {};
+  if (typeof req.body?.name === "string") {
+    const name = req.body.name.trim();
+    if (!name) throw ApiError.badRequest("name cannot be empty");
+    patch.name = name;
+  }
+  if (typeof req.body?.instructions === "string") {
+    patch.instructions = req.body.instructions.slice(0, 2000);
+  }
+  if (!Object.keys(patch).length) throw ApiError.badRequest("nothing to update");
 
   const collection = await Collection.findOneAndUpdate(
     { _id: req.params.id, userId: req.user.id },
-    { name },
+    patch,
     { new: true, runValidators: true }
   );
   if (!collection) throw ApiError.notFound("Collection not found");

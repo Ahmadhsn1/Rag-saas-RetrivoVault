@@ -92,6 +92,12 @@ export const env = {
     priceMaxAnnual: optional("STRIPE_PRICE_MAX_ANNUAL"),
   },
 
+  // Emails granted admin access to /api/admin/*.
+  adminEmails: (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
+
   // Auto-on when there's no real DB or no Gemini key (local demo). Also honours DEMO_MODE=true.
   get demoMode() {
     return (

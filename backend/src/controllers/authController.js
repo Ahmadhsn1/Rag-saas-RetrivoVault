@@ -9,11 +9,17 @@ import { ApiKey } from "../models/ApiKey.js";
 import { Token } from "../models/Token.js";
 import { UsageEvent } from "../models/UsageEvent.js";
 import { RefreshToken } from "../models/RefreshToken.js";
+import { Notification } from "../models/Notification.js";
+import { ActivityLog } from "../models/ActivityLog.js";
+import { Webhook } from "../models/Webhook.js";
 import { env, isProd, isTestEnv } from "../config/env.js";
 import ms from "../utils/ms.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { signAccessToken } from "../middleware/auth.js";
 import { issueToken, consumeToken } from "../services/authTokens.js";
+import { TRIAL_DAYS, TRIAL_PLAN } from "../config/plans.js";
+import { logActivity } from "../services/activityLog.js";
+import { notify } from "../services/notifications.js";
 import {
   startSession,
   rotate,
@@ -70,6 +76,8 @@ export const signup = asyncHandler(async (req, res) => {
     email,
     passwordHash,
     emailVerified: env.demoMode || isTestEnv,
+    trialPlan: TRIAL_PLAN,
+    trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000),
   });
 
   if (!user.emailVerified) {
@@ -77,6 +85,14 @@ export const signup = asyncHandler(async (req, res) => {
       console.error("[auth] verification email failed:", err.message)
     );
   }
+
+  logActivity(user._id, "auth.signup", email, req);
+  void notify(user._id, {
+    type: "welcome",
+    title: `Welcome to Retrivo Vault, ${name.split(" ")[0]}`,
+    body: `Your ${TRIAL_DAYS}-day ${TRIAL_PLAN.toUpperCase()} trial is active. Upload a document to get started.`,
+    link: "/app/documents",
+  });
 
   const accessToken = signAccessToken(user._id);
   const { raw } = await startSession(user._id, req);
@@ -124,6 +140,7 @@ export const login = asyncHandler(async (req, res) => {
   const accessToken = signAccessToken(user._id);
   const { raw } = await startSession(user._id, req);
   setRefreshCookie(res, raw);
+  logActivity(user._id, "auth.login", null, req);
 
   res.json({ user: user.toJSON(), accessToken });
 });
@@ -252,6 +269,9 @@ export const deleteAccount = asyncHandler(async (req, res) => {
     Token.deleteMany({ userId: uid }),
     UsageEvent.deleteMany({ userId: uid }),
     RefreshToken.deleteMany({ userId: uid }),
+    Notification.deleteMany({ userId: uid }),
+    ActivityLog.deleteMany({ userId: uid }),
+    Webhook.deleteMany({ userId: uid }),
   ]);
   await User.deleteOne({ _id: uid });
 

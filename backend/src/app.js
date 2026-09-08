@@ -19,6 +19,10 @@ import billingRoutes from "./routes/billingRoutes.js";
 import usageRoutes from "./routes/usageRoutes.js";
 import apiKeyRoutes from "./routes/apiKeyRoutes.js";
 import accountRoutes from "./routes/accountRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import publicRoutes from "./routes/publicRoutes.js";
 
 export function createApp() {
   const app = express();
@@ -64,6 +68,7 @@ export function createApp() {
     });
   });
 
+  app.use("/api/public", publicRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/documents", documentRoutes);
   app.use("/api/collections", collectionRoutes);
@@ -72,6 +77,9 @@ export function createApp() {
   app.use("/api/usage", usageRoutes);
   app.use("/api/keys", apiKeyRoutes);
   app.use("/api/account", accountRoutes);
+  app.use("/api/notifications", notificationRoutes);
+  app.use("/api/webhooks", webhookRoutes);
+  app.use("/api/admin", adminRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -7,7 +7,7 @@ Rules:
 - Cite the passages you used inline with bracketed numbers like [1], [2].
 - Be concise and factual. Do not invent sources.`;
 
-function buildPrompt({ question, chunks, history = [] }) {
+function buildPrompt({ question, chunks, history = [], instructions = "" }) {
   const context = chunks
     .map((c, i) => `[${i + 1}] ${c.text}`)
     .join("\n\n---\n\n");
@@ -17,8 +17,12 @@ function buildPrompt({ question, chunks, history = [] }) {
     .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n");
 
-  return `${SYSTEM_PROMPT}
+  const extra = instructions?.trim()
+    ? `\nAdditional instructions for this knowledge base:\n${instructions.trim()}\n`
+    : "";
 
+  return `${SYSTEM_PROMPT}
+${extra}
 ${priorTurns ? `Conversation so far:\n${priorTurns}\n\n` : ""}Context passages:
 ${context || "(no passages retrieved)"}
 
@@ -28,8 +32,8 @@ Answer:`;
 }
 
 // Streams the answer token-by-token. Yields text deltas.
-export async function* streamAnswer({ question, chunks, history, model }) {
-  const prompt = buildPrompt({ question, chunks, history });
+export async function* streamAnswer({ question, chunks, history, model, instructions }) {
+  const prompt = buildPrompt({ question, chunks, history, instructions });
   // Retry only the initial call — once tokens flow we can't safely restart.
   const result = await withRetry(() =>
     (model || sharedLlmModel).generateContentStream(prompt)
@@ -58,5 +62,27 @@ export async function generateSessionTitle(question, model) {
     return result.response.text().trim().replace(/^["']|["']$/g, "").slice(0, 80);
   } catch {
     return question.slice(0, 60);
+  }
+}
+
+/** One-paragraph summary + 3 starter questions for a freshly ingested document. */
+export async function summarizeDocument(text, model) {
+  const excerpt = text.slice(0, 12000);
+  try {
+    const result = await withRetry(() =>
+      (model || sharedLlmModel).generateContent(
+        `Summarize the following document in 2-3 sentences, then list exactly 3 specific questions a reader might ask about it. Respond ONLY as JSON: {"summary":"...","questions":["...","...","..."]}\n\nDOCUMENT:\n${excerpt}`
+      )
+    );
+    const raw = result.response.text().replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(raw);
+    return {
+      summary: String(parsed.summary || "").slice(0, 1000) || null,
+      questions: (Array.isArray(parsed.questions) ? parsed.questions : [])
+        .slice(0, 3)
+        .map((q) => String(q).slice(0, 200)),
+    };
+  } catch {
+    return { summary: null, questions: [] };
   }
 }

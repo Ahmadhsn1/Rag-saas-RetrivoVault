@@ -51,6 +51,13 @@ export const PLANS = {
 
 export const getPlan = (id) => PLANS[id] || PLANS.free;
 
+// The plan config in force for a user right now (respects an active trial).
+export const planFor = (user) =>
+  getPlan(typeof user?.effectivePlan === "function" ? user.effectivePlan() : user?.plan);
+
+export const TRIAL_DAYS = Number(process.env.TRIAL_DAYS || 14);
+export const TRIAL_PLAN = "pro";
+
 // Map a Stripe price id back to a plan id.
 export function planForPrice(priceId) {
   for (const plan of Object.values(PLANS)) {

@@ -1,6 +1,6 @@
 import { User } from "../models/User.js";
 import { env, billingEnabled } from "../config/env.js";
-import { PLANS, getPlan, priceIsKnown } from "../config/plans.js";
+import { PLANS, planFor, priceIsKnown } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import {
   getStripe,
@@ -12,7 +12,11 @@ import {
 export const getBilling = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
   if (!user) throw ApiError.unauthorized();
-  const plan = getPlan(user.plan);
+  const plan = planFor(user);
+  const onTrial =
+    user.plan === "free" &&
+    user.trialEndsAt &&
+    user.trialEndsAt.getTime() > Date.now();
 
   res.json({
     billingEnabled,
@@ -22,6 +26,9 @@ export const getBilling = asyncHandler(async (req, res) => {
       limits: plan.limits,
       features: plan.features,
     },
+    trial: onTrial
+      ? { plan: user.trialPlan, endsAt: user.trialEndsAt }
+      : null,
     subscriptionStatus: user.subscriptionStatus,
     planRenewsAt: user.planRenewsAt,
     hasBillingAccount: Boolean(user.stripeCustomerId),

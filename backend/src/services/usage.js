@@ -3,7 +3,7 @@ import { User } from "../models/User.js";
 import { Document } from "../models/Document.js";
 import { Collection } from "../models/Collection.js";
 import { UsageEvent } from "../models/UsageEvent.js";
-import { getPlan } from "../config/plans.js";
+import { planFor } from "../config/plans.js";
 
 const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -48,13 +48,13 @@ export async function getUsageSnapshot(userId) {
   ]);
   const collections = await Collection.countDocuments({ userId: uid });
 
-  const limits = getPlan(user.plan).limits;
+  const limits = planFor(user).limits;
   const documents = docAgg?.count ?? 0;
   const storageBytes = docAgg?.bytes ?? 0;
   const queries = user.usage.queriesThisPeriod;
 
   return {
-    plan: user.plan,
+    plan: user.effectivePlan(),
     limits,
     current: { documents, storageBytes, collections, queries },
     remaining: {

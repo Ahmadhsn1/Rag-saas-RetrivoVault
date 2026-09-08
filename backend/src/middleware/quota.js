@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { Document } from "../models/Document.js";
 import { Collection } from "../models/Collection.js";
-import { getPlan } from "../config/plans.js";
+import { planFor } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { rollUsageWindow } from "../services/usage.js";
 
@@ -13,7 +13,7 @@ const quotaError = (msg) =>
 export const enforceDocumentQuota = asyncHandler(async (req, _res, next) => {
   const user = await User.findById(req.user.id);
   if (!user) throw ApiError.unauthorized();
-  const limits = getPlan(user.plan).limits;
+  const limits = planFor(user).limits;
 
   const uid = new mongoose.Types.ObjectId(req.user.id);
   const [agg] = await Document.aggregate([
@@ -26,12 +26,12 @@ export const enforceDocumentQuota = asyncHandler(async (req, _res, next) => {
 
   if (count >= limits.documents) {
     throw quotaError(
-      `You've reached the ${limits.documents}-document limit on the ${user.plan} plan. Upgrade for more.`
+      `You've reached the ${limits.documents}-document limit on the ${user.effectivePlan()} plan. Upgrade for more.`
     );
   }
   if (bytes + incoming > limits.storageBytes) {
     throw quotaError(
-      `This upload would exceed your storage limit on the ${user.plan} plan. Upgrade for more.`
+      `This upload would exceed your storage limit on the ${user.effectivePlan()} plan. Upgrade for more.`
     );
   }
   next();
@@ -40,12 +40,12 @@ export const enforceDocumentQuota = asyncHandler(async (req, _res, next) => {
 export const enforceCollectionQuota = asyncHandler(async (req, _res, next) => {
   const user = await User.findById(req.user.id);
   if (!user) throw ApiError.unauthorized();
-  const limits = getPlan(user.plan).limits;
+  const limits = planFor(user).limits;
 
   const count = await Collection.countDocuments({ userId: req.user.id });
   if (count >= limits.collections) {
     throw quotaError(
-      `You've reached the ${limits.collections}-collection limit on the ${user.plan} plan.`
+      `You've reached the ${limits.collections}-collection limit on the ${user.effectivePlan()} plan.`
     );
   }
   next();
@@ -56,10 +56,10 @@ export const enforceQueryQuota = asyncHandler(async (req, _res, next) => {
   if (!user) throw ApiError.unauthorized();
   await rollUsageWindow(user);
 
-  const limits = getPlan(user.plan).limits;
+  const limits = planFor(user).limits;
   if (user.usage.queriesThisPeriod >= limits.queriesPerMonth) {
     throw quotaError(
-      `You've used all ${limits.queriesPerMonth} questions in your monthly allowance on the ${user.plan} plan. Upgrade or wait for the reset.`
+      `You've used all ${limits.queriesPerMonth} questions in your monthly allowance on the ${user.effectivePlan()} plan. Upgrade or wait for the reset.`
     );
   }
   req.planUser = user;
@@ -71,7 +71,7 @@ export const requireFeature = (feature) =>
   asyncHandler(async (req, _res, next) => {
     const user = req.planUser || (await User.findById(req.user.id));
     if (!user) throw ApiError.unauthorized();
-    if (!getPlan(user.plan).features[feature]) {
+    if (!planFor(user).features[feature]) {
       throw new ApiError(
         403,
         `The "${feature}" capability requires a higher plan.`,

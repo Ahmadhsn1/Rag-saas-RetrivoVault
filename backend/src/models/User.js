@@ -15,12 +15,25 @@ const userSchema = new mongoose.Schema(
 
     emailVerified: { type: Boolean, default: false },
 
+    role: { type: String, enum: ["user", "admin"], default: "user" },
+
     // --- Billing / plan ---
     plan: {
       type: String,
       enum: ["free", "pro", "max"],
       default: "free",
       index: true,
+    },
+    // A signup grants a time-limited Pro trial; when it lapses the effective
+    // plan falls back to `plan` (see getEffectivePlan / plans.js).
+    trialPlan: { type: String, enum: ["pro", "max", null], default: null },
+    trialEndsAt: { type: Date, default: null },
+
+    notificationPrefs: {
+      ingestComplete: { type: Boolean, default: true },
+      quotaWarnings: { type: Boolean, default: true },
+      weeklyDigest: { type: Boolean, default: false },
+      productUpdates: { type: Boolean, default: true },
     },
     subscriptionStatus: {
       type: String,
@@ -59,6 +72,15 @@ const userSchema = new mongoose.Schema(
 
 userSchema.methods.isLocked = function () {
   return this.lockedUntil && this.lockedUntil.getTime() > Date.now();
+};
+
+// The plan actually in force right now (paid subscription > live trial > free).
+userSchema.methods.effectivePlan = function () {
+  if (this.plan !== "free") return this.plan;
+  if (this.trialPlan && this.trialEndsAt && this.trialEndsAt.getTime() > Date.now()) {
+    return this.trialPlan;
+  }
+  return "free";
 };
 
 userSchema.methods.toJSON = function () {

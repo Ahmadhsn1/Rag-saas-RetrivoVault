@@ -6,8 +6,10 @@ import {
   createSession,
   listSessions,
   getSession,
-  renameSession,
+  updateSession,
   deleteSession,
+  shareSession,
+  messageFeedback,
   sendMessage,
 } from "../controllers/chatController.js";
 
@@ -18,8 +20,10 @@ router.use(authenticateFlexible);
 router.post("/", createSession);
 router.get("/", listSessions);
 router.get("/:sessionId", getSession);
-router.patch("/:sessionId", renameSession);
+router.patch("/:sessionId", updateSession);
 router.delete("/:sessionId", deleteSession);
+router.post("/:sessionId/share", shareSession);
+router.post("/:sessionId/messages/:messageId/feedback", messageFeedback);
 router.post("/:sessionId/message", chatLimiter, enforceQueryQuota, sendMessage);
 
 export default router;
