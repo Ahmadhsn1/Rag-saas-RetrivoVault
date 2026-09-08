@@ -37,8 +37,17 @@ CI (`.github/workflows/ci.yml`) runs all of the above on push/PR.
 Follow the `dataviz` skill. The validated categorical pair for the dark chart surface
 is blue `#3987e5` / orange `#d95926` (see `components/app/settings/UsageChart.tsx`).
 
-## Not yet done / known limitations
+## Local dev
 
-- No true end-to-end run has been done here (needs a real Atlas cluster + Gemini key + Stripe test keys).
+`cd backend && npm run dev` boots with **zero config**: no `.env` → ephemeral
+in-memory MongoDB + demo mode (`config/env.js` `autoMongo` / `demoMode`,
+`server.js` `resolveMongoUri`). Vector retrieval and AI calls return a clean `502`
+until `MONGO_URI` (Atlas) and `GEMINI_API_KEY` are set.
+
+## Known limitations
+
+- Vector search + live Gemini/Stripe can't run without real credentials — verified
+  up to the provider boundary (mocked in tests, clean `502` in dev).
 - Ingestion queue is in-process (single instance). Swap `services/jobQueue.js` for BullMQ + Redis to scale horizontally.
 - Data fetching uses hand-rolled hooks + polling; TanStack Query would be the upgrade.
+- No visual browser QA has been done (no browser tooling in the build env).

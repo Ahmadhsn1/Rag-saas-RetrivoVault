@@ -45,27 +45,28 @@ and [`features.md`](./features.md) for the feature list.
 ```bash
 # backend
 cd backend
-cp .env.example .env        # MONGO_URI, GEMINI_API_KEY, JWT secrets (min)
 npm install
-npm run create-index        # one-time: Atlas Vector Search index
-npm test                    # 33 tests (spins up an in-memory MongoDB)
-npm run dev                 # http://localhost:5000
+npm run dev                 # http://localhost:5000  — works with ZERO config
 
 # frontend (new terminal)
 cd frontend
-cp .env.example .env
 npm install
 npm run dev                 # http://localhost:5173  (proxies /api -> :5000)
-npm test                    # 27 tests
-npm run typecheck && npm run lint && npm run build
 ```
 
-For a zero-config demo (auto-verified emails, billing stubbed) set `DEMO_MODE=true`
-in `backend/.env`.
+**Zero-config dev:** with no `backend/.env`, `npm run dev` starts an **ephemeral
+in-memory MongoDB** and runs in demo mode (emails auto-verified, billing stubbed).
+Every endpoint works except **vector retrieval** (needs Atlas) and **AI calls**
+(need a Gemini key) — you'll get a clear `502` there until you configure them.
 
-`cd backend && npm run dev:standalone` boots the API against an ephemeral in-memory
-MongoDB — no Atlas needed — for quickly exercising every endpoint except vector
-search (which is Atlas-only) and live Gemini/Stripe calls.
+**Real setup:** `cp .env.example .env`, fill in `MONGO_URI` (a MongoDB **Atlas**
+cluster — Vector Search is Atlas-only), `GEMINI_API_KEY`, and JWT secrets, then:
+
+```bash
+cd backend && npm run create-index   # one-time: Atlas Vector Search index
+```
+
+**Checks:** `npm test` (backend, 33) · `npm test && npm run typecheck && npm run lint && npm run build` (frontend, 27).
 
 ### Routes
 

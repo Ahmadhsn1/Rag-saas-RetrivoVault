@@ -7,7 +7,6 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "dev:standalone": "node scripts/dev-standalone.mjs",
     "create-index": "node src/scripts/createVectorIndex.js",
     "test": "vitest run",
     "test:watch": "vitest"
