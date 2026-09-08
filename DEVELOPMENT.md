@@ -3,6 +3,10 @@
 Individual-focused RAG SaaS. **No teams / workspaces / org roles — never add them.**
 See `retrivo-vault-architecture.md` and `features.md` for the full picture.
 
+**All user-facing copy** (marketing, app text, emails, notifications, meta) follows
+`BRAND.md` — positioning, voice, naming. Never call it a "portfolio project" in
+user copy; "open source, built by one person" is the pitch and lives on `/about`.
+
 ## Layout
 
 - `backend/` — Node + Express (ESM), MongoDB Atlas + Vector Search, Gemini.

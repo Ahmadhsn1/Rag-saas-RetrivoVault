@@ -4,21 +4,21 @@ import { useGsapReveal } from "@/hooks/useGsapReveal";
 const STEPS = [
   {
     n: "01",
-    title: "Upload",
-    body: "Add PDFs or text files, optionally into a collection. Retrivo parses, chunks, and embeds each one in the background.",
-    chip: "pdf · txt · ≤ 10 MB",
+    title: "Add your documents",
+    body: "Drop in PDFs, Word files, spreadsheets, notes — or paste a web page. Retrivo reads, splits and indexes each one in the background. Group them into collections if you like.",
+    chip: "pdf · docx · csv · md · url",
   },
   {
     n: "02",
-    title: "Ask",
-    body: "Open a chat and ask in plain language. Your question is embedded and matched against your own chunks only.",
-    chip: "$vectorSearch · userId filter",
+    title: "Ask in plain language",
+    body: "Open your vault and ask a real question. Retrivo matches it against your own text by meaning, not keywords — and only ever searches your documents.",
+    chip: "semantic · scoped to you",
   },
   {
     n: "03",
-    title: "Get cited answers",
-    body: "The answer streams back grounded in retrieved passages, with a clickable source behind every claim.",
-    chip: "stream · [1] [2] · scores",
+    title: "Get a sourced answer",
+    body: "The answer streams back grounded in the passages it found, with a clickable citation and match score behind every claim. Thumbs it, copy it, or share the thread.",
+    chip: "streamed · [1] [2] · scores",
   },
 ];
 
@@ -33,7 +33,9 @@ export function HowItWorks() {
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
             How it works
           </p>
-          <h2 className="mt-3 text-3xl sm:text-4xl">Three steps to a grounded answer</h2>
+          <h2 className="mt-3 text-3xl sm:text-4xl">
+            Three steps to a sourced answer
+          </h2>
         </div>
 
         <div ref={ref} className="mt-14 grid gap-6 md:grid-cols-3">

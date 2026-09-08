@@ -51,7 +51,7 @@ describe("App routing", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("link", { name: /start your vault/i })[0],
+      screen.getAllByRole("link", { name: /start free/i })[0],
     ).toBeInTheDocument();
   });
 
@@ -110,7 +110,7 @@ describe("App routing", () => {
     signedIn();
     renderWithProviders(<App />, { route: "/app/documents" });
     expect(
-      await screen.findByText(/no documents yet/i),
+      await screen.findByText(/your vault is empty/i),
     ).toBeInTheDocument();
   });
 });

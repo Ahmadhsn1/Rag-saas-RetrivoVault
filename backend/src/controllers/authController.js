@@ -92,8 +92,8 @@ export const signup = asyncHandler(async (req, res) => {
   logActivity(user._id, "auth.signup", email, req);
   void notify(user._id, {
     type: "welcome",
-    title: `Welcome to Retrivo Vault, ${name.split(" ")[0] || "there"}`,
-    body: `Your ${TRIAL_DAYS}-day ${TRIAL_PLAN.toUpperCase()} trial is active. Upload a document to get started.`,
+    title: `Your vault is ready, ${name.split(" ")[0] || "there"}`,
+    body: `Add a few documents, then ask a real question — every answer comes with the passage it came from. Your ${TRIAL_DAYS}-day ${TRIAL_PLAN.toUpperCase()} trial is running.`,
     link: "/app/documents",
   });
 

@@ -5,11 +5,11 @@ const COLS = [
   {
     title: "Product",
     links: [
-      { label: "Features", href: "/#features" },
+      { label: "Who it's for", href: "/#who" },
       { label: "How it works", href: "/#how" },
+      { label: "Features", href: "/#features" },
       { label: "Pricing", href: "/pricing" },
       { label: "API docs", href: "/docs" },
-      { label: "Watch it retrieve", href: "/#demo" },
     ],
   },
   {
@@ -22,6 +22,7 @@ const COLS = [
   {
     title: "About",
     links: [
+      { label: "The project", href: "/about" },
       { label: "FAQ", href: "/#faq" },
       { label: "Security", href: "/#security" },
       { label: "Terms", href: "/terms" },
@@ -37,7 +38,8 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-            A private, cited RAG knowledge base for one person. Open source.
+            The research assistant that only knows what you've read. Ask your
+            documents anything, get a sourced answer in seconds — privately.
           </p>
         </div>
         {COLS.map((col) => (
@@ -72,10 +74,11 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="container flex flex-col items-center justify-between gap-3 py-6 sm:flex-row">
           <p className="font-mono text-2xs text-muted-foreground">
-            Retrivo Vault — portfolio project. No warranty.
+            © {new Date().getFullYear()} Retrivo Vault · Your documents stay
+            yours.
           </p>
           <p className="font-mono text-2xs text-muted-foreground">
-            Built with React · MongoDB Atlas · Gemini
+            Open source · built by one person
           </p>
         </div>
       </div>

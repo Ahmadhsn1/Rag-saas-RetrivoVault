@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 
 const LINKS = [
-  { label: "Features", href: "/#features" },
+  { label: "Who it's for", href: "/#who" },
   { label: "How it works", href: "/#how" },
+  { label: "Features", href: "/#features" },
   { label: "Pricing", href: "/pricing" },
-  { label: "API", href: "/docs" },
   { label: "FAQ", href: "/#faq" },
 ];
 

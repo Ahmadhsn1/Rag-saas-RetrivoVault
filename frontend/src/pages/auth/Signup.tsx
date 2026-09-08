@@ -45,7 +45,7 @@ export default function Signup() {
   return (
     <AuthLayout
       title="Create your vault"
-      subtitle="Your documents stay scoped to your account."
+      subtitle="Free to start, with a 14-day Pro trial — no card. Your documents stay yours."
     >
       <form onSubmit={submit} noValidate>
         <FormError message={error} />

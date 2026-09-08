@@ -7,28 +7,28 @@ import {
 
 const ITEMS = [
   {
-    q: "What file types can I upload?",
-    a: "PDF and plain-text (.txt) files today, up to 10 MB each. DOCX, Markdown, and CSV are on the roadmap.",
+    q: "What can I put in my vault?",
+    a: "PDF, Word (.docx), spreadsheets (.csv), Markdown and plain text, up to 10 MB each — plus web pages by URL. Drop in a batch at once and they process in the background.",
   },
   {
-    q: "Where do the answers come from?",
-    a: "Only from passages retrieved out of your own documents. If the context doesn't contain an answer, Retrivo says so rather than guessing — and every claim links back to the passage it used.",
+    q: "How do I know the answer is right?",
+    a: "Every claim carries a citation. Click it and you're looking at the exact passage Retrivo used, with a match score. If your documents don't contain an answer, it tells you that instead of making one up.",
   },
   {
-    q: "Can other users see my documents?",
-    a: "No. Every read — including the Atlas vector search — is filtered by your user id. Your vault is yours alone.",
+    q: "Is anyone else able to see my documents?",
+    a: "No. Every read — the semantic search included — is filtered to your account in the database. Your documents are never used to train a model, and there's no company incentive to touch them: Retrivo is open source and built by one person.",
   },
   {
-    q: "Which models does it use?",
-    a: "Google Gemini text-embedding-004 for embeddings (768-dim) and gemini-2.5-flash for generation, streamed token-by-token.",
+    q: "How is it different from asking ChatGPT?",
+    a: "ChatGPT can't see your files unless you paste them one at a time, it has no memory across documents, and it won't cite a source you can check. Retrivo searches your whole library at once and shows its work.",
   },
   {
-    q: "Do I need my own API keys?",
-    a: "On the Free plan the app runs against a shared quota. Pro and Max plans include generous limits; you can also bring your own Gemini key on any paid plan.",
+    q: "What does it cost?",
+    a: "Free forever for a small vault. Every account starts with a 14-day Pro trial (no card). Pro is $9–12/mo and Max $24–29/mo depending on billing period. Cancel any time.",
   },
   {
-    q: "Can I export or delete my data?",
-    a: "Yes. Delete a document and its chunks are removed immediately. Account deletion wipes every document, chunk, and chat in one action.",
+    q: "Can I get my data out?",
+    a: "Any time. Export everything as one JSON file from Settings, delete a single document (its index entries go with it), or delete your account to erase all of it at once.",
   },
 ];
 
@@ -42,7 +42,10 @@ export function FAQ() {
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl">Questions, answered</h2>
           <p className="mt-4 text-muted-foreground">
-            Still curious? Everything here is open source — read the code.
+            The kind of answer Retrivo would give — sourced.{" "}
+            <a href="/about" className="text-primary hover:underline">
+              More about the project →
+            </a>
           </p>
         </div>
 

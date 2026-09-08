@@ -6,7 +6,7 @@ const TERMS = {
   sections: [
     [
       "What this is",
-      "Retrivo Vault is a portfolio project — a personal RAG knowledge base. It is provided as-is, with no warranty and no service-level guarantee. Don't rely on it for anything critical.",
+      "Retrivo Vault is a private, sourced knowledge base for one person — an open-source project maintained by an independent developer. It's provided as-is, without warranty or a formal service-level guarantee. Keep your own copies of anything you can't afford to lose.",
     ],
     [
       "Your account",
@@ -57,7 +57,7 @@ const PRIVACY = {
     ],
     [
       "Contact",
-      "This is a portfolio project — open a GitHub issue for anything privacy-related.",
+      "Retrivo is open source. For anything privacy-related, open an issue on the project repository — the person who built it reads them.",
     ],
   ],
 };

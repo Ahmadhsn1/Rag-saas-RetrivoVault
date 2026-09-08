@@ -112,8 +112,8 @@ export default function Collections() {
       ) : collections.length === 0 ? (
         <EmptyState
           icon={FolderTree}
-          title="No collections"
-          description="Create one above, then upload documents into it."
+          title="No collections yet"
+          description="Group related documents — one client, one project, one case — so you can scope a question to just those."
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">

@@ -1,9 +1,11 @@
 # Retrivo Vault
 
-A production-grade, **individual-focused** Retrieval-Augmented Generation (RAG) SaaS.
-Sign up (14-day Pro trial, no card), verify your email, add documents (PDF · TXT ·
-Markdown · DOCX · CSV · **web pages by URL**) into a private knowledge base, and query
-it through a streaming, citation-backed chat with feedback, sharing and a ⌘K palette.
+**The research assistant that only knows what you've read.** A production-grade,
+**individual-focused** Retrieval-Augmented Generation (RAG) SaaS. Sign up (14-day Pro
+trial, no card), verify your email, add your contracts, papers and notes (PDF · TXT ·
+Markdown · DOCX · CSV · **web pages by URL**) to a private vault, and ask it anything
+through a streaming, citation-backed chat — every answer carries the passage it came
+from — with feedback, sharing and a ⌘K palette.
 Free / Pro / Max plans with trial-aware quotas, Stripe billing, in-app + email
 notifications, an activity log + data export, personal API keys, HMAC-signed webhooks,
 an OpenAPI spec, and a lightweight admin console.

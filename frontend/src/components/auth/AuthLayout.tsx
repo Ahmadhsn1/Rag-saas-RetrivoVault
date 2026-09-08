@@ -37,7 +37,16 @@ export function AuthLayout({
 
       <div className="relative hidden overflow-hidden border-l border-border bg-surface/30 lg:block">
         <div className="glow-hero absolute inset-0" aria-hidden="true" />
-        <div className="relative flex h-full flex-col justify-center gap-10 px-12">
+        <div className="relative flex h-full flex-col justify-center gap-8 px-12">
+          <div>
+            <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
+              Retrivo Vault
+            </p>
+            <p className="mt-3 max-w-sm text-lg leading-snug text-foreground/90">
+              The research assistant that only knows what you've read. Ask your
+              documents anything — every answer cites the passage it came from.
+            </p>
+          </div>
           <PipelineStrip animated />
           <div className="terminal-panel p-4">
             <p className="font-mono text-2xs uppercase tracking-wide text-muted-foreground">

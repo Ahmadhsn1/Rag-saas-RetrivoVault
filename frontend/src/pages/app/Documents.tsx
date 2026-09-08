@@ -155,8 +155,8 @@ export default function Documents() {
       ) : showEmpty ? (
         <EmptyState
           icon={FileText}
-          title="No documents yet"
-          description="Upload a PDF, Markdown, DOCX, TXT or CSV file to start building this knowledge base."
+          title="Your vault is empty"
+          description="Add a PDF, Word file, spreadsheet, note or web page. Retrivo reads and indexes it in the background, then you can ask."
           action={<UploadDialog onUploaded={onUploaded} trigger={uploadTrigger} />}
         />
       ) : documents.length === 0 ? (

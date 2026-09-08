@@ -122,8 +122,8 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
         </div>
 
         <p className="mx-auto mt-8 max-w-md text-center font-mono text-2xs text-muted-foreground">
-          Prices in USD. Payments handled by Stripe. This is a portfolio project —
-          use test-mode cards.
+          Prices in USD, billed securely by Stripe. Switch plans or cancel any
+          time — your documents stay put.
         </p>
       </div>
     </section>

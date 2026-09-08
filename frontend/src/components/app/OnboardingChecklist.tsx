@@ -41,8 +41,8 @@ export function OnboardingChecklist({
     },
     {
       done: hasDocs,
-      title: "Upload a document",
-      body: "PDF, Markdown, DOCX, TXT or CSV. It's chunked and embedded automatically.",
+      title: "Add a document",
+      body: "A contract, a paper, a transcript — PDF, Word, spreadsheet, note or web page. Retrivo reads and indexes it for you.",
       action: hasDocs ? undefined : (
         <UploadDialog
           onUploaded={onUploaded}
@@ -57,7 +57,7 @@ export function OnboardingChecklist({
     {
       done: askedSomething,
       title: "Ask your first question",
-      body: "Type below. The answer streams back with a source behind every claim.",
+      body: "Type it below in plain language. The answer streams back with the passage it came from behind every claim.",
     },
   ];
 
@@ -67,7 +67,7 @@ export function OnboardingChecklist({
 
       <div className="w-full space-y-2 text-left">
         <p className="text-center font-mono text-sm font-semibold">
-          {hasReadyDoc ? "Ask your knowledge base" : "Get set up in three steps"}
+          {hasReadyDoc ? "Ask your vault" : "Get set up in three steps"}
         </p>
         <ul className="mt-4 space-y-2">
           {steps.map((step) => (
@@ -104,7 +104,7 @@ export function OnboardingChecklist({
         {hasReadyDoc && (
           <p className="pt-2 text-center text-xs text-muted-foreground">
             <ArrowRight className="mr-1 inline h-3 w-3" />
-            Your documents are ready — ask away.
+            Your vault is ready — ask it anything.
           </p>
         )}
       </div>

@@ -34,7 +34,7 @@ export default function Login() {
   return (
     <AuthLayout
       title="Sign in"
-      subtitle="Access your private knowledge base."
+      subtitle="Back to your vault."
     >
       <form onSubmit={submit} noValidate>
         <FormError message={error} />

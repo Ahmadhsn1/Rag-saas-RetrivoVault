@@ -12,12 +12,15 @@ describe("Landing page", () => {
       await screen.findByRole("heading", { level: 1, name: /your documents/i }),
     ).toBeInTheDocument();
 
-    // section headings across the newly added components
+    // section headings across the composed marketing sections
     for (const re of [
+      /if your work leaves you with a pile of documents/i,
+      /you've already read the answer/i,
       /a full rag pipeline/i,
       /from question to cited answer/i,
-      /three steps to a grounded answer/i,
-      /private by construction/i,
+      /three steps to a sourced answer/i,
+      /the tools you'd reach for first/i,
+      /what's in your vault stays in your vault/i,
       /priced for one person/i,
       /questions, answered/i,
     ]) {

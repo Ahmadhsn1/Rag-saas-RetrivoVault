@@ -7,6 +7,7 @@ const MarketingLayout = lazy(() => import("@/pages/marketing/MarketingLayout"));
 const Landing = lazy(() => import("@/pages/marketing/Landing"));
 const PricingPage = lazy(() => import("@/pages/marketing/PricingPage"));
 const DocsPage = lazy(() => import("@/pages/marketing/DocsPage"));
+const AboutPage = lazy(() => import("@/pages/marketing/AboutPage"));
 const TermsPage = lazy(() =>
   import("@/pages/marketing/LegalPage").then((m) => ({
     default: () => <m.LegalPage kind="terms" />,
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/docs" element={<DocsPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
         </Route>

@@ -20,7 +20,10 @@ export default function SharedChat() {
   const [state, setState] = useState<"loading" | "ok" | "missing">("loading");
   const [chat, setChat] = useState<Shared | null>(null);
 
-  useSeo(chat?.title || "Shared chat", "A conversation shared from Retrivo Vault.");
+  useSeo(
+    chat?.title || "Shared chat",
+    "A sourced answer shared from someone's Retrivo vault.",
+  );
 
   useEffect(() => {
     axios
@@ -54,7 +57,7 @@ export default function SharedChat() {
           <div className="py-20 text-center">
             <p className="font-mono text-4xl font-semibold text-brand">404</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              This shared chat doesn't exist or was unshared.
+              This shared answer doesn't exist, or the owner turned off the link.
             </p>
           </div>
         )}
@@ -85,9 +88,10 @@ export default function SharedChat() {
               ))}
             </div>
             <p className="mt-10 border-t border-border pt-6 text-center text-sm text-muted-foreground">
-              Answers are grounded in the sharer's private documents (not shown).{" "}
+              Every answer here is grounded in the sharer's own documents, which
+              stay private.{" "}
               <Link to="/signup" className="text-primary hover:underline">
-                Build your own →
+                Start your own vault →
               </Link>
             </p>
           </>

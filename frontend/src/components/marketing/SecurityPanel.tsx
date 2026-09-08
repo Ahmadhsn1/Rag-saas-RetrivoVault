@@ -1,10 +1,10 @@
 const LINES = [
-  { k: "passwords", v: "bcrypt · cost 12 · never stored plaintext" },
-  { k: "sessions", v: "JWT access 15m + httpOnly refresh cookie, rotated" },
-  { k: "isolation", v: "every query scoped by userId — vector search included" },
-  { k: "uploads", v: "MIME allowlist + 10 MB cap before any parsing" },
-  { k: "rate limits", v: "auth · upload · chat — protects model quota" },
-  { k: "errors", v: "centralized handler — no stack traces to the client" },
+  { k: "isolation", v: "every query scoped to your account — the vector index too" },
+  { k: "training", v: "your documents are never used to train any model" },
+  { k: "at rest", v: "bcrypt passwords · API keys and tokens stored only as hashes" },
+  { k: "in transit", v: "rotating session tokens · https-only · account lockout" },
+  { k: "uploads", v: "type + size checked before parsing · held in memory, never on disk" },
+  { k: "export", v: "download everything as JSON, or delete it all, any time" },
 ];
 
 export function SecurityPanel() {
@@ -13,15 +13,15 @@ export function SecurityPanel() {
       <div className="container grid items-center gap-12 lg:grid-cols-2">
         <div>
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
-            Security
+            Private by construction
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl">
-            Private by construction
+            What's in your vault stays in your vault
           </h2>
           <p className="mt-4 max-w-lg text-muted-foreground">
-            Retrivo Vault is multi-user from the data model up. Isolation isn't a
-            setting you enable — it's the filter on every read, including the
-            Atlas vector index itself.
+            Isolation isn't a checkbox — it's the filter on every read, enforced
+            in the database. Retrivo is open source, so you can verify that
+            rather than take our word for it.
           </p>
         </div>
 
