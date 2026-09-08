@@ -45,6 +45,12 @@ CI (`.github/workflows/ci.yml`) runs all of the above.
   `await` them in the request path; tests must add a small delay before asserting.
 - Frontend: dark theme only, token classes not raw hex, Lucide icons only, all
   motion respects `prefers-reduced-motion`. Surface API errors with `notifyApiError()`.
+- Frontend motion: **Framer Motion** for component reveals + micro-interactions
+  (`components/motion/*` — `Reveal`/`Stagger`, `SpotlightCard`, `TiltCard`,
+  `MagneticButton`; tokens in `lib/anim.ts`); **GSAP** (`lib/motion.ts`) only for
+  the hero headline / count-up / aurora; **CSS** `animate-in` for app rows. The
+  motion components check `useReducedMotion()`; `framer-motion` is mocked in
+  `src/test/setup.ts`. See `design-system/retrivo-vault/MASTER.md` §Motion.
 - Frontend data hooks tolerate malformed responses (`Array.isArray(...) ? ... : []`).
 
 ## Local dev

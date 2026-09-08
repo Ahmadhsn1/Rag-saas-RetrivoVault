@@ -63,19 +63,41 @@ inside monospace chips/badges, never as body text. Brand bone is for one thing p
 
 ## Motion
 
-Standard tier. GSAP + ScrollTrigger for the landing; CSS transitions in the app.
+Standard tier. **Two libraries, clean split:**
 
-```js
-// scroll reveal — grid/stack
-gsap.from(els, { opacity: 0, y: 16, scale: 0.97, duration: 0.4,
-  stagger: { each: 0.06, from: 'start' }, ease: 'back.out(1.4)' });
+- **Framer Motion** — component-level motion. Scroll-into-view reveals
+  (`components/motion/Reveal.tsx` → `<Reveal>` / `<Stagger>` / `<RevealItem>`),
+  hover/tap micro-interactions, cursor spotlight (`SpotlightCard`), 3D tilt
+  (`TiltCard`), magnetic CTAs (`MagneticButton`), `AnimatePresence`. Every one
+  of these checks `useReducedMotion()` and renders the final state flat.
+- **GSAP + ScrollTrigger** (`lib/motion.ts`) — the hero headline split reveal,
+  the stat count-up, the aurora drift, any scrubbed parallax. Not for new
+  section reveals — use `<Reveal>`.
+- **CSS** (`tailwindcss-animate`) — app list/row entrances (`animate-in fade-in
+  slide-in-from-bottom-1` + `animationDelay` stagger), button hover.
+
+Shared Framer tokens live in `lib/anim.ts` (`EASE_OUT` = `[0.16,1,0.3,1]`,
+`revealVariants`, `staggerContainer`, spring presets).
+
+```tsx
+// section reveal
+<Reveal className="...">…</Reveal>
+// staggered grid — wrapChildren wraps each child in a RevealItem
+<Stagger className="grid …" stagger={0.07}>{cards}</Stagger>
 ```
 
-- Hover/interaction transitions 150–200ms `ease-out`. No layout-shifting hover (translate/opacity/border only, no scale on cards).
-- `back.out` overshoot is fine for marketing cards; **never** on tables or app data.
-- Global guard: `@media (prefers-reduced-motion: reduce)` zeroes all animation/transition
-  durations, and `motion.ts` `matchMedia` check renders final state without tweening.
+- Reveal throw: `y: 22 → 0`, `blur(6px) → 0`, opacity, 0.6s `EASE_OUT`, fires once.
+- Hover/interaction transitions 150–200ms `ease-out`. Cards may lift (`y: -3`
+  translate) + border brighten + cursor spotlight — **no scale on cards**.
+- Buttons: 200ms; hover = `-translate-y-0.5` + soft coloured shadow (indigo for
+  `default`, bone for `brand`); `active:scale-[0.97]`; trailing icon nudges `+2px`.
+- Magnetic pull is for **one or two focal CTAs per view**, never scattered.
+- Global guard: `@media (prefers-reduced-motion: reduce)` zeroes all CSS
+  animation/transition durations; Framer components honour `useReducedMotion()`;
+  `motion.ts` `matchMedia` check renders GSAP final state without tweening.
 - "Live" pulse dot: 2s ease-in-out opacity/scale loop, disabled under reduced-motion.
+- Tests: `framer-motion` is mocked in `src/test/setup.ts` (motion tags → plain
+  DOM, `useReducedMotion` → true) so reveals never gate on IntersectionObserver.
 
 ## Components
 

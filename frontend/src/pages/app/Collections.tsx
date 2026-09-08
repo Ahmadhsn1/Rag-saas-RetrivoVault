@@ -117,8 +117,12 @@ export default function Collections() {
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {collections.map((c) => (
-            <Card key={c._id} className="group p-4">
+          {collections.map((c, i) => (
+            <Card
+              key={c._id}
+              style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}
+              className="group p-4 animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-300 transition-[transform,border-color,box-shadow] hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg motion-reduce:transform-none"
+            >
               {editingId === c._id ? (
                 <div className="flex items-center gap-2">
                   <Input

@@ -1,10 +1,10 @@
-import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Eye, Lock, GitBranch } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
-import { Button } from "@/components/ui/button";
 import { PipelineStrip } from "@/components/rag/PipelineStrip";
-import { useGsapReveal } from "@/hooks/useGsapReveal";
+import { MagneticButton } from "@/components/motion/MagneticButton";
+import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
+import { SpotlightCard } from "@/components/motion/SpotlightCard";
 
 const PRINCIPLES = [
   {
@@ -30,60 +30,60 @@ export default function AboutPage() {
     "Retrivo Vault turns the documents you've collected — and never re-read — into a research assistant you can actually ask. Open source, built by one person.",
   );
 
-  const ref = useRef<HTMLDivElement>(null);
-  useGsapReveal(ref, "> *", { stagger: 0.08 });
-
   return (
     <div className="pt-32 pb-24">
       <div className="container max-w-2xl">
-        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
-          About
-        </p>
-        <h1 className="mt-3 text-3xl sm:text-4xl">
-          The research assistant that only knows what you've read
-        </h1>
-        <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-          Retrivo Vault turns the documents you've collected — and never
-          re-read — into something you can actually ask. Add your contracts,
-          papers, transcripts and notes to a private vault, ask in plain
-          language, and get an answer in seconds with the exact passage it came
-          from. It's private to you, and if the answer isn't in your documents,
-          Retrivo says so instead of guessing.
-        </p>
-
-        <div className="mt-12">
-          <PipelineStrip />
-        </div>
-
-        <div className="mt-16">
-          <h2 className="text-2xl">Open source, built by one person</h2>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            That's the pitch, not an apology. Retrivo is built and maintained by
-            a single independent developer, and the whole thing is open source.
-            When the product you trust with your contracts and research is a
-            small, readable codebase with no company behind it looking for a
-            reason to monetise your files, that's a feature.
+        <Reveal>
+          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
+            About
           </p>
+          <h1 className="mt-3 text-3xl sm:text-4xl">
+            The research assistant that only knows what you've read
+          </h1>
+          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+            Retrivo Vault turns the documents you've collected — and never
+            re-read — into something you can actually ask. Add your contracts,
+            papers, transcripts and notes to a private vault, ask in plain
+            language, and get an answer in seconds with the exact passage it came
+            from. It's private to you, and if the answer isn't in your documents,
+            Retrivo says so instead of guessing.
+          </p>
+        </Reveal>
 
-          <div ref={ref} className="mt-8 space-y-4">
-            {PRINCIPLES.map(({ icon: Icon, title, body }) => (
-              <div
-                key={title}
-                className="rounded-xl border border-border bg-card p-6"
-              >
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary">
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <h3 className="mt-4 font-mono text-sm font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Reveal className="mt-12" delay={0.06}>
+          <PipelineStrip />
+        </Reveal>
 
         <div className="mt-16">
+          <Reveal>
+            <h2 className="text-2xl">Open source, built by one person</h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              That's the pitch, not an apology. Retrivo is built and maintained
+              by a single independent developer, and the whole thing is open
+              source. When the product you trust with your contracts and
+              research is a small, readable codebase with no company behind it
+              looking for a reason to monetise your files, that's a feature.
+            </p>
+          </Reveal>
+
+          <Stagger wrapChildren={false} className="mt-8 space-y-4" stagger={0.08}>
+            {PRINCIPLES.map(({ icon: Icon, title, body }) => (
+              <RevealItem key={title}>
+                <SpotlightCard className="p-6">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary transition-colors group-hover:border-primary/60">
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-4 font-mono text-sm font-semibold">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {body}
+                  </p>
+                </SpotlightCard>
+              </RevealItem>
+            ))}
+          </Stagger>
+        </div>
+
+        <Reveal className="mt-16">
           <h2 className="text-2xl">How your documents are handled</h2>
           <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
             <li>
@@ -116,26 +116,24 @@ export default function AboutPage() {
             </Link>
             .
           </p>
-        </div>
+        </Reveal>
 
-        <div className="mt-16 rounded-2xl border border-border bg-card p-8 text-center">
+        <Reveal className="mt-16 rounded-2xl border border-border bg-card p-8 text-center">
           <h2 className="text-2xl">Stop re-reading. Start asking.</h2>
           <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
             Add your first few documents and ask a real question in the next two
             minutes. Free plan, or a 14-day Pro trial with no card.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <Button asChild variant="brand" size="lg">
-              <Link to="/signup">
-                Start free
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/pricing">See plans</Link>
-            </Button>
+            <MagneticButton to="/signup" variant="brand" size="lg">
+              Start free
+              <ArrowRight className="h-4 w-4" />
+            </MagneticButton>
+            <MagneticButton to="/pricing" variant="outline" size="lg" strength={0.18}>
+              See plans
+            </MagneticButton>
           </div>
-        </div>
+        </Reveal>
       </div>
     </div>
   );

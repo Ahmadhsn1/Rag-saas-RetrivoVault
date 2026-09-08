@@ -176,8 +176,12 @@ export default function Documents() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents.map((doc) => (
-                  <TableRow key={doc._id}>
+                {documents.map((doc, i) => (
+                  <TableRow
+                    key={doc._id}
+                    className="animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-300"
+                    style={{ animationDelay: `${Math.min(i, 14) * 25}ms` }}
+                  >
                     <TableCell className="max-w-[220px]">
                       <button
                         onClick={() => setDrawerDoc(doc)}

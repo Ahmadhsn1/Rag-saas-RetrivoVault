@@ -1,6 +1,5 @@
-import { useRef } from "react";
 import { X, Check } from "lucide-react";
-import { useGsapReveal } from "@/hooks/useGsapReveal";
+import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
 
 const WITHOUT = [
   "Re-reading documents you've already read to find one clause or number",
@@ -19,13 +18,10 @@ const WITH = [
 ];
 
 export function MissingOut() {
-  const ref = useRef<HTMLDivElement>(null);
-  useGsapReveal(ref, "> *", { stagger: 0.1 });
-
   return (
     <section className="border-y border-border bg-surface/30 py-24 md:py-32">
       <div className="container">
-        <div className="mx-auto max-w-2xl text-center">
+        <Reveal className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
             What you're missing
           </p>
@@ -35,35 +31,56 @@ export function MissingOut() {
           <p className="mt-4 text-muted-foreground">
             The value is in your archive. It's just locked in the pile.
           </p>
-        </div>
+        </Reveal>
 
-        <div ref={ref} className="mx-auto mt-14 grid max-w-4xl gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-destructive/25 bg-destructive/[0.04] p-6">
+        <div className="mx-auto mt-14 grid max-w-4xl gap-4 md:grid-cols-2">
+          <Reveal
+            className="rounded-xl border border-destructive/25 bg-destructive/[0.04] p-6"
+            delay={0.05}
+          >
             <p className="font-mono text-2xs uppercase tracking-wide text-destructive">
               Without Retrivo — right now you are
             </p>
-            <ul className="mt-4 space-y-3">
+            <Stagger as="ul" className="mt-4 space-y-3" stagger={0.06}>
               {WITHOUT.map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                  <X className="mt-0.5 h-4 w-4 shrink-0 text-destructive/70" aria-hidden="true" />
+                <RevealItem
+                  as="li"
+                  key={t}
+                  className="flex items-start gap-2.5 text-sm text-muted-foreground"
+                >
+                  <X
+                    className="mt-0.5 h-4 w-4 shrink-0 text-destructive/70"
+                    aria-hidden="true"
+                  />
                   {t}
-                </li>
+                </RevealItem>
               ))}
-            </ul>
-          </div>
-          <div className="rounded-xl border border-ok/25 bg-ok/[0.04] p-6">
+            </Stagger>
+          </Reveal>
+
+          <Reveal
+            className="rounded-xl border border-ok/25 bg-ok/[0.04] p-6"
+            delay={0.12}
+          >
             <p className="font-mono text-2xs uppercase tracking-wide text-ok">
               With Retrivo
             </p>
-            <ul className="mt-4 space-y-3">
+            <Stagger as="ul" className="mt-4 space-y-3" stagger={0.06}>
               {WITH.map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-sm text-foreground/90">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok" aria-hidden="true" />
+                <RevealItem
+                  as="li"
+                  key={t}
+                  className="flex items-start gap-2.5 text-sm text-foreground/90"
+                >
+                  <Check
+                    className="mt-0.5 h-4 w-4 shrink-0 text-ok"
+                    aria-hidden="true"
+                  />
                   {t}
-                </li>
+                </RevealItem>
               ))}
-            </ul>
-          </div>
+            </Stagger>
+          </Reveal>
         </div>
       </div>
     </section>

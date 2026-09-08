@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Reveal } from "@/components/motion/Reveal";
 
 const ITEMS = [
   {
@@ -36,7 +37,7 @@ export function FAQ() {
   return (
     <section id="faq" className="scroll-mt-24 py-24 md:py-32">
       <div className="container grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-        <div>
+        <Reveal>
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
             FAQ
           </p>
@@ -47,16 +48,18 @@ export function FAQ() {
               More about the project →
             </a>
           </p>
-        </div>
+        </Reveal>
 
-        <Accordion type="single" collapsible className="w-full">
-          {ITEMS.map((item, i) => (
-            <AccordionItem key={i} value={`item-${i}`}>
-              <AccordionTrigger>{item.q}</AccordionTrigger>
-              <AccordionContent>{item.a}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <Reveal delay={0.08}>
+          <Accordion type="single" collapsible className="w-full">
+            {ITEMS.map((item, i) => (
+              <AccordionItem key={i} value={`item-${i}`}>
+                <AccordionTrigger>{item.q}</AccordionTrigger>
+                <AccordionContent>{item.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Reveal>
       </div>
     </section>
   );

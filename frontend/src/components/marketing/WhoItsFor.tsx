@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import {
   Briefcase,
   Microscope,
@@ -7,7 +6,8 @@ import {
   PenLine,
   type LucideIcon,
 } from "lucide-react";
-import { useGsapReveal } from "@/hooks/useGsapReveal";
+import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
+import { SpotlightCard } from "@/components/motion/SpotlightCard";
 
 interface Persona {
   icon: LucideIcon;
@@ -50,13 +50,10 @@ const PERSONAS: Persona[] = [
 ];
 
 export function WhoItsFor() {
-  const ref = useRef<HTMLDivElement>(null);
-  useGsapReveal(ref, "> *", { stagger: 0.07 });
-
   return (
     <section id="who" className="scroll-mt-24 py-24 md:py-32">
       <div className="container">
-        <div className="mx-auto max-w-2xl text-center">
+        <Reveal className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
             Who it's for
           </p>
@@ -67,28 +64,27 @@ export function WhoItsFor() {
             You collected them to reference later. Retrivo makes “later” take
             seconds instead of an afternoon.
           </p>
-        </div>
+        </Reveal>
 
-        <div
-          ref={ref}
+        <Stagger
           className="mx-auto mt-14 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          stagger={0.07}
         >
           {PERSONAS.map(({ icon: Icon, who, pile, question }) => (
-            <article
-              key={who}
-              className="flex flex-col rounded-xl border border-border bg-card p-6 transition-colors hover:border-border-strong"
-            >
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary">
-                <Icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <h3 className="mt-4 font-mono text-sm font-semibold">{who}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">{pile}</p>
-              <p className="mt-4 text-sm leading-relaxed text-foreground/90">
-                {question}
-              </p>
-            </article>
+            <RevealItem key={who} className="h-full">
+              <SpotlightCard as="article" className="flex h-full flex-col p-6" lift>
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary transition-colors group-hover:border-primary/60">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 font-mono text-sm font-semibold">{who}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{pile}</p>
+                <p className="mt-4 text-sm leading-relaxed text-foreground/90">
+                  {question}
+                </p>
+              </SpotlightCard>
+            </RevealItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );

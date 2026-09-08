@@ -48,6 +48,70 @@ vi.mock("@/lib/motion", () => {
   };
 });
 
+// Framer Motion drives layout/transform APIs jsdom doesn't implement and gates
+// reveals on IntersectionObserver. Render motion elements as plain DOM and make
+// every hook inert so components take their reduced-motion (final-state) path.
+vi.mock("framer-motion", async () => {
+  const React = await import("react");
+
+  const STRIP = new Set([
+    "initial", "animate", "exit", "variants", "transition", "whileHover",
+    "whileTap", "whileFocus", "whileInView", "whileDrag", "viewport", "layout",
+    "layoutId", "layoutScroll", "drag", "dragConstraints", "dragElastic",
+    "onViewportEnter", "onViewportLeave", "onAnimationComplete", "custom",
+  ]);
+
+  const clean = (props: Record<string, unknown>) => {
+    const out: Record<string, unknown> = {};
+    for (const k in props) if (!STRIP.has(k)) out[k] = props[k];
+    return out;
+  };
+
+  const make = (tag: unknown) =>
+    React.forwardRef(
+      ({ children, ...props }: Record<string, unknown>, ref: unknown) =>
+        React.createElement(
+          (typeof tag === "string" ? tag : tag) as string,
+          { ...clean(props), ref },
+          children as React.ReactNode,
+        ),
+    );
+
+  const base: Record<string, unknown> = { create: (tag: unknown) => make(tag) };
+  const motion = new Proxy(base, {
+    get: (target, key: string) => (key in target ? target[key] : make(key)),
+  });
+
+  const mv = (initial: unknown) => {
+    let v = initial;
+    return {
+      get: () => v,
+      set: (n: unknown) => { v = n; },
+      on: () => () => {},
+      destroy: () => {},
+    };
+  };
+
+  return {
+    motion,
+    m: motion,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+    MotionConfig: ({ children }: { children: React.ReactNode }) => children,
+    LazyMotion: ({ children }: { children: React.ReactNode }) => children,
+    domAnimation: {},
+    domMax: {},
+    useReducedMotion: () => true,
+    useInView: () => true,
+    useAnimationControls: () => ({ start: () => Promise.resolve(), set: () => {} }),
+    useMotionValue: (v: unknown) => mv(v),
+    useSpring: (v: unknown) => (v && typeof v === "object" ? v : mv(v)),
+    useTransform: () => mv(0),
+    useMotionTemplate: () => "",
+    useScroll: () => ({ scrollY: mv(0), scrollYProgress: mv(0) }),
+    useMotionValueEvent: () => {},
+  };
+});
+
 export const mockApi = api as unknown as {
   get: Mock;
   post: Mock;

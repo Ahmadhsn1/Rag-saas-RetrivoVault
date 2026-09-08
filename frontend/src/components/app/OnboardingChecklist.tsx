@@ -70,12 +70,13 @@ export function OnboardingChecklist({
           {hasReadyDoc ? "Ask your vault" : "Get set up in three steps"}
         </p>
         <ul className="mt-4 space-y-2">
-          {steps.map((step) => (
+          {steps.map((step, i) => (
             <li
               key={step.title}
+              style={{ animationDelay: `${i * 70}ms` }}
               className={cn(
-                "flex items-start gap-3 rounded-lg border px-4 py-3",
-                step.done ? "border-ok/25 bg-ok/5" : "border-border bg-card",
+                "flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-300",
+                step.done ? "border-ok/25 bg-ok/5" : "border-border bg-card hover:border-border-strong",
               )}
             >
               {step.done ? (

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
+import { Stagger, RevealItem } from "@/components/motion/Reveal";
 
 const COLS = [
   {
@@ -34,16 +35,20 @@ const COLS = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-border">
-      <div className="container grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <div>
+      <Stagger
+        wrapChildren={false}
+        stagger={0.06}
+        className="container grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)]"
+      >
+        <RevealItem>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">
             The research assistant that only knows what you've read. Ask your
             documents anything, get a sourced answer in seconds — privately.
           </p>
-        </div>
+        </RevealItem>
         {COLS.map((col) => (
-          <div key={col.title}>
+          <RevealItem key={col.title}>
             <p className="font-mono text-2xs uppercase tracking-wide text-muted-foreground">
               {col.title}
             </p>
@@ -68,9 +73,9 @@ export function SiteFooter() {
                 </li>
               ))}
             </ul>
-          </div>
+          </RevealItem>
         ))}
-      </div>
+      </Stagger>
       <div className="border-t border-border">
         <div className="container flex flex-col items-center justify-between gap-3 py-6 sm:flex-row">
           <p className="font-mono text-2xs text-muted-foreground">

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,13 +6,11 @@ import { PLANS } from "@/lib/plans";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useGsapReveal } from "@/hooks/useGsapReveal";
+import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
 
 export function Pricing({ standalone = false }: { standalone?: boolean }) {
   const [annual, setAnnual] = useState(true);
   const { user } = useAuth();
-  const gridRef = useRef<HTMLDivElement>(null);
-  useGsapReveal(gridRef, "> *", { stagger: 0.08 });
 
   const ctaTo = (planId: string) =>
     user
@@ -24,7 +22,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
   return (
     <section id="pricing" className={cn("scroll-mt-24", standalone ? "pt-36 pb-24" : "py-24 md:py-32")}>
       <div className="container">
-        <div className="mx-auto max-w-2xl text-center">
+        <Reveal className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
             Pricing
           </p>
@@ -58,19 +56,23 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
               <span className="text-ok">−25%</span>
             </button>
           </div>
-        </div>
+        </Reveal>
 
-        <div ref={gridRef} className="mx-auto mt-14 grid max-w-5xl gap-5 lg:grid-cols-3">
+        <Stagger
+          wrapChildren={false}
+          stagger={0.1}
+          className="mx-auto mt-14 grid max-w-5xl gap-5 lg:grid-cols-3"
+        >
           {PLANS.map((plan) => {
             const price = annual ? plan.priceAnnual : plan.priceMonthly;
             return (
+              <RevealItem key={plan.id} className="h-full">
               <div
-                key={plan.id}
                 className={cn(
-                  "relative flex flex-col rounded-xl border bg-card p-6",
+                  "relative flex h-full flex-col rounded-xl border bg-card p-6 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-1 motion-reduce:transform-none",
                   plan.highlight
-                    ? "border-primary/50 shadow-lg ring-1 ring-primary/20"
-                    : "border-border",
+                    ? "border-primary/50 shadow-lg ring-1 ring-primary/20 hover:shadow-[0_20px_50px_-16px_rgba(108,92,231,0.45)]"
+                    : "border-border hover:border-border-strong hover:shadow-lg",
                 )}
               >
                 {plan.highlight && (
@@ -117,14 +119,18 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
                   ))}
                 </ul>
               </div>
+              </RevealItem>
             );
           })}
-        </div>
+        </Stagger>
 
-        <p className="mx-auto mt-8 max-w-md text-center font-mono text-2xs text-muted-foreground">
+        <Reveal
+          as="p"
+          className="mx-auto mt-8 max-w-md text-center font-mono text-2xs text-muted-foreground"
+        >
           Prices in USD, billed securely by Stripe. Switch plans or cancel any
           time — your documents stay put.
-        </p>
+        </Reveal>
       </div>
     </section>
   );

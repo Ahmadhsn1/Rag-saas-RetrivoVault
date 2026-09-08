@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { ArrowRight, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { MagneticButton } from "@/components/motion/MagneticButton";
+import { TiltCard } from "@/components/motion/TiltCard";
 import { PipelineStrip } from "@/components/rag/PipelineStrip";
 import { AnswerText } from "@/components/rag/AnswerText";
 import { AuroraBackground } from "@/components/marketing/AuroraBackground";
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { gsap, splitReveal, prefersReducedMotion } from "@/lib/motion";
+import { EASE_OUT } from "@/lib/anim";
 import type { RetrievedSource } from "@/types/api";
 
 interface Demo {
@@ -83,6 +85,7 @@ const DEMOS: Demo[] = [
 const HEADLINE = ["Your", "documents,", "answerable."];
 
 export function Hero() {
+  const reduce = useReducedMotion();
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const [demoIndex, setDemoIndex] = useState(0);
   const demo = DEMOS[demoIndex];
@@ -154,15 +157,13 @@ export function Hero() {
           </p>
 
           <div className="hero-fade mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button asChild variant="brand" size="lg">
-              <Link to="/signup">
-                Start free
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <a href="#demo">See it work</a>
-            </Button>
+            <MagneticButton to="/signup" variant="brand" size="lg">
+              Start free
+              <ArrowRight className="h-4 w-4" />
+            </MagneticButton>
+            <MagneticButton href="#demo" variant="outline" size="lg" strength={0.18}>
+              See it work
+            </MagneticButton>
           </div>
 
           <p className="hero-fade mt-3 font-mono text-2xs text-muted-foreground">
@@ -170,8 +171,13 @@ export function Hero() {
           </p>
         </div>
 
-        <div className="hero-fade relative">
-          <div className="glass rounded-xl p-4 shadow-lg">
+        <motion.div
+          className="relative"
+          initial={reduce ? false : { opacity: 0, y: 28, rotate: -1 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0, rotate: 0 }}
+          transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.4 }}
+        >
+          <TiltCard className="glass rounded-xl p-4 shadow-lg">
             <div className="flex items-center gap-1.5 pb-3">
               <span className="h-2.5 w-2.5 rounded-full bg-destructive/50" />
               <span className="h-2.5 w-2.5 rounded-full bg-warn/50" />
@@ -200,19 +206,32 @@ export function Hero() {
             <div className="mt-3 border-t border-border pt-3">
               <PipelineStrip compact animated />
             </div>
-          </div>
+          </TiltCard>
 
-          <div className="absolute -right-3 -top-5 hidden rotate-3 rounded-lg border border-border bg-card px-3 py-2 shadow-md sm:block">
+          <motion.div
+            className="absolute -right-3 -top-5 hidden rotate-3 rounded-lg border border-border bg-card px-3 py-2 shadow-md sm:block"
+            animate={reduce ? undefined : { y: [0, -7, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          >
             <p className="font-mono text-2xs text-muted-foreground">retrieval</p>
             <p className="font-mono text-sm text-ok">142ms</p>
-          </div>
-          <div className="absolute -bottom-6 -left-4 hidden -rotate-2 rounded-lg border border-border bg-card px-3 py-2 shadow-md sm:block">
+          </motion.div>
+          <motion.div
+            className="absolute -bottom-6 -left-4 hidden -rotate-2 rounded-lg border border-border bg-card px-3 py-2 shadow-md sm:block"
+            animate={reduce ? undefined : { y: [0, 7, 0] }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.6,
+            }}
+          >
             <p className="font-mono text-2xs text-muted-foreground">matched</p>
             <p className="font-mono text-sm text-brand">
               {sources.length} of 1,284
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );

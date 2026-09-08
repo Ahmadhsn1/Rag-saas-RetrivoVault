@@ -1,3 +1,5 @@
+import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
+
 const LINES = [
   { k: "isolation", v: "every query scoped to your account — the vector index too" },
   { k: "training", v: "your documents are never used to train any model" },
@@ -11,7 +13,7 @@ export function SecurityPanel() {
   return (
     <section id="security" className="scroll-mt-24 py-24 md:py-32">
       <div className="container grid items-center gap-12 lg:grid-cols-2">
-        <div>
+        <Reveal>
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
             Private by construction
           </p>
@@ -23,9 +25,9 @@ export function SecurityPanel() {
             in the database. Retrivo is open source, so you can verify that
             rather than take our word for it.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="terminal-panel overflow-hidden">
+        <Reveal className="terminal-panel overflow-hidden" delay={0.1}>
           <div className="flex items-center gap-1.5 border-b border-border px-4 py-2.5">
             <span className="h-2.5 w-2.5 rounded-full bg-border-strong" />
             <span className="h-2.5 w-2.5 rounded-full bg-border-strong" />
@@ -34,19 +36,28 @@ export function SecurityPanel() {
               security.audit
             </span>
           </div>
-          <ul className="divide-y divide-border font-mono text-xs">
+          <Stagger
+            as="ul"
+            wrapChildren={false}
+            stagger={0.06}
+            className="divide-y divide-border font-mono text-xs"
+          >
             {LINES.map((l) => (
-              <li key={l.k} className="flex items-start gap-3 px-4 py-3">
+              <RevealItem
+                as="li"
+                key={l.k}
+                className="flex items-start gap-3 px-4 py-3"
+              >
                 <span className="shrink-0 rounded-sm border border-ok/30 bg-ok/10 px-1.5 py-0.5 text-2xs uppercase text-ok">
                   ok
                 </span>
                 <span className="text-muted-foreground">
                   <span className="text-foreground">{l.k}</span> — {l.v}
                 </span>
-              </li>
+              </RevealItem>
             ))}
-          </ul>
-        </div>
+          </Stagger>
+        </Reveal>
       </div>
     </section>
   );

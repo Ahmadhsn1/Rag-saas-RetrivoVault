@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import {
   FileStack,
   Search,
@@ -8,45 +7,42 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGsapReveal } from "@/hooks/useGsapReveal";
+import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
+import { SpotlightCard } from "@/components/motion/SpotlightCard";
 import { PipelineStrip } from "@/components/rag/PipelineStrip";
 import { Badge } from "@/components/ui/badge";
 
 function Cell({
-  className,
+  span,
+  glow,
   children,
 }: {
-  className?: string;
+  span?: string;
+  glow?: string;
   children: React.ReactNode;
 }) {
   return (
-    <article
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card p-6 transition-colors duration-200 hover:border-border-strong",
-        className,
-      )}
-    >
-      {children}
-    </article>
+    <RevealItem className={cn("h-full", span)}>
+      <SpotlightCard className="flex h-full flex-col p-6" glow={glow} lift>
+        {children}
+      </SpotlightCard>
+    </RevealItem>
   );
 }
 
 function Icon({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary [&_svg]:h-5 [&_svg]:w-5">
+    <span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary transition-colors duration-200 group-hover:border-primary/60 [&_svg]:h-5 [&_svg]:w-5">
       {children}
     </span>
   );
 }
 
 export function BentoFeatures() {
-  const gridRef = useRef<HTMLDivElement>(null);
-  useGsapReveal(gridRef, "> *", { stagger: 0.08 });
-
   return (
     <section id="features" className="scroll-mt-24 py-24 md:py-32">
       <div className="container">
-        <div className="mx-auto max-w-2xl text-center">
+        <Reveal className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
             What's inside
           </p>
@@ -56,14 +52,15 @@ export function BentoFeatures() {
           <p className="mt-4 text-muted-foreground">
             Every stage from parsing to grounded generation — built to be read and run.
           </p>
-        </div>
+        </Reveal>
 
-        <div
-          ref={gridRef}
+        <Stagger
+          wrapChildren={false}
+          stagger={0.07}
           className="mt-14 grid auto-rows-[minmax(180px,auto)] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           {/* wide: ingestion */}
-          <Cell className="sm:col-span-2">
+          <Cell span="sm:col-span-2">
             <Icon>
               <FileStack />
             </Icon>
@@ -81,7 +78,7 @@ export function BentoFeatures() {
           </Cell>
 
           {/* tall: retrieval */}
-          <Cell className="lg:row-span-2">
+          <Cell span="lg:row-span-2">
             <Icon>
               <Search />
             </Icon>
@@ -149,7 +146,7 @@ export function BentoFeatures() {
           </Cell>
 
           {/* wide: isolation */}
-          <Cell className="sm:col-span-2">
+          <Cell span="sm:col-span-2" glow="rgba(74,222,128,0.12)">
             <div className="flex items-start justify-between">
               <Icon>
                 <ShieldCheck />
@@ -165,7 +162,7 @@ export function BentoFeatures() {
               the filter on every read, not a setting.
             </p>
           </Cell>
-        </div>
+        </Stagger>
       </div>
     </section>
   );
