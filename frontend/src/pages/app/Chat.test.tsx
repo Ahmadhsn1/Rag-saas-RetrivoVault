@@ -19,6 +19,9 @@ describe("Chat", () => {
   it("creates a session then streams an answer with sources", async () => {
     mockApi.get.mockImplementation((url: string) => {
       if (url === "/collections") return Promise.resolve({ data: { collections: [] } });
+      if (url === "/usage") return Promise.reject(new Error("no usage"));
+      if (url === "/documents")
+        return Promise.resolve({ data: { documents: [], total: 0, page: 1, pages: 1 } });
       if (url === "/chat") return Promise.resolve({ data: { sessions: [] } });
       if (url.startsWith("/chat/"))
         return Promise.resolve({

@@ -6,6 +6,7 @@ import {
   createSession,
   listSessions,
   getSession,
+  renameSession,
   deleteSession,
   sendMessage,
 } from "../controllers/chatController.js";
@@ -17,6 +18,7 @@ router.use(authenticateFlexible);
 router.post("/", createSession);
 router.get("/", listSessions);
 router.get("/:sessionId", getSession);
+router.patch("/:sessionId", renameSession);
 router.delete("/:sessionId", deleteSession);
 router.post("/:sessionId/message", chatLimiter, enforceQueryQuota, sendMessage);
 

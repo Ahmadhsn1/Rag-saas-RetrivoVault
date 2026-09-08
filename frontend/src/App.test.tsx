@@ -13,7 +13,8 @@ function signedIn() {
   mockApi.get.mockImplementation((url: string) => {
     if (url === "/collections") return Promise.resolve({ data: { collections: [] } });
     if (url === "/chat") return Promise.resolve({ data: { sessions: [] } });
-    if (url === "/documents") return Promise.resolve({ data: { documents: [] } });
+    if (url === "/documents")
+      return Promise.resolve({ data: { documents: [], total: 0, page: 1, pages: 1 } });
     if (url === "/usage")
       return Promise.resolve({
         data: {

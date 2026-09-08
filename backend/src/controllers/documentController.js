@@ -63,12 +63,36 @@ export const uploadDocument = asyncHandler(async (req, res) => {
   res.status(202).json({ document: doc });
 });
 
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export const listDocuments = asyncHandler(async (req, res) => {
   const query = { userId: req.user.id };
   if (req.query.collectionId) query.collectionId = req.query.collectionId;
+  if (["processing", "ready", "failed"].includes(req.query.status)) {
+    query.status = req.query.status;
+  }
+  const q = (req.query.q || "").trim();
+  if (q) query.filename = { $regex: escapeRegex(q), $options: "i" };
 
-  const documents = await Document.find(query).sort({ uploadedAt: -1 }).lean();
-  res.json({ documents });
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const pageSize = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+
+  const [documents, total] = await Promise.all([
+    Document.find(query)
+      .sort({ uploadedAt: -1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .lean(),
+    Document.countDocuments(query),
+  ]);
+
+  res.json({
+    documents,
+    total,
+    page,
+    pageSize,
+    pages: Math.max(Math.ceil(total / pageSize), 1),
+  });
 });
 
 export const getDocument = asyncHandler(async (req, res) => {

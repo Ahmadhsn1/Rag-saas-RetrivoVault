@@ -34,6 +34,19 @@ export const getSession = asyncHandler(async (req, res) => {
   res.json({ session });
 });
 
+export const renameSession = asyncHandler(async (req, res) => {
+  const title = (req.body?.title || "").trim().slice(0, 120);
+  if (!title) throw ApiError.badRequest("title is required");
+
+  const session = await ChatSession.findOneAndUpdate(
+    { _id: req.params.sessionId, userId: req.user.id },
+    { title },
+    { new: true }
+  ).select("title createdAt updatedAt");
+  if (!session) throw ApiError.notFound("Chat session not found");
+  res.json({ session });
+});
+
 export const deleteSession = asyncHandler(async (req, res) => {
   const deleted = await ChatSession.findOneAndDelete({
     _id: req.params.sessionId,

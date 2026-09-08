@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { api, apiErrorMessage, streamChat } from "@/lib/api";
 import { notifyApiError } from "@/lib/notifyApiError";
 import { useChatSessions } from "@/hooks/useChatSessions";
@@ -68,6 +69,15 @@ export default function Chat() {
     setMessages([]);
   }, []);
 
+  const copyMessage = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied");
+    } catch {
+      toast.error("Couldn't copy");
+    }
+  }, []);
+
   const deleteSession = useCallback(
     async (id: string) => {
       try {
@@ -79,6 +89,19 @@ export default function Chat() {
       }
     },
     [activeId, newSession, setSessions],
+  );
+
+  const renameSession = useCallback(
+    async (id: string, title: string) => {
+      setSessions((s) => s.map((x) => (x._id === id ? { ...x, title } : x)));
+      try {
+        await api.patch(`/chat/${id}`, { title });
+      } catch (err) {
+        toast.error(apiErrorMessage(err, "Rename failed"));
+        void refetchSessions();
+      }
+    },
+    [setSessions, refetchSessions],
   );
 
   const send = useCallback(
@@ -161,6 +184,7 @@ export default function Chat() {
           onSelect={setActiveId}
           onNew={newSession}
           onDelete={deleteSession}
+          onRename={renameSession}
         />
       </div>
 
@@ -182,20 +206,37 @@ export default function Chat() {
                 {messages.map((msg, i) => (
                   <div
                     key={i}
-                    className={
-                      msg.role === "user"
-                        ? "ml-auto w-fit max-w-[85%] rounded-lg bg-surface px-3.5 py-2.5 text-sm"
-                        : "w-fit max-w-[92%] rounded-lg border border-border bg-card px-3.5 py-2.5"
-                    }
+                    className={cn(
+                      "group/msg",
+                      msg.role === "user" ? "flex justify-end" : "",
+                    )}
                   >
-                    {msg.role === "assistant" ? (
-                      <AnswerText
-                        content={msg.content}
-                        sources={msg.sources}
-                        onSelectSource={setSelected}
-                      />
-                    ) : (
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <div
+                      className={
+                        msg.role === "user"
+                          ? "w-fit max-w-[85%] rounded-lg bg-surface px-3.5 py-2.5 text-sm"
+                          : "w-fit max-w-[92%] rounded-lg border border-border bg-card px-3.5 py-2.5"
+                      }
+                    >
+                      {msg.role === "assistant" ? (
+                        <AnswerText
+                          content={msg.content}
+                          sources={msg.sources}
+                          onSelectSource={setSelected}
+                        />
+                      ) : (
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      )}
+                    </div>
+                    {msg.role === "assistant" && (
+                      <button
+                        onClick={() => copyMessage(msg.content)}
+                        className="mt-1 inline-flex items-center gap-1 rounded px-1 font-mono text-2xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/msg:opacity-100"
+                        aria-label="Copy answer"
+                      >
+                        <Copy className="h-3 w-3" />
+                        copy
+                      </button>
                     )}
                   </div>
                 ))}

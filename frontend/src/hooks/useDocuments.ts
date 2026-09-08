@@ -1,34 +1,67 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import type { VaultDocument } from "@/types/api";
+import type { DocumentStatus, VaultDocument } from "@/types/api";
 
-export function useDocuments(collectionId?: string | null) {
+interface Options {
+  collectionId?: string | null;
+  q?: string;
+  status?: DocumentStatus | "all";
+  page?: number;
+  limit?: number;
+}
+
+interface Result {
+  documents: VaultDocument[];
+  total: number;
+  pages: number;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  setDocuments: React.Dispatch<React.SetStateAction<VaultDocument[]>>;
+}
+
+export function useDocuments(opts: Options | string | null = {}): Result {
+  // Back-compat: a bare collectionId string/null still works.
+  const o: Options =
+    typeof opts === "string" || opts === null ? { collectionId: opts } : opts;
+  const { collectionId, q = "", status = "all", page = 1, limit = 25 } = o;
+
   const [documents, setDocuments] = useState<VaultDocument[]>([]);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
 
   const refetch = useCallback(async () => {
     try {
-      const { data } = await api.get<{ documents: VaultDocument[] }>(
-        "/documents",
-        { params: collectionId ? { collectionId } : {} },
-      );
+      const params: Record<string, string | number> = { page, limit };
+      if (collectionId) params.collectionId = collectionId;
+      if (q) params.q = q;
+      if (status !== "all") params.status = status;
+
+      const { data } = await api.get<{
+        documents: VaultDocument[];
+        total: number;
+        pages: number;
+      }>("/documents", { params });
       setDocuments(data.documents);
+      setTotal(data.total);
+      setPages(data.pages);
       setError(null);
     } catch {
       setError("Failed to load documents");
     } finally {
       setLoading(false);
     }
-  }, [collectionId]);
+  }, [collectionId, q, status, page, limit]);
 
   useEffect(() => {
     setLoading(true);
     void refetch();
   }, [refetch]);
 
-  // Poll while any document is still processing.
+  // Poll while anything on this page is still processing.
   useEffect(() => {
     const processing = documents.some((d) => d.status === "processing");
     if (!processing) {
@@ -44,5 +77,5 @@ export function useDocuments(collectionId?: string | null) {
     };
   }, [documents, refetch]);
 
-  return { documents, loading, error, refetch, setDocuments };
+  return { documents, total, pages, loading, error, refetch, setDocuments };
 }
