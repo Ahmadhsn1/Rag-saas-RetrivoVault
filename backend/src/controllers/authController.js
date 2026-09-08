@@ -15,6 +15,7 @@ import { Webhook } from "../models/Webhook.js";
 import { env, isProd, isTestEnv } from "../config/env.js";
 import ms from "../utils/ms.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
+import { str } from "../middleware/sanitize.js";
 import { signAccessToken } from "../middleware/auth.js";
 import { issueToken, consumeToken } from "../services/authTokens.js";
 import { TRIAL_DAYS, TRIAL_PLAN } from "../config/plans.js";
@@ -60,14 +61,16 @@ async function sendVerificationEmail(user) {
 }
 
 export const signup = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body || {};
-  if (!name || !emailRe.test(email || "") || !password || password.length < 8) {
+  const name = str(req.body?.name).trim().slice(0, 120);
+  const email = str(req.body?.email).trim().toLowerCase().slice(0, 254);
+  const password = str(req.body?.password);
+  if (!name || !emailRe.test(email) || password.length < 8 || password.length > 200) {
     throw ApiError.badRequest(
-      "name, valid email, and password (min 8 chars) are required"
+      "name, valid email, and password (8–200 chars) are required"
     );
   }
 
-  const exists = await User.findOne({ email: email.toLowerCase() }).lean();
+  const exists = await User.findOne({ email }).lean();
   if (exists) throw ApiError.conflict("Email already registered");
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -89,7 +92,7 @@ export const signup = asyncHandler(async (req, res) => {
   logActivity(user._id, "auth.signup", email, req);
   void notify(user._id, {
     type: "welcome",
-    title: `Welcome to Retrivo Vault, ${name.split(" ")[0]}`,
+    title: `Welcome to Retrivo Vault, ${name.split(" ")[0] || "there"}`,
     body: `Your ${TRIAL_DAYS}-day ${TRIAL_PLAN.toUpperCase()} trial is active. Upload a document to get started.`,
     link: "/app/documents",
   });
@@ -105,10 +108,11 @@ const MAX_FAILED = 8;
 const LOCK_MS = 15 * 60 * 1000;
 
 export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body || {};
+  const email = str(req.body?.email).trim().toLowerCase().slice(0, 254);
+  const password = str(req.body?.password);
   if (!email || !password) throw ApiError.badRequest("email and password required");
 
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email });
 
   if (user?.isLocked()) {
     const mins = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
@@ -190,7 +194,7 @@ export const me = asyncHandler(async (req, res) => {
 // --- Email verification ---
 
 export const verifyEmail = asyncHandler(async (req, res) => {
-  const raw = req.body?.token || req.query?.token;
+  const raw = str(req.body?.token) || str(req.query?.token);
   const userId = await consumeToken(raw, "email_verify");
   if (!userId) throw ApiError.badRequest("Invalid or expired verification link");
 
@@ -211,8 +215,8 @@ export const resendVerification = asyncHandler(async (req, res) => {
 // --- Password reset ---
 
 export const forgotPassword = asyncHandler(async (req, res) => {
-  const email = (req.body?.email || "").toLowerCase().trim();
-  const user = email ? await User.findOne({ email }) : null;
+  const email = str(req.body?.email).toLowerCase().trim().slice(0, 254);
+  const user = email && emailRe.test(email) ? await User.findOne({ email }) : null;
 
   // Always 200 — don't reveal whether the address exists.
   if (user) {
@@ -227,9 +231,10 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 export const resetPassword = asyncHandler(async (req, res) => {
-  const { token, password } = req.body || {};
-  if (!password || password.length < 8) {
-    throw ApiError.badRequest("Password must be at least 8 characters");
+  const token = str(req.body?.token);
+  const password = str(req.body?.password);
+  if (password.length < 8 || password.length > 200) {
+    throw ApiError.badRequest("Password must be 8–200 characters");
   }
   const userId = await consumeToken(token, "password_reset");
   if (!userId) throw ApiError.badRequest("Invalid or expired reset link");
@@ -248,7 +253,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
 // --- Account deletion (cascade) ---
 
 export const deleteAccount = asyncHandler(async (req, res) => {
-  const { password } = req.body || {};
+  const password = str(req.body?.password);
   const user = await User.findById(req.user.id);
   if (!user) throw ApiError.unauthorized();
 

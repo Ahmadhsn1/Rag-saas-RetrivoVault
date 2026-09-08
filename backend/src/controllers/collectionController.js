@@ -3,9 +3,10 @@ import { Collection } from "../models/Collection.js";
 import { Document } from "../models/Document.js";
 import { Chunk } from "../models/Chunk.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
+import { str } from "../middleware/sanitize.js";
 
 export const createCollection = asyncHandler(async (req, res) => {
-  const name = (req.body?.name || "").trim();
+  const name = str(req.body?.name).trim();
   if (!name) throw ApiError.badRequest("name is required");
 
   const collection = await Collection.create({ userId: req.user.id, name });
@@ -34,12 +35,12 @@ export const listCollections = asyncHandler(async (req, res) => {
 export const updateCollection = asyncHandler(async (req, res) => {
   const patch = {};
   if (typeof req.body?.name === "string") {
-    const name = req.body.name.trim();
+    const name = str(req.body.name).trim();
     if (!name) throw ApiError.badRequest("name cannot be empty");
     patch.name = name;
   }
   if (typeof req.body?.instructions === "string") {
-    patch.instructions = req.body.instructions.slice(0, 2000);
+    patch.instructions = str(req.body.instructions).slice(0, 2000);
   }
   if (!Object.keys(patch).length) throw ApiError.badRequest("nothing to update");
 

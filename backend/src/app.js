@@ -8,6 +8,7 @@ import pinoHttp from "pino-http";
 import { env, billingEnabled, mailEnabled, isTestEnv } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
+import { mongoSanitize } from "./middleware/sanitize.js";
 import { handleWebhook } from "./controllers/billingController.js";
 import { queueStats } from "./services/jobQueue.js";
 
@@ -53,6 +54,7 @@ export function createApp() {
 
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
+  app.use(mongoSanitize);
 
   app.get("/api/health", (_req, res) =>
     res.json({ ok: true, service: "retrivo-vault", ts: Date.now() })

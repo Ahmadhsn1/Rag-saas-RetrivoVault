@@ -2,6 +2,7 @@ import { ApiKey, generateApiKey } from "../models/ApiKey.js";
 import { User } from "../models/User.js";
 import { planFor } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
+import { str } from "../middleware/sanitize.js";
 
 export const listApiKeys = asyncHandler(async (req, res) => {
   const keys = await ApiKey.find({ userId: req.user.id, revokedAt: null }).sort({
@@ -11,7 +12,7 @@ export const listApiKeys = asyncHandler(async (req, res) => {
 });
 
 export const createApiKey = asyncHandler(async (req, res) => {
-  const name = (req.body?.name || "").trim();
+  const name = str(req.body?.name).trim();
   if (!name) throw ApiError.badRequest("name is required");
 
   const user = await User.findById(req.user.id);

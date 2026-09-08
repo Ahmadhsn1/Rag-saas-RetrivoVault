@@ -4,6 +4,7 @@ import { ChatSession } from "../models/ChatSession.js";
 import { UsageEvent } from "../models/UsageEvent.js";
 import { PLANS } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
+import { str } from "../middleware/sanitize.js";
 import { logActivity } from "../services/activityLog.js";
 import { notify } from "../services/notifications.js";
 
@@ -40,10 +41,17 @@ export const adminStats = asyncHandler(async (_req, res) => {
   });
 });
 
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export const adminListUsers = asyncHandler(async (req, res) => {
-  const q = (req.query.q || "").trim();
+  const q = escapeRegex(str(req.query.q).trim()).slice(0, 100);
   const filter = q
-    ? { $or: [{ email: new RegExp(q, "i") }, { name: new RegExp(q, "i") }] }
+    ? {
+        $or: [
+          { email: { $regex: q, $options: "i" } },
+          { name: { $regex: q, $options: "i" } },
+        ],
+      }
     : {};
   const page = Math.max(Number(req.query.page) || 1, 1);
   const pageSize = 25;

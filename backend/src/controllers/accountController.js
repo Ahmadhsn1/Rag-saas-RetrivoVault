@@ -5,10 +5,11 @@ import { Collection } from "../models/Collection.js";
 import { ChatSession } from "../models/ChatSession.js";
 import { planFor } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
+import { str } from "../middleware/sanitize.js";
 import { listActivity, logActivity } from "../services/activityLog.js";
 
 export const updateProfile = asyncHandler(async (req, res) => {
-  const name = (req.body?.name || "").trim();
+  const name = str(req.body?.name).trim();
   if (!name) throw ApiError.badRequest("name is required");
 
   const user = await User.findByIdAndUpdate(
@@ -41,7 +42,7 @@ export const updateNotificationPrefs = asyncHandler(async (req, res) => {
 
 // Bring-your-own Gemini key (paid plans only).
 export const setGeminiKey = asyncHandler(async (req, res) => {
-  const key = (req.body?.key || "").trim();
+  const key = str(req.body?.key).trim();
   if (!key || key.length < 20) throw ApiError.badRequest("That doesn't look like a valid key");
 
   const user = await User.findById(req.user.id);

@@ -10,12 +10,16 @@ import {
 import { incrementQueryCount, recordEvent } from "../services/usage.js";
 import { dispatchWebhook } from "../services/webhooks.js";
 import { modelsFor } from "../config/gemini.js";
+import { str } from "../middleware/sanitize.js";
+
+// A path/body value that must be a plain ObjectId-shaped string, else null.
+const asId = (v) => (typeof v === "string" && /^[a-f\d]{24}$/i.test(v) ? v : null);
 
 export const createSession = asyncHandler(async (req, res) => {
   const session = await ChatSession.create({
     userId: req.user.id,
-    title: req.body?.title?.trim() || "New chat",
-    collectionId: req.body?.collectionId || null,
+    title: str(req.body?.title).trim().slice(0, 120) || "New chat",
+    collectionId: asId(req.body?.collectionId),
   });
   res.status(201).json({ session });
 });
@@ -122,6 +126,7 @@ export const messageFeedback = asyncHandler(async (req, res) => {
   });
   if (!session) throw ApiError.notFound("Chat session not found");
 
+  if (!asId(req.params.messageId)) throw ApiError.notFound("Message not found");
   const msg = session.messages.id(req.params.messageId);
   if (!msg || msg.role !== "assistant") {
     throw ApiError.notFound("Message not found");
@@ -133,7 +138,7 @@ export const messageFeedback = asyncHandler(async (req, res) => {
 
 // POST /api/chat/:sessionId/message  — Server-Sent Events stream.
 export const sendMessage = asyncHandler(async (req, res) => {
-  const question = (req.body?.content || "").trim();
+  const question = str(req.body?.content).trim().slice(0, 8000);
   if (!question) throw ApiError.badRequest("content is required");
 
   const session = await ChatSession.findOne({
@@ -142,7 +147,9 @@ export const sendMessage = asyncHandler(async (req, res) => {
   });
   if (!session) throw ApiError.notFound("Chat session not found");
 
-  const collectionId = req.body?.collectionId || session.collectionId || null;
+  const collectionId =
+    asId(req.body?.collectionId) ||
+    (session.collectionId ? String(session.collectionId) : null);
   let instructions = "";
   if (collectionId) {
     const col = await Collection.findOne({

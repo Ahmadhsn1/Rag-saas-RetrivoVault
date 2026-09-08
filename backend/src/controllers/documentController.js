@@ -4,6 +4,9 @@ import { Chunk } from "../models/Chunk.js";
 import { Collection } from "../models/Collection.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { queueIngestion } from "../services/ingestionService.js";
+import { str } from "../middleware/sanitize.js";
+
+const asId = (v) => (typeof v === "string" && /^[a-f\d]{24}$/i.test(v) ? v : null);
 
 const EXT_MIME = {
   ".pdf": "application/pdf",
@@ -31,15 +34,13 @@ function normalizeMime(file) {
 export const uploadDocument = asyncHandler(async (req, res) => {
   if (!req.file) throw ApiError.badRequest("No file uploaded (field name: 'file')");
 
-  let { collectionId } = req.body || {};
+  let collectionId = asId(req.body?.collectionId);
   if (collectionId) {
     const owned = await Collection.exists({
       _id: collectionId,
       userId: req.user.id,
     });
     if (!owned) throw ApiError.badRequest("Unknown collectionId");
-  } else {
-    collectionId = null;
   }
 
   const mimeType = normalizeMime(req.file);
@@ -67,11 +68,12 @@ const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const listDocuments = asyncHandler(async (req, res) => {
   const query = { userId: req.user.id };
-  if (req.query.collectionId) query.collectionId = req.query.collectionId;
+  const qCol = asId(req.query.collectionId);
+  if (qCol) query.collectionId = qCol;
   if (["processing", "ready", "failed"].includes(req.query.status)) {
     query.status = req.query.status;
   }
-  const q = (req.query.q || "").trim();
+  const q = str(req.query.q).trim();
   if (q) query.filename = { $regex: escapeRegex(q), $options: "i" };
 
   const page = Math.max(Number(req.query.page) || 1, 1);
