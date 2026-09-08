@@ -1,4 +1,5 @@
 import { llmModel as sharedLlmModel } from "../config/gemini.js";
+import { withRetry } from "../utils/retry.js";
 
 const SYSTEM_PROMPT = `You are Retrivo Vault's assistant. Answer the user's question using ONLY the numbered context passages provided.
 Rules:
@@ -29,7 +30,10 @@ Answer:`;
 // Streams the answer token-by-token. Yields text deltas.
 export async function* streamAnswer({ question, chunks, history, model }) {
   const prompt = buildPrompt({ question, chunks, history });
-  const result = await (model || sharedLlmModel).generateContentStream(prompt);
+  // Retry only the initial call — once tokens flow we can't safely restart.
+  const result = await withRetry(() =>
+    (model || sharedLlmModel).generateContentStream(prompt)
+  );
   for await (const part of result.stream) {
     const delta = part.text();
     if (delta) yield delta;
@@ -39,7 +43,9 @@ export async function* streamAnswer({ question, chunks, history, model }) {
 // Non-streaming variant (used for tests / fallback).
 export async function generateAnswer({ question, chunks, history, model }) {
   const prompt = buildPrompt({ question, chunks, history });
-  const result = await (model || sharedLlmModel).generateContent(prompt);
+  const result = await withRetry(() =>
+    (model || sharedLlmModel).generateContent(prompt)
+  );
   return result.response.text();
 }
 

@@ -1,17 +1,20 @@
 import { embeddingModel as sharedEmbeddingModel } from "../config/gemini.js";
+import { withRetry } from "../utils/retry.js";
 
 const EMBED_DIM = 768;
 
 async function embed(text, taskType, model) {
-  const res = await (model || sharedEmbeddingModel).embedContent({
-    content: { parts: [{ text }] },
-    taskType,
+  return withRetry(async () => {
+    const res = await (model || sharedEmbeddingModel).embedContent({
+      content: { parts: [{ text }] },
+      taskType,
+    });
+    const values = res.embedding?.values;
+    if (!Array.isArray(values) || values.length !== EMBED_DIM) {
+      throw new Error(`Unexpected embedding shape: got ${values?.length} values`);
+    }
+    return values;
   });
-  const values = res.embedding?.values;
-  if (!Array.isArray(values) || values.length !== EMBED_DIM) {
-    throw new Error(`Unexpected embedding shape: got ${values?.length} values`);
-  }
-  return values;
 }
 
 // For stored document chunks.
