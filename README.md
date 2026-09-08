@@ -63,6 +63,10 @@ npm run typecheck && npm run lint && npm run build
 For a zero-config demo (auto-verified emails, billing stubbed) set `DEMO_MODE=true`
 in `backend/.env`.
 
+`cd backend && npm run dev:standalone` boots the API against an ephemeral in-memory
+MongoDB — no Atlas needed — for quickly exercising every endpoint except vector
+search (which is Atlas-only) and live Gemini/Stripe calls.
+
 ### Routes
 
 `/` landing · `/pricing` · `/login` · `/signup` · `/forgot-password` ·
