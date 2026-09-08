@@ -7,6 +7,16 @@ const MarketingLayout = lazy(() => import("@/pages/marketing/MarketingLayout"));
 const Landing = lazy(() => import("@/pages/marketing/Landing"));
 const PricingPage = lazy(() => import("@/pages/marketing/PricingPage"));
 const DocsPage = lazy(() => import("@/pages/marketing/DocsPage"));
+const TermsPage = lazy(() =>
+  import("@/pages/marketing/LegalPage").then((m) => ({
+    default: () => <m.LegalPage kind="terms" />,
+  })),
+);
+const PrivacyPage = lazy(() =>
+  import("@/pages/marketing/LegalPage").then((m) => ({
+    default: () => <m.LegalPage kind="privacy" />,
+  })),
+);
 const SharedChat = lazy(() => import("@/pages/SharedChat"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Signup = lazy(() => import("@/pages/auth/Signup"));
@@ -54,6 +64,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/docs" element={<DocsPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Route>
 
         <Route path="/s/:shareId" element={<SharedChat />} />

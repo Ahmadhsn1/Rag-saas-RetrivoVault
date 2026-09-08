@@ -24,6 +24,8 @@ const COLS = [
     links: [
       { label: "FAQ", href: "/#faq" },
       { label: "Security", href: "/#security" },
+      { label: "Terms", href: "/terms" },
+      { label: "Privacy", href: "/privacy" },
     ],
   },
 ];
