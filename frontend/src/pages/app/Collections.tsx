@@ -1,5 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { FolderTree, Plus, Check, X, Pencil, Trash2 } from "lucide-react";
+import {
+  FolderTree,
+  Plus,
+  Check,
+  X,
+  Pencil,
+  Trash2,
+  Wand2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
 import { notifyApiError } from "@/lib/notifyApiError";
@@ -9,8 +17,10 @@ import { EmptyState } from "@/components/app/EmptyState";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import type { Collection } from "@/types/api";
 
 export default function Collections() {
   const { collections, collectionsLoading, refetchCollections } = useAppState();
@@ -56,6 +66,16 @@ export default function Collections() {
       toast.success("Collection deleted. Documents were kept.");
     } catch (err) {
       toast.error(apiErrorMessage(err, "Delete failed"));
+    }
+  };
+
+  const saveInstructions = async (id: string, instructions: string) => {
+    try {
+      await api.patch(`/collections/${id}`, { instructions });
+      await refetchCollections();
+      toast.success("Instructions saved.");
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Save failed"));
     }
   };
 
@@ -128,44 +148,96 @@ export default function Collections() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-mono text-sm font-semibold">{c.name}</p>
-                    <p className="mt-1 font-mono text-2xs text-muted-foreground">
-                      {c.documentCount ?? 0} docs · created{" "}
-                      {formatRelativeTime(c.createdAt)}
-                    </p>
+                <>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-mono text-sm font-semibold">{c.name}</p>
+                      <p className="mt-1 font-mono text-2xs text-muted-foreground">
+                        {c.documentCount ?? 0} docs · created{" "}
+                        {formatRelativeTime(c.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                      <button
+                        onClick={() => {
+                          setEditingId(c._id);
+                          setEditName(c.name);
+                        }}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        aria-label={`Rename ${c.name}`}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <ConfirmDialog
+                        title="Delete collection?"
+                        description={`"${c.name}" will be removed. Its documents are kept and moved to "All documents".`}
+                        confirmLabel="Delete"
+                        onConfirm={() => remove(c._id)}
+                        trigger={
+                          <button
+                            className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"
+                            aria-label={`Delete ${c.name}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        }
+                      />
+                    </div>
                   </div>
-                  <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                    <button
-                      onClick={() => {
-                        setEditingId(c._id);
-                        setEditName(c.name);
-                      }}
-                      className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                      aria-label={`Rename ${c.name}`}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <ConfirmDialog
-                      title="Delete collection?"
-                      description={`"${c.name}" will be removed. Its documents are kept and moved to "All documents".`}
-                      confirmLabel="Delete"
-                      onConfirm={() => remove(c._id)}
-                      trigger={
-                        <button
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"
-                          aria-label={`Delete ${c.name}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      }
-                    />
-                  </div>
-                </div>
+                  <InstructionsEditor collection={c} onSave={saveInstructions} />
+                </>
               )}
             </Card>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InstructionsEditor({
+  collection,
+  onSave,
+}: {
+  collection: Collection;
+  onSave: (id: string, instructions: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(collection.instructions ?? "");
+  const dirty = value !== (collection.instructions ?? "");
+
+  return (
+    <div className="mt-3 border-t border-border pt-3">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-wide text-muted-foreground hover:text-foreground"
+      >
+        <Wand2 className="h-3 w-3" />
+        Custom instructions
+        {collection.instructions ? (
+          <span className="text-ok">· set</span>
+        ) : null}
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2">
+          <Textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            rows={3}
+            maxLength={2000}
+            placeholder="e.g. Answer as a cautious contracts lawyer. Always quote the exact clause."
+            className="text-xs"
+          />
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!dirty}
+              onClick={() => onSave(collection._id, value)}
+            >
+              Save
+            </Button>
+          </div>
         </div>
       )}
     </div>

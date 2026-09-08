@@ -68,6 +68,21 @@ export default function Chat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
+  // Deep link from a suggested question: /app?ask=...
+  const askConsumed = useRef(false);
+  useEffect(() => {
+    const ask = params.get("ask");
+    if (ask && !askConsumed.current && !streaming) {
+      askConsumed.current = true;
+      setParams((p) => {
+        p.delete("ask");
+        return p;
+      });
+      void send(ask);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
+
   useEffect(() => {
     if (!activeId) {
       setMessages([]);

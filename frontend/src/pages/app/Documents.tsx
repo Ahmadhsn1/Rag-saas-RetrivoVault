@@ -16,6 +16,7 @@ import { useAppState } from "@/context/AppContext";
 import { StatusChip } from "@/components/rag/StatusChip";
 import { EmptyState } from "@/components/app/EmptyState";
 import { UploadDialog } from "@/components/app/UploadDialog";
+import { DocumentDrawer } from "@/components/app/DocumentDrawer";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import type { DocumentStatus } from "@/types/api";
+import type { DocumentStatus, VaultDocument } from "@/types/api";
 
 const STATUS_FILTERS: (DocumentStatus | "all")[] = [
   "all",
@@ -51,6 +52,7 @@ export default function Documents() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<DocumentStatus | "all">("all");
   const [page, setPage] = useState(1);
+  const [drawerDoc, setDrawerDoc] = useState<VaultDocument | null>(null);
 
   // debounce the search box
   useEffect(() => {
@@ -177,7 +179,10 @@ export default function Documents() {
                 {documents.map((doc) => (
                   <TableRow key={doc._id}>
                     <TableCell className="max-w-[220px]">
-                      <span className="flex items-center gap-2">
+                      <button
+                        onClick={() => setDrawerDoc(doc)}
+                        className="flex items-center gap-2 text-left hover:text-primary"
+                      >
                         <FileText
                           className="h-4 w-4 shrink-0 text-muted-foreground"
                           aria-hidden="true"
@@ -185,7 +190,7 @@ export default function Documents() {
                         <span className="truncate font-mono text-xs">
                           {doc.filename}
                         </span>
-                      </span>
+                      </button>
                       {doc.status === "failed" && doc.error && (
                         <span className="mt-1 block truncate font-mono text-2xs text-destructive">
                           {doc.error}
@@ -234,6 +239,11 @@ export default function Documents() {
               </TableBody>
             </Table>
           </div>
+
+          <DocumentDrawer
+            doc={drawerDoc}
+            onOpenChange={(o) => !o && setDrawerDoc(null)}
+          />
 
           {pages > 1 && (
             <div className="mt-4 flex items-center justify-between font-mono text-2xs text-muted-foreground">

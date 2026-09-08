@@ -4,6 +4,7 @@ import {
   FileText,
   FolderTree,
   Settings,
+  ShieldCheck,
   PanelLeftClose,
   type LucideIcon,
 } from "lucide-react";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { UserMenu } from "@/components/app/UserMenu";
 import { useAppState } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { Progress } from "@/components/ui/progress";
 
 interface NavItem {
@@ -30,6 +32,11 @@ const NAV: NavItem[] = [
 export function AppSidebar({ onClose }: { onClose?: () => void }) {
   const { collections, activeCollectionId, setActiveCollectionId, usage } =
     useAppState();
+  const { user } = useAuth();
+  const nav =
+    user?.role === "admin"
+      ? [...NAV, { to: "/app/admin", label: "Admin", icon: ShieldCheck }]
+      : NAV;
 
   const queriesUsed = usage?.current.queries ?? 0;
   const queriesLimit = usage?.limits.queriesPerMonth ?? 100;
@@ -52,7 +59,7 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
 
       <nav aria-label="Main" className="px-3">
         <ul className="space-y-0.5">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <li key={item.to}>
               <NavLink
                 to={item.to}

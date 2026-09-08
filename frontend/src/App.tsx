@@ -6,6 +6,8 @@ import { Logo } from "@/components/Logo";
 const MarketingLayout = lazy(() => import("@/pages/marketing/MarketingLayout"));
 const Landing = lazy(() => import("@/pages/marketing/Landing"));
 const PricingPage = lazy(() => import("@/pages/marketing/PricingPage"));
+const DocsPage = lazy(() => import("@/pages/marketing/DocsPage"));
+const SharedChat = lazy(() => import("@/pages/SharedChat"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Signup = lazy(() => import("@/pages/auth/Signup"));
 const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
@@ -18,6 +20,7 @@ const Chat = lazy(() => import("@/pages/app/Chat"));
 const Documents = lazy(() => import("@/pages/app/Documents"));
 const Collections = lazy(() => import("@/pages/app/Collections"));
 const Settings = lazy(() => import("@/pages/app/Settings"));
+const Admin = lazy(() => import("@/pages/app/Admin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 function FullScreenLoader() {
@@ -50,7 +53,10 @@ export default function App() {
         <Route element={<MarketingLayout />}>
           <Route path="/" element={<Landing />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/docs" element={<DocsPage />} />
         </Route>
+
+        <Route path="/s/:shareId" element={<SharedChat />} />
 
         <Route
           path="/login"
@@ -84,6 +90,7 @@ export default function App() {
           <Route path="documents" element={<Documents />} />
           <Route path="collections" element={<Collections />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="admin" element={<Admin />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

@@ -32,7 +32,9 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
             Priced for one person, not a procurement team
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Start free. Upgrade when your vault outgrows it. Cancel anytime.
+            Every account starts with a{" "}
+            <span className="text-foreground">14-day Pro trial</span> — no card.
+            Then it's free forever, or upgrade. Cancel anytime.
           </p>
 
           <div className="mt-8 inline-flex items-center gap-3 rounded-md border border-border bg-surface p-1 font-mono text-xs">
