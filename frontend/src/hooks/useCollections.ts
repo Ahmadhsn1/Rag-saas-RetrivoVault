@@ -12,7 +12,7 @@ export function useCollections() {
       const { data } = await api.get<{ collections: Collection[] }>(
         "/collections",
       );
-      setCollections(data.collections);
+      setCollections(Array.isArray(data.collections) ? data.collections : []);
       setError(null);
     } catch {
       setError("Failed to load collections");

@@ -148,25 +148,40 @@ export async function streamChat({
   const decoder = new TextDecoder();
   let buffer = "";
 
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
 
-    const frames = buffer.split("\n\n");
-    buffer = frames.pop() || "";
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() || "";
 
-    for (const frame of frames) {
-      const eventMatch = frame.match(/^event: (.+)$/m);
-      const dataMatch = frame.match(/^data: (.+)$/m);
-      if (!eventMatch || !dataMatch) continue;
-      const event = eventMatch[1].trim();
-      const data = JSON.parse(dataMatch[1]);
+      for (const frame of frames) {
+        const eventMatch = frame.match(/^event: (.+)$/m);
+        const dataMatch = frame.match(/^data: (.+)$/m);
+        if (!eventMatch || !dataMatch) continue;
+        const event = eventMatch[1].trim();
+        let data: Record<string, unknown>;
+        try {
+          data = JSON.parse(dataMatch[1]);
+        } catch {
+          continue; // ignore a malformed frame rather than aborting the stream
+        }
 
-      if (event === "sources") onSources?.(data.sources);
-      else if (event === "token") onToken?.(data.delta);
-      else if (event === "done") onDone?.(data);
-      else if (event === "error") onError?.(new Error(data.message));
+        if (event === "sources")
+          onSources?.((data.sources as RetrievedSource[]) ?? []);
+        else if (event === "token") onToken?.(String(data.delta ?? ""));
+        else if (event === "done")
+          onDone?.(data as { title: string; messageId?: string });
+        else if (event === "error")
+          onError?.(new Error(String(data.message ?? "Generation failed")));
+      }
+    }
+  } catch (err) {
+    // AbortError is expected when the user hits Stop.
+    if ((err as Error)?.name !== "AbortError") {
+      onError?.(err instanceof Error ? err : new Error("Stream interrupted"));
     }
   }
 }

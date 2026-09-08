@@ -11,7 +11,7 @@ export function useChatSessions(archived = false) {
       const { data } = await api.get<{ sessions: ChatSessionSummary[] }>("/chat", {
         params: archived ? { archived: "true" } : {},
       });
-      setSessions(data.sessions);
+      setSessions(Array.isArray(data.sessions) ? data.sessions : []);
     } finally {
       setLoading(false);
     }

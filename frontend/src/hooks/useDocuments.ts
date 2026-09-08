@@ -45,9 +45,9 @@ export function useDocuments(opts: Options | string | null = {}): Result {
         total: number;
         pages: number;
       }>("/documents", { params });
-      setDocuments(data.documents);
-      setTotal(data.total);
-      setPages(data.pages);
+      setDocuments(Array.isArray(data.documents) ? data.documents : []);
+      setTotal(Number(data.total) || 0);
+      setPages(Number(data.pages) || 1);
       setError(null);
     } catch {
       setError("Failed to load documents");

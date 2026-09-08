@@ -14,8 +14,8 @@ export function useNotifications(pollMs = 45000) {
         "/notifications",
         { params: { limit: 30 } },
       );
-      setItems(data.items);
-      setUnread(data.unread);
+      setItems(Array.isArray(data.items) ? data.items : []);
+      setUnread(Number(data.unread) || 0);
     } catch {
       /* keep last */
     } finally {
