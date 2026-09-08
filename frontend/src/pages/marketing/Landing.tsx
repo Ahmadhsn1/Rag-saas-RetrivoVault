@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useSeo } from "@/hooks/useSeo";
 import { Hero } from "@/components/marketing/Hero";
 import { TrustStrip } from "@/components/marketing/TrustStrip";
 import { StatsBand } from "@/components/marketing/StatsBand";
@@ -12,6 +13,10 @@ import { CTASection } from "@/components/marketing/CTASection";
 import { ScrollTrigger } from "@/lib/motion";
 
 export default function Landing() {
+  useSeo(
+    "",
+    "Upload your documents and get cited answers from a private, per-user knowledge base. A production-grade individual RAG platform.",
+  );
   useEffect(() => {
     const t = window.setTimeout(() => ScrollTrigger.refresh(), 300);
     return () => window.clearTimeout(t);

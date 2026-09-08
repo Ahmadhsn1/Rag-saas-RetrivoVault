@@ -78,6 +78,14 @@ describe("App routing", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows a 404 page for an unknown route", async () => {
+    renderWithProviders(<App />, { route: "/definitely-not-a-route" });
+    expect(await screen.findByText("404")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /home/i }),
+    ).toBeInTheDocument();
+  });
+
   it("redirects an unauthenticated visitor away from /app", async () => {
     renderWithProviders(<App />, { route: "/app" });
     expect(

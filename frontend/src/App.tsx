@@ -18,6 +18,7 @@ const Chat = lazy(() => import("@/pages/app/Chat"));
 const Documents = lazy(() => import("@/pages/app/Documents"));
 const Collections = lazy(() => import("@/pages/app/Collections"));
 const Settings = lazy(() => import("@/pages/app/Settings"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 function FullScreenLoader() {
   return (
@@ -85,7 +86,7 @@ export default function App() {
           <Route path="settings" element={<Settings />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
