@@ -1,9 +1,12 @@
 # Retrivo Vault — System Architecture
 
 A production-grade, **individual-focused** Retrieval-Augmented Generation (RAG) SaaS.
-Users sign up, verify their email, upload documents into a private knowledge base,
-and query it through a streaming, citation-backed chat. Free / Pro / Max plans with
-usage quotas, Stripe billing, personal API keys, and bring-your-own Gemini key.
+Sign up (14-day Pro trial, no card), verify email, upload documents (PDF/TXT/MD/DOCX/CSV)
+into a private knowledge base, and query it through a streaming, citation-backed chat
+with feedback, sharing and an ⌘K palette. Free / Pro / Max plans with trial-aware
+quotas, Stripe billing, in-app + email notifications, an activity log + data export,
+personal API keys, HMAC-signed webhooks, an OpenAPI spec, and a lightweight admin
+console.
 
 > Individuals only — there are no teams, workspaces, or org roles by design.
 
@@ -85,25 +88,33 @@ retrivo-vault/
 
 ---
 
-## 4. Data Models (additions in **bold**)
+## 4. Data Models
 
-**User** — `name, email, passwordHash, **emailVerified**, **plan** (free|pro|max),
-**subscriptionStatus**, **planRenewsAt**, **stripeCustomerId**, **stripeSubscriptionId**,
-**geminiApiKey** (select:false) / **hasGeminiKey**, **usage{ queriesThisPeriod, periodStart }**`
+**User** — `name, email, passwordHash, emailVerified, role (user|admin), plan (free|pro|max),
+trialPlan / trialEndsAt (14-day Pro trial), subscriptionStatus, planRenewsAt,
+stripeCustomerId, stripeSubscriptionId, geminiApiKey (select:false) / hasGeminiKey,
+usage{ queriesThisPeriod, periodStart }, notificationPrefs{…}, failedLoginAttempts, lockedUntil`
+— `effectivePlan()` = paid > live trial > free.
 
-**Document** — `userId, collectionId, filename, mimeType, sizeBytes, status, chunkCount, error, uploadedAt`
+**Document** — `userId, collectionId, filename, mimeType, sizeBytes, contentHash, sourceUrl,
+summary, suggestedQuestions[], status, chunkCount, error, uploadedAt`
 
 **Chunk** — `userId, documentId, collectionId, order, text, embedding[768]`
 
-**Collection** — `userId, name`
+**Collection** — `userId, name, instructions` (persona prepended to the prompt)
 
-**ChatSession** — `userId, title, messages[{ role, content, citedChunkIds, createdAt }]`
+**ChatSession** — `userId, title, collectionId, pinned, archived, shareId, messages[{ _id,
+role, content, citedChunkIds, sources, feedback }]`
 
-**Token** — `userId, type (email_verify|password_reset), tokenHash (sha256), expiresAt, usedAt` — TTL-indexed
+**Token** / **RefreshToken** / **ApiKey** — SHA-256-hashed secrets, TTL-indexed
 
-**ApiKey** — `userId, name, keyHash (sha256), prefix, lastUsedAt, revokedAt`
+**Notification** — `userId, type, title, body, link, readAt` — TTL 90d
 
-**UsageEvent** — `userId, kind (query|ingest), amount, meta, createdAt` — TTL 400d; feeds the usage chart
+**ActivityLog** — `userId, action, detail, ip, userAgent` — TTL 180d, append-only
+
+**Webhook** — `userId, url, events[], secret (HMAC), active, lastStatus, failureCount`
+
+**UsageEvent** — `userId, kind (query|ingest), amount, meta` — TTL 400d; feeds the usage chart
 
 ---
 
@@ -161,7 +172,17 @@ The `userId` filter is what enforces **per-user isolation** on every retrieval.
 | GET | `/api/billing` | Plan, status, catalog |
 | POST | `/api/billing/checkout` · `/api/billing/portal` | Stripe redirects |
 | POST | `/api/billing/webhook` | Stripe events → subscription sync (raw body) |
+| PATCH | `/api/chat/:id` | Rename / pin / archive |
+| POST | `/api/chat/:id/share` | Enable/disable a public share link |
+| POST | `/api/chat/:id/messages/:mid/feedback` | 👍/👎 an answer |
+| GET | `/api/public/shared-chats/:shareId` | Read a shared chat (**no auth**) |
+| GET | `/api/public/openapi.json` | OpenAPI 3.1 spec (**no auth**) |
 | GET/POST/DELETE | `/api/keys` (+`/:id`) | Personal API keys (Max) |
+| GET/POST/PATCH/DELETE | `/api/webhooks` (+`/:id`) | Personal webhooks (Max), HMAC-signed |
+| GET/POST/DELETE | `/api/notifications` (+`/read`, `/:id`) | Notification centre |
+| GET | `/api/account/activity` · `/api/account/export` | Audit log · full data export |
+| PATCH | `/api/account/notification-prefs` | Email preference toggles |
+| GET/PATCH | `/api/admin/{stats,users}` (+`/users/:id`) | Admin dashboard (role / `ADMIN_EMAILS`) |
 | GET | `/api/health` · `/api/health/deep` | Liveness / DB + queue + feature flags |
 
 `/api/documents` and `/api/chat` also accept `x-api-key`.
@@ -184,7 +205,16 @@ The `userId` filter is what enforces **per-user isolation** on every retrieval.
 - Transient upstream errors (429/503/timeout) retried with exponential backoff + jitter
 - Stripe webhook signature verified against the raw body
 - Password-reset responses never reveal whether an address exists
-- Centralized error handler + structured logging (pino) with secret redaction
+- Centralized error handler maps every framework error (malformed JSON, CastError,
+  multer, JWT, payload-too-large) to a 4xx — no 500 on bad input; bails cleanly if
+  a response already streamed (SSE)
+- **NoSQL-injection defense**: `mongoSanitize` strips `$`/dotted keys; `str()`
+  coercion + `asId()` validation on every user string/id before Mongo
+- Webhook URLs: https-only, private/loopback/metadata hosts blocked (SSRF), delivery
+  uses `redirect: error`
+- Ingestion input caps: extracted-text length, chunks-per-document, queue depth
+  (503 backpressure) — decompression-bomb / RAM-exhaustion safe
+- Structured logging (pino) with secret redaction; operational 5xx logged at `warn`
 - Secrets only via env; optional integrations degrade gracefully when unset
 - Zero-config dev: no `.env` → ephemeral in-memory MongoDB + demo mode (`env.autoMongo`)
 
@@ -192,14 +222,15 @@ The `userId` filter is what enforces **per-user isolation** on every retrieval.
 
 ## 9. Testing & CI
 
-- **Backend:** Vitest + `mongodb-memory-server` + `supertest`; the Gemini SDK is
-  mocked. ~47 tests: auth + refresh-token rotation/reuse + login lockout,
-  email/reset/delete flows, quota enforcement, billing (disabled path + webhook
-  signature + `syncSubscription`), API keys, documents pagination/search, chat
-  session rename, ingestion queue end-to-end, format extraction, retry helper.
-- **Frontend:** Vitest + Testing Library (jsdom); GSAP + api mocked. ~30 tests:
-  every route renders (incl. 404 + error boundary), auth + password flows, chat
-  streaming + citations, settings tabs, full landing render + interactive demo.
+- **Backend (~78 tests):** Vitest + `mongodb-memory-server` + `supertest`; the
+  Gemini SDK is mocked. Covers auth + refresh-token rotation/reuse + login lockout,
+  email/reset/delete flows, quota enforcement (trial-aware), billing, API keys,
+  webhooks + SSRF, notifications, chat feedback/share/pin, collection instructions,
+  admin, activity/export, ingestion end-to-end + input caps, plus two **adversarial
+  hardening suites** (malformed input never 500s, cross-user isolation, injection).
+- **Frontend (~34 tests):** Vitest + Testing Library (jsdom); GSAP + api mocked.
+  Every route renders (incl. 404, error boundary, /docs, /s/:id, /app/admin), auth
+  + password flows, chat streaming + citations, settings tabs, full landing.
 - **CI** (`.github/workflows/ci.yml`): backend `npm test` (mongo binary cached);
   frontend `typecheck` + `lint` + `test` + `build`.
 
