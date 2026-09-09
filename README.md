@@ -122,3 +122,15 @@ in-memory only · every query scoped by `userId` (vector index included) · one-
 tokens & keys stored as SHA-256 hashes, TTL-indexed · Stripe webhook signature verified
 against the raw body · no user enumeration on password reset · pino logging with secret
 redaction · secrets via env. See `SECURITY.md`.
+
+---
+
+## Contributing
+
+Bug reports, feature ideas and PRs are welcome — see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Please also read the [Code of Conduct](./CODE_OF_CONDUCT.md). Release notes live in
+[`CHANGELOG.md`](./CHANGELOG.md).
+
+## License
+
+MIT — see [`LICENSE`](./LICENSE).
