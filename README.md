@@ -13,7 +13,7 @@ answers that cite the exact passage they came from — nothing else, nothing inv
 [![Node](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
-[Quick start](#quick-start) · [Architecture](#architecture) · [Why I built this](#why-i-built-this) · [Engineering notes](#engineering-notes-problems-i-ran-into) · [API](#api) · [Security](#security)
+[Quick start](#quick-start) · [Architecture](#architecture) · [Why I built this](#why-i-built-this) · [Engineering notes](#engineering-notes) · [API](#api) · [Security](#security)
 
 </div>
 
@@ -123,66 +123,188 @@ flowchart LR
 Full component breakdown, data models, and folder structure:
 [`retrivo-vault-architecture.md`](./retrivo-vault-architecture.md).
 
-## Engineering notes: problems I ran into
+## Engineering notes
 
-A few things that weren't obvious until they broke, and how they're handled now.
+The parts that were harder than they looked, what the code actually does, and what
+I traded away. File references are real — the whole pipeline is small enough to read.
 
-**Isolation can't be an afterthought in a RAG system.**
-The whole point of a private vault falls apart if one user's question can ever
-retrieve another user's chunk. Checking `userId` in application code is easy to get
-right once and wrong the next time someone adds a query path. So the filter lives
-in the MongoDB Atlas Vector Search index definition itself (`§6` of the architecture
-doc) — retrieval is structurally incapable of crossing accounts, not just carefully
-coded not to. Two adversarial test suites exist specifically to keep trying to break
-this.
+### Isolation is enforced by the index, not by the query
 
-**Rotating refresh tokens are useless without reuse detection.**
-A refresh token that just rotates on every use still leaves a window: if an old,
-already-rotated token gets replayed (stolen and used after the legitimate client
-already refreshed), a naive implementation just issues a new one. Refresh tokens
-here are grouped into a `family`; replaying a token that's already been rotated past
-its short retry-grace window revokes the *entire* family, not just that token — the
-whole session line is killed rather than trusting a token that shouldn't exist
-anymore.
+The premise of a private vault collapses if one person's question can ever retrieve
+another person's chunk. Checking `userId` in application code is easy to get right
+once and easy to forget the next time someone adds a retrieval path, so the filter
+is part of the Atlas Vector Search index definition itself:
 
-**Streaming responses and error handling actively fight each other.**
-Once an SSE response starts streaming tokens, you can't turn around and send a JSON
-error with a normal status code — the headers are already sent. The first version
-of the error handler didn't know that and threw secondary errors mid-stream on any
-upstream hiccup. It now checks whether the response has already started streaming
-and, if so, closes the stream cleanly instead of trying to write headers a second
-time — every other route still gets a consistent 4xx mapped from whatever the
-framework threw (bad JSON, a Mongo `CastError`, a payload-too-large, a bad JWT).
+```json
+{ "fields": [
+  { "type": "vector", "path": "embedding", "numDimensions": 768, "similarity": "cosine" },
+  { "type": "filter", "path": "userId" },
+  { "type": "filter", "path": "collectionId" }
+]}
+```
 
-**Untrusted input reaches Mongo *and* the network — both needed hardening.**
-Two separate classes of attack, two separate fixes: (1) request bodies are
-sanitized against NoSQL-injection operators (`$`, dotted keys) and every user-
-supplied string/id is coerced and validated before it touches a query; (2) personal
-webhook URLs are user-supplied by design (HMAC-signed delivery to your own
-endpoint), which makes them an SSRF vector — so delivery is HTTPS-only, blocks
-private/loopback/cloud-metadata hosts, and never follows redirects.
+`retrieveChunks()` then passes `filter: { userId }` into `$vectorSearch`
+([`services/retrievalService.js`](./backend/src/services/retrievalService.js)) —
+the filter is applied *inside* the ANN search, not as a `$match` afterwards. That
+distinction matters: post-filtering would let another user's vectors consume the
+top-k slots and silently shrink your recall to near zero, while pre-filtering keeps
+the candidate pool entirely within your own chunks.
 
-**Ingestion is the one endpoint that takes untrusted *content*, not just untrusted
-parameters.** A large or adversarial file could blow up memory during text
-extraction before any chunk limit ever kicks in. Extracted-text length, chunks-per-
-document, and queue depth are all capped, with the queue returning `503`
-(backpressure) rather than accepting work it can't finish — the goal was to fail
-predictably under load instead of degrading silently.
+The related tuning knob is `numCandidates: Math.max(topK * 20, 100)`. Atlas's HNSW
+search is approximate; the ratio of candidates to returned results is the
+recall/latency dial. 20× at `topK = 5` means 100 candidates explored to return 5 —
+enough that the filter never starves the result set, cheap enough to stay well
+inside interactive latency.
 
-**Trial vs. paid vs. free logic wants to sprawl.** Every quota check needs to know
-which plan actually applies right now, and "paid but expired," "on an active trial,"
-and "never subscribed" are three different states that all need the same answer
-shape. Collapsing that into a single `user.effectivePlan()` (paid > live trial >
-free) meant every quota middleware calls one function instead of re-deriving plan
-state at each call site — the kind of duplication that quietly drifts out of sync.
+Two adversarial test suites exist purely to keep trying to cross this boundary.
 
-**Local dev shouldn't require a cloud database to click around.** Atlas Vector
-Search isn't available in a local/in-memory MongoDB, which made "clone and try it"
-painful — you needed a real Atlas cluster and a Gemini key just to see the UI. With
-no `backend/.env` present, `npm run dev` now spins up an ephemeral in-memory Mongo
-and runs in demo mode; every route works except vector retrieval and AI calls, which
-fail with a clear `502` instead of a cryptic connection error until you plug in real
-credentials.
+### Chunking: a three-tier cascade, because real documents are hostile
+
+Fixed-size chunking cuts mid-sentence and strands the subject of a clause in a
+different vector from its object, which wrecks retrieval quality. But you cannot
+*only* split on semantic boundaries either — a 4 MB single-line CSV or a minified
+export has no boundaries at all.
+[`services/chunkingService.js`](./backend/src/services/chunkingService.js) degrades
+in three tiers: paragraphs (`\n{2,}`) → sentences (`/[^.!?]+[.!?]*\s*/g`) → a
+fixed-width `hardSplit()` for any run that still exceeds the target. Each tier only
+runs when the one above it fails to get under `CHUNK_SIZE` (default 1000).
+
+Overlap (default 150) is carried by seeding the next buffer with the tail of the
+flushed chunk — `buffer = trimmed.slice(-overlap)` — so a fact that straddles a
+boundary appears in full in at least one chunk. The cost is honest: ~15% duplicated
+text, which is storage and embedding spend traded for not losing answers to a
+boundary.
+
+`MAX_CHUNKS_PER_DOC` (4000) is a hard ceiling. Without it, one pathological input
+becomes thousands of embedding calls and a bill.
+
+### Refresh-token reuse detection needs a grace window, or it logs people out
+
+Rotating a refresh token on every use is the easy half. The hard half is what to do
+when an *already-rotated* token is presented: that either means the token was stolen
+and replayed, or it means the legitimate client retried.
+
+[`services/refreshTokens.js`](./backend/src/services/refreshTokens.js) groups tokens
+into a `family` (a UUID minted at login). On rotation it stamps `rotatedAt`. If a
+token that already has `rotatedAt` comes back, the age decides:
+
+- **within `REPLAY_GRACE_MS` (15s)** → treated as a client retry. React StrictMode
+  double-mounts in dev, and a flaky network will resend a refresh whose response was
+  lost. Issue a sibling token in the same family; revoke nothing.
+- **older than 15s** → genuine reuse. `updateMany` revokes the *entire family*, not
+  just that token, so the attacker and the victim are both cut off and the real user
+  is forced to re-authenticate.
+
+Getting this wrong in either direction is bad: no grace window means users get
+randomly logged out by their own retries; no reuse detection means a stolen token
+stays valid for its whole TTL. Fifteen seconds is the compromise — far longer than
+any legitimate retry, far shorter than a useful attack window.
+
+### Streaming breaks the assumptions of centralized error handling
+
+Express error handling assumes you can still set a status code when something fails.
+The moment an SSE response has flushed its first token, that assumption is false —
+headers are gone, and trying to send a JSON error throws a second error inside the
+handler for the first.
+[`middleware/errorHandler.js`](./backend/src/middleware/errorHandler.js) checks
+`res.headersSent` before anything else and, if the response is already in flight,
+just calls `res.end()` to close the stream cleanly.
+
+The same boundary changes retry semantics.
+[`services/generationService.js`](./backend/src/services/generationService.js) wraps
+only the *initial* `generateContentStream()` call in `withRetry` — once tokens are
+flowing you cannot transparently restart, because the client has already rendered a
+partial answer. Retry before first byte, fail forward after it.
+
+Everything that isn't streaming gets normalized in that one handler: malformed JSON
+(`entity.parse.failed`), oversized bodies, multer's `LIMIT_FILE_SIZE`, Mongoose
+`CastError` on a bad ObjectId, duplicate-key `11000`, and stray JWT errors all map
+to a 4xx. The rule the adversarial suite enforces: **no malformed input may ever
+produce a 500.** In production, non-operational 5xx messages are replaced entirely
+so internals never reach a client.
+
+### Retry classification, and not synchronizing every client
+
+[`utils/retry.js`](./backend/src/utils/retry.js) retries only what is actually
+transient — HTTP 429/503 and timeout/reset signatures — and throws immediately on
+everything else, because retrying a deterministic 400 just multiplies load.
+
+Backoff is `min(baseMs * 2^(attempt-1), maxMs)` multiplied by random jitter in
+`0.7–1.3×`. The jitter is the point: without it, every client that hit the same
+upstream rate limit retries at the same instant and rebuilds the spike that caused
+the failure.
+
+### Backpressure: the queue refuses work it cannot finish
+
+Ingestion is the expensive path — parse, chunk, then one embedding call per chunk.
+[`services/jobQueue.js`](./backend/src/services/jobQueue.js) is a small in-process
+queue with bounded concurrency (`INGEST_CONCURRENCY`, default 2), so a 200-page PDF
+cannot monopolize the event loop or the embedding quota.
+
+- **Priority** is an ordered insert (`findIndex(j => j.priority < priority)`) — higher
+  priority first, FIFO within a level. Paid plans enqueue at priority 10.
+- **Retries** use the same exponential backoff, and the `setTimeout` is `.unref()`d
+  so a pending retry never keeps the process alive at shutdown.
+- **Depth is capped** at `MAX_QUEUE_DEPTH` (500). Past that, uploads are rejected with
+  a `503` rather than accepted into a queue that will never drain. Refusing work
+  loudly beats accepting it and failing silently an hour later.
+
+The public surface is deliberately three functions (`enqueue`, `registerHandler`,
+`queueStats`) so this module can be swapped for BullMQ + Redis when one process stops
+being enough. That is the known limit of this design, and it is documented rather
+than hidden.
+
+### Untrusted input reaches Mongo *and* the network — two problems, two fixes
+
+**Into the database.** [`middleware/sanitize.js`](./backend/src/middleware/sanitize.js)
+strips `$`-prefixed and dotted keys from body, query, and params, with a recursion
+depth cap of 8 so a deeply nested payload can't burn CPU in the sanitizer itself.
+But stripping operators is not sufficient on its own — `{ email: { $ne: null } }`
+becomes `{ email: {} }`, which is still not a string. So call sites additionally
+coerce: `str()` returns `""` for anything that isn't a string, and `asId()` validates
+ObjectIds before they reach a query. Sanitize *and* coerce; either alone leaves a gap.
+
+**Out to the network.** Personal webhooks are user-supplied URLs by design, which
+makes them a textbook SSRF vector — a "webhook" pointed at `169.254.169.254` is a
+cloud credential-metadata read.
+[`utils/safeUrl.js`](./backend/src/utils/safeUrl.js) requires HTTPS and blocks
+loopback, RFC 1918 (`10/8`, `172.16–31/12`, `192.168/16`), link-local `169.254/16`,
+and IPv6 `fc/fd/fe80` ranges. Delivery uses `redirect: "error"`, because a public URL
+that 302s to internal metadata would otherwise walk straight through a naive check.
+
+### Grounding is a prompt contract, not a hope
+
+[`services/generationService.js`](./backend/src/services/generationService.js) numbers
+every retrieved passage `[1]…[n]` and instructs the model to answer *only* from them,
+cite inline with those numbers, and explicitly say when the answer isn't in the
+documents. Because the numbering in the prompt matches the chunk order handed to the
+client, `[1]` in the streamed text resolves to a real chunk id — citations are
+clickable and verifiable rather than decorative.
+
+History is capped at the last 6 turns. Unbounded history steadily crowds retrieved
+context out of the window, so the model starts answering from the conversation
+instead of from your documents — the exact failure the product exists to avoid.
+
+### Trial, paid and free are one function, called everywhere
+
+"Paid," "on an active trial," and "never subscribed" are three states that every
+quota check needs a single answer from, and duplicating that resolution at each call
+site is how limits quietly drift out of sync. `user.effectivePlan()` resolves it once
+— paid > live trial > free — and every guard in
+[`middleware/quota.js`](./backend/src/middleware/quota.js) calls it. Over-limit
+responses carry a machine-readable `details.code` (`quota_exceeded` /
+`feature_locked`) so the frontend can turn a 402/403 into a specific upgrade prompt
+instead of a generic error toast.
+
+### Local dev shouldn't need a cloud database
+
+Atlas Vector Search doesn't exist in a local MongoDB, which made "clone it and look
+around" require a real cluster and a Gemini key. With no `backend/.env`, the server
+now starts an ephemeral in-memory MongoDB and runs in demo mode (auto-verified
+emails, stubbed billing). Every route works except the two that genuinely cannot —
+vector retrieval and model calls — and those fail with a clear `502` at the boundary
+instead of a confusing connection error. The honest limitation is stated rather than
+faked.
 
 ---
 
