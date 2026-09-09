@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -139,14 +139,17 @@ export function Hero() {
             className="text-[2.6rem] leading-[1.04] [perspective:800px] sm:text-6xl md:text-[4rem]"
           >
             {HEADLINE.map((w, i) => (
-              <span key={i} className="inline-block overflow-hidden pb-1">
-                <span
-                  className={"word inline-block " + (i === 2 ? "text-gradient" : "")}
-                >
-                  {w}
+              <Fragment key={i}>
+                <span className="inline-block overflow-hidden pb-1">
+                  <span
+                    className={"word inline-block " + (i === 2 ? "text-gradient" : "")}
+                  >
+                    {w}
+                  </span>
                 </span>
+                {/* the space must live outside the inline-block, or it collapses */}
                 {i < HEADLINE.length - 1 && " "}
-              </span>
+              </Fragment>
             ))}
           </h1>
 

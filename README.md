@@ -33,6 +33,41 @@ system design and [`features.md`](./features.md) for the complete feature list.
 
 ---
 
+## Screens
+
+<div align="center">
+
+<img src="docs/screenshots/01-landing-hero.jpg" alt="Retrivo Vault landing page — 'Your documents, answerable.' with a live vault chat preview" width="900">
+
+<sub><b>The promise, and the mechanism behind it</b> — the pipeline strip is on the hero on purpose: no magic, just the stages.</sub>
+
+<br><br>
+
+<img src="docs/screenshots/02-retrieval-pipeline.jpg" alt="Interactive retrieval demo: embed question, vector search, rank top-k, generate — producing a cited answer with similarity scores" width="900">
+
+<sub><b>Question → cited answer.</b> Every stage reports itself, and the answer carries <code>[1] 0.84</code> / <code>[2] 0.79</code> match scores with clickable inline citations. If it isn't in your documents, Retrivo says so.</sub>
+
+<br><br>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/03-features.jpg" alt="Feature grid: automated ingestion, vector retrieval with similarity bars, cited answers, collections" ></td>
+<td width="50%"><img src="docs/screenshots/04-security.jpg" alt="Security audit panel: isolation, training, at rest, in transit, uploads, export" ></td>
+</tr>
+<tr>
+<td align="center"><sub><b>A full RAG pipeline, not a wrapper</b> — every stage from parsing to grounded generation.</sub></td>
+<td align="center"><sub><b>Private by construction</b> — isolation is the filter on every read, enforced in the database.</sub></td>
+</tr>
+</table>
+
+<img src="docs/screenshots/05-pricing.jpg" alt="Pricing: Free, Pro and Max tiers with a 14-day Pro trial" width="900">
+
+<sub><b>Priced for one person, not a procurement team</b> — every account starts on a 14-day Pro trial, no card.</sub>
+
+</div>
+
+---
+
 ## Why I built this
 
 Everyone who works with documents ends up with the same pile: contracts, papers,
