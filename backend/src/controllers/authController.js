@@ -97,8 +97,8 @@ export const signup = asyncHandler(async (req, res) => {
     link: "/app/documents",
   });
 
-  const accessToken = signAccessToken(user._id);
-  const { raw } = await startSession(user._id, req);
+  const { raw, family } = await startSession(user._id, req);
+  const accessToken = signAccessToken(user._id, family);
   setRefreshCookie(res, raw);
 
   res.status(201).json({ user: user.toJSON(), accessToken });
@@ -122,6 +122,12 @@ export const login = asyncHandler(async (req, res) => {
     );
   }
 
+  if (user?.isSuspended()) {
+    throw ApiError.forbidden(
+      "This account has been suspended. Contact support if you think this is a mistake."
+    );
+  }
+
   const ok = user && (await bcrypt.compare(password, user.passwordHash));
   if (!ok) {
     if (user) {
@@ -141,8 +147,8 @@ export const login = asyncHandler(async (req, res) => {
     await user.save();
   }
 
-  const accessToken = signAccessToken(user._id);
-  const { raw } = await startSession(user._id, req);
+  const { raw, family } = await startSession(user._id, req);
+  const accessToken = signAccessToken(user._id, family);
   setRefreshCookie(res, raw);
   logActivity(user._id, "auth.login", null, req);
 
@@ -169,8 +175,17 @@ export const refresh = asyncHandler(async (req, res) => {
     throw ApiError.unauthorized("User no longer exists");
   }
 
+  if (user.isSuspended()) {
+    await revokeAllForUser(user._id, "admin").catch(() => {});
+    clearRefreshCookie(res);
+    throw ApiError.forbidden("This account has been suspended.");
+  }
+
   setRefreshCookie(res, rotated.raw);
-  res.json({ user: user.toJSON(), accessToken: signAccessToken(user._id) });
+  res.json({
+    user: user.toJSON(),
+    accessToken: signAccessToken(user._id, rotated.family),
+  });
 });
 
 export const logout = asyncHandler(async (req, res) => {
@@ -210,6 +225,44 @@ export const resendVerification = asyncHandler(async (req, res) => {
 
   await sendVerificationEmail(user);
   res.json({ sent: true });
+});
+
+// --- Change password (authenticated) ---
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const currentPassword = str(req.body?.currentPassword);
+  const newPassword = str(req.body?.newPassword);
+  if (newPassword.length < 8 || newPassword.length > 200) {
+    throw ApiError.badRequest("New password must be 8–200 characters");
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) throw ApiError.unauthorized();
+
+  const ok = currentPassword && (await bcrypt.compare(currentPassword, user.passwordHash));
+  if (!ok) throw ApiError.unauthorized("Current password is incorrect");
+
+  if (await bcrypt.compare(newPassword, user.passwordHash)) {
+    throw ApiError.badRequest("Pick a password you haven't used here before");
+  }
+
+  user.passwordHash = await bcrypt.hash(newPassword, 12);
+  user.mustChangePassword = false;
+  await user.save();
+
+  // Invalidate every session, then start a fresh one on this device.
+  await revokeAllForUser(user._id, "password_reset");
+  const { raw, family } = await startSession(user._id, req);
+  setRefreshCookie(res, raw);
+  logActivity(user._id, "auth.password_changed", null, req);
+  void notify(user._id, {
+    type: "system",
+    title: "Your password was changed",
+    body: "If this wasn't you, reset your password immediately and contact support.",
+    email: true,
+  });
+
+  res.json({ user: user.toJSON(), accessToken: signAccessToken(user._id, family) });
 });
 
 // --- Password reset ---

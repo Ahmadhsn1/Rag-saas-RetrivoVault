@@ -3,6 +3,7 @@ import { Notification } from "../models/Notification.js";
 import { UsageEvent } from "../models/UsageEvent.js";
 import { getUsageSnapshot } from "./usage.js";
 import { notify } from "./notifications.js";
+import { sweepStaleSessions } from "./presence.js";
 import { logger } from "../config/logger.js";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -72,6 +73,35 @@ async function notifyQuotaWarnings() {
   }
 }
 
+async function notifyCompsEnding() {
+  const soon = new Date(Date.now() + 3 * DAY);
+  const users = await User.find({
+    "comp.plan": { $ne: null },
+    "comp.expiresAt": { $gt: new Date(), $lte: soon },
+  }).select("_id comp");
+
+  for (const u of users) {
+    const already = await Notification.exists({
+      userId: u._id,
+      type: "plan_changed",
+      title: /complimentary .* ends/i,
+      createdAt: { $gt: new Date(Date.now() - 7 * DAY) },
+    });
+    if (already) continue;
+    const days = Math.max(
+      1,
+      Math.ceil((u.comp.expiresAt.getTime() - Date.now()) / DAY)
+    );
+    void notify(u._id, {
+      type: "plan_changed",
+      title: `Your complimentary ${u.comp.plan.toUpperCase()} ends in ${days} day${days === 1 ? "" : "s"}`,
+      body: "After that you'll move to the plan tied to your billing. Upgrade any time to keep higher limits.",
+      link: "/app/settings?tab=billing",
+      email: true,
+    });
+  }
+}
+
 let timer = null;
 
 export function startScheduler() {
@@ -80,6 +110,9 @@ export function startScheduler() {
     try {
       await notifyTrialsEnding();
       await notifyQuotaWarnings();
+      await notifyCompsEnding();
+      const swept = await sweepStaleSessions();
+      if (swept) logger.info({ swept }, "closed stale sessions");
     } catch (err) {
       logger.error({ err }, "scheduler tick failed");
     }

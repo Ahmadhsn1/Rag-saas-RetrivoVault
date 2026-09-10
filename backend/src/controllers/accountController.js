@@ -3,10 +3,13 @@ import { User } from "../models/User.js";
 import { Document } from "../models/Document.js";
 import { Collection } from "../models/Collection.js";
 import { ChatSession } from "../models/ChatSession.js";
+import { UserSession } from "../models/UserSession.js";
 import { planFor } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { str } from "../middleware/sanitize.js";
 import { listActivity, logActivity } from "../services/activityLog.js";
+import { revokeFamily } from "../services/refreshTokens.js";
+import { presenceCutoff } from "../services/presence.js";
 
 export const updateProfile = asyncHandler(async (req, res) => {
   const name = str(req.body?.name).trim();
@@ -65,6 +68,41 @@ export const clearGeminiKey = asyncHandler(async (req, res) => {
     geminiApiKey: null,
     hasGeminiKey: false,
   });
+  res.status(204).end();
+});
+
+/** The signed-in user's own devices / sessions (GitHub-style). */
+export const getSessions = asyncHandler(async (req, res) => {
+  const cutoff = presenceCutoff().getTime();
+  const rows = await UserSession.find({ userId: req.user.id })
+    .sort({ lastSeenAt: -1 })
+    .limit(50)
+    .lean();
+
+  const items = rows.map((s) => ({
+    id: String(s._id),
+    family: s.family,
+    device: s.device,
+    ip: s.ip,
+    startedAt: s.startedAt,
+    lastSeenAt: s.lastSeenAt,
+    endedAt: s.endedAt,
+    current: Boolean(req.user.family && s.family === req.user.family),
+    online:
+      !s.endedAt && new Date(s.lastSeenAt).getTime() >= cutoff,
+  }));
+
+  res.json({ items });
+});
+
+/** Revoke one of the user's own sessions by family id. */
+export const revokeSession = asyncHandler(async (req, res) => {
+  const family = str(req.params.family);
+  if (family && family === req.user.family) {
+    throw ApiError.badRequest("Use sign out to end the current session");
+  }
+  await revokeFamily(req.user.id, family, "revoked");
+  logActivity(req.user.id, "account.session_revoked", family, req);
   res.status(204).end();
 });
 

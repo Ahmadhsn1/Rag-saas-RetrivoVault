@@ -4,6 +4,7 @@ import { env, billingEnabled, mailEnabled } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { Document } from "./models/Document.js";
 import { startScheduler, stopScheduler } from "./services/scheduler.js";
+import { bootstrapAdmin } from "./services/adminBootstrap.js";
 import "./services/ingestionService.js"; // registers the ingest job handler
 
 let memoryMongo = null;
@@ -42,6 +43,10 @@ async function main() {
   await requeueStuckDocuments().catch((e) =>
     logger.error({ err: e }, "stuck-doc sweep failed")
   );
+  await bootstrapAdmin().catch((e) => {
+    logger.fatal({ err: e }, "admin bootstrap failed");
+    process.exit(1);
+  });
 
   if (!env.geminiConfigured) {
     logger.warn(

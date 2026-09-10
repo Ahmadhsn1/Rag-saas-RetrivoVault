@@ -6,6 +6,7 @@ import { enforceDocumentQuota } from "../middleware/quota.js";
 import {
   uploadDocument,
   ingestUrl,
+  retryDocument,
   listDocuments,
   getDocument,
   deleteDocument,
@@ -17,6 +18,7 @@ router.use(authenticateFlexible);
 
 router.post("/", uploadLimiter, uploadSingle, enforceDocumentQuota, uploadDocument);
 router.post("/url", uploadLimiter, enforceDocumentQuota, ingestUrl);
+router.post("/:id/retry", uploadLimiter, retryDocument);
 router.get("/", listDocuments);
 router.get("/:id", getDocument);
 router.delete("/:id", deleteDocument);

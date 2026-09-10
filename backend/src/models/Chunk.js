@@ -21,7 +21,7 @@ const chunkSchema = new mongoose.Schema(
     },
     order: { type: Number, required: true },
     text: { type: String, required: true },
-    // 768-dim vector from Gemini text-embedding-004.
+    // 768-dim unit vector from Gemini (gemini-embedding-001, truncated to 768).
     // The Atlas Vector Search index on this path is created out-of-band
     // (see scripts/createVectorIndex.js / README section 5).
     embedding: { type: [Number], required: true },

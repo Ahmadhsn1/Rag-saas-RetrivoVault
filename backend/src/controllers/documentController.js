@@ -141,6 +141,55 @@ export const listDocuments = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Retry a failed ingestion.
+ *  - URL-sourced docs: re-fetch the page and re-run the pipeline.
+ *  - Uploaded files: the original bytes aren't kept (in-memory only, by design),
+ *    so we can't retry server-side — the client re-uploads instead (422).
+ */
+export const retryDocument = asyncHandler(async (req, res) => {
+  if (queueIsFull()) {
+    throw new ApiError(503, "Ingestion is busy right now — please retry shortly.");
+  }
+
+  const doc = await Document.findOne({
+    _id: req.params.id,
+    userId: req.user.id,
+  });
+  if (!doc) throw ApiError.notFound("Document not found");
+  if (doc.status !== "failed") {
+    throw ApiError.badRequest("Only a failed document can be retried");
+  }
+
+  if (!doc.sourceUrl) {
+    throw new ApiError(
+      422,
+      "Re-upload this file to retry — the original isn't stored after processing.",
+      { code: "reupload_required" }
+    );
+  }
+
+  const { buffer, mimeType, filename } = await fetchUrlForIngest(doc.sourceUrl);
+
+  await Chunk.deleteMany({ documentId: doc._id, userId: req.user.id }).catch(() => {});
+  doc.status = "processing";
+  doc.error = null;
+  doc.chunkCount = 0;
+  doc.mimeType = mimeType;
+  doc.filename = filename;
+  doc.sizeBytes = buffer.length;
+  await doc.save();
+
+  await queueIngestion({
+    documentId: doc._id,
+    userId: req.user.id,
+    collectionId: doc.collectionId,
+    file: { buffer, mimetype: mimeType, originalname: filename },
+  });
+
+  res.status(202).json({ document: doc });
+});
+
 export const getDocument = asyncHandler(async (req, res) => {
   const document = await Document.findOne({
     _id: req.params.id,

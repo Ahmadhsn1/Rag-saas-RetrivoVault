@@ -26,6 +26,18 @@ const stubLlmModel = {
     })(),
   })),
 };
+// Web Push must never hit the network in tests.
+vi.mock("web-push", () => ({
+  default: {
+    setVapidDetails: vi.fn(),
+    sendNotification: vi.fn(async () => ({ statusCode: 201 })),
+    generateVAPIDKeys: vi.fn(() => ({
+      publicKey: "test-vapid-public",
+      privateKey: "test-vapid-private",
+    })),
+  },
+}));
+
 vi.mock("../config/gemini.js", () => ({
   genAI: {},
   embeddingModel: stubEmbeddingModel,

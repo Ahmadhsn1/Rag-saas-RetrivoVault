@@ -19,3 +19,14 @@ export const requireAdmin = asyncHandler(async (req, _res, next) => {
   req.adminUser = user;
   next();
 });
+
+/**
+ * Stricter gate for irreversible operator actions (promoting/demoting admins).
+ * Only the env-provisioned root admin passes. Must run after `requireAdmin`.
+ */
+export const requireRootAdmin = asyncHandler(async (req, _res, next) => {
+  if (!req.adminUser?.isRootAdmin) {
+    throw ApiError.forbidden("Only the root administrator can do that");
+  }
+  next();
+});

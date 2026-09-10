@@ -16,7 +16,9 @@ export function ProfileTab() {
   const [geminiKey, setGeminiKey] = useState("");
   const [savingKey, setSavingKey] = useState(false);
 
-  const paid = user?.plan !== "free";
+  // BYO key is a plan capability — resolve it from server-computed entitlements
+  // so it works on a trial or an admin complimentary grant, not just paid.
+  const canBYOKey = user?.features?.byoKey ?? false;
 
   const saveName = async (e: FormEvent) => {
     e.preventDefault();
@@ -108,10 +110,11 @@ export function ProfileTab() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!paid ? (
+          {!canBYOKey ? (
             <p className="text-sm text-muted-foreground">
               Using your own Google Gemini API key runs requests against your
-              quota instead of the shared one. Available on Pro and Max.
+              quota instead of the shared one. Available on Pro and Max (your
+              trial counts).
             </p>
           ) : user?.hasGeminiKey ? (
             <div className="flex items-center justify-between">
@@ -131,7 +134,7 @@ export function ProfileTab() {
             <div className="flex gap-2">
               <Input
                 type="password"
-                placeholder="AIza…"
+                placeholder="Gemini API key"
                 value={geminiKey}
                 onChange={(e) => setGeminiKey(e.target.value)}
                 aria-label="Gemini API key"

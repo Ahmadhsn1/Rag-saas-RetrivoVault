@@ -41,7 +41,7 @@ export function AppTopbar({
             {activeCollection.name}
           </Badge>
         )}
-        <Badge className="hidden md:inline-flex">gemini-2.5-flash</Badge>
+        <Badge className="hidden md:inline-flex">gemini flash</Badge>
         <button
           onClick={onCommand}
           className="hidden items-center gap-1.5 rounded-md border border-border px-2 py-1 font-mono text-2xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:flex"

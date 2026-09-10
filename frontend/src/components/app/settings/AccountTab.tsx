@@ -1,12 +1,21 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, MailWarning } from "lucide-react";
+import { Loader2, MailWarning, Monitor, BellRing } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { formatRelativeTime } from "@/lib/utils";
+import {
+  enablePush,
+  disablePush,
+  getPushConfig,
+  isPushSubscribed,
+  pushSupported,
+} from "@/lib/push";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -17,9 +26,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { SessionInfo } from "@/types/api";
 
 export function AccountTab() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, changePassword } = useAuth();
   const navigate = useNavigate();
   const [resending, setResending] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -76,48 +86,18 @@ export function AccountTab() {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Sessions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              Sign out on this device.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={signingOut}
-              onClick={async () => {
-                setSigningOut(true);
-                await logout();
-                navigate("/login", { replace: true });
-              }}
-            >
-              Sign out
-            </Button>
-          </div>
-          <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
-            <p className="text-sm text-muted-foreground">
-              Sign out everywhere — revokes every active session (use if a device
-              was lost).
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={signingOut}
-              onClick={async () => {
-                setSigningOut(true);
-                await logout(true);
-                navigate("/login", { replace: true });
-              }}
-            >
-              Sign out all
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <ChangePasswordCard onChange={changePassword} />
+
+      <PushCard />
+
+      <SessionsCard
+        onSignOut={async (everywhere) => {
+          setSigningOut(true);
+          await logout(everywhere);
+          navigate("/login", { replace: true });
+        }}
+        signingOut={signingOut}
+      />
 
       <Card className="border-destructive/30">
         <CardHeader>
@@ -180,5 +160,247 @@ export function AccountTab() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function ChangePasswordCard({
+  onChange,
+}: {
+  onChange: (current: string, next: string) => Promise<void>;
+}) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const valid = current && next.length >= 8 && next === confirm;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Change password</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="grid gap-3 sm:max-w-sm"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!valid) return;
+            setBusy(true);
+            try {
+              await onChange(current, next);
+              toast.success("Password changed. Other devices were signed out.");
+              setCurrent("");
+              setNext("");
+              setConfirm("");
+            } catch (err) {
+              toast.error(apiErrorMessage(err, "Couldn't change password"));
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="cp-current">Current password</Label>
+            <Input
+              id="cp-current"
+              type="password"
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cp-next">New password</Label>
+            <Input
+              id="cp-next"
+              type="password"
+              autoComplete="new-password"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+              placeholder="At least 8 characters"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cp-confirm">Confirm new password</Label>
+            <Input
+              id="cp-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </div>
+          <Button type="submit" size="sm" disabled={!valid || busy} className="w-fit">
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            Update password
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PushCard() {
+  const [available, setAvailable] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!pushSupported()) return;
+      const config = await getPushConfig();
+      if (!alive) return;
+      setAvailable(config.enabled);
+      if (config.enabled) setSubscribed(await isPushSubscribed());
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!available) return null;
+
+  const toggle = async (want: boolean) => {
+    setBusy(true);
+    try {
+      if (want) {
+        const ok = await enablePush();
+        setSubscribed(ok);
+        toast[ok ? "success" : "error"](
+          ok ? "Push notifications on for this device." : "Permission denied.",
+        );
+      } else {
+        await disablePush();
+        setSubscribed(false);
+        toast.success("Push notifications off for this device.");
+      }
+    } catch {
+      toast.error("Couldn't update push notifications.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BellRing className="h-4 w-4" /> Push notifications
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          Get product updates and important announcements as browser notifications
+          on this device.
+        </p>
+        <Switch checked={subscribed} onCheckedChange={toggle} disabled={busy} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function SessionsCard({
+  onSignOut,
+  signingOut,
+}: {
+  onSignOut: (everywhere: boolean) => Promise<void>;
+  signingOut: boolean;
+}) {
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    try {
+      const { data } = await api.get<{ items: SessionInfo[] }>("/account/sessions");
+      setSessions(Array.isArray(data.items) ? data.items : []);
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const revoke = async (family: string) => {
+    setSessions((xs) => xs.filter((s) => s.family !== family));
+    try {
+      await api.delete(`/account/sessions/${family}`);
+      toast.success("Device signed out.");
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+      void load();
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Monitor className="h-4 w-4" /> Active devices
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : sessions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No other sessions.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {sessions.map((s) => (
+              <li key={s.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 text-sm">
+                    {s.device ?? "Unknown device"}
+                    {s.current && (
+                      <span className="font-mono text-2xs text-primary">this device</span>
+                    )}
+                    {s.online && !s.current && (
+                      <span className="font-mono text-2xs text-ok">online</span>
+                    )}
+                  </p>
+                  <p className="font-mono text-2xs text-muted-foreground">
+                    {s.ip ?? "no ip"} · last active {formatRelativeTime(s.lastSeenAt)}
+                  </p>
+                </div>
+                {!s.current && (
+                  <Button size="sm" variant="ghost" onClick={() => revoke(s.family)}>
+                    Sign out
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          <p className="text-sm text-muted-foreground">
+            Sign out — this device, or everywhere at once.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={signingOut}
+              onClick={() => onSignOut(false)}
+            >
+              Sign out
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={signingOut}
+              onClick={() => onSignOut(true)}
+            >
+              Sign out all
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

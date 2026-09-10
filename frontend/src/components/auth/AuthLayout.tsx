@@ -6,8 +6,8 @@ import { PipelineStrip } from "@/components/rag/PipelineStrip";
 const SIGNALS = [
   "conn atlas://cluster0 · ok",
   "index chunks_vector_index · ready",
-  "embed text-embedding-004 · 768d",
-  "model gemini-2.5-flash · streaming",
+  "embed gemini-embedding-001 · 768d",
+  "model gemini-flash · streaming",
   "auth jwt · access 15m / refresh 7d",
 ];
 

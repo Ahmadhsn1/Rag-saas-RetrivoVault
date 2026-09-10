@@ -7,10 +7,10 @@ import { AnswerText } from "@/components/rag/AnswerText";
 import { prefersReducedMotion } from "@/lib/motion";
 
 const STEPS = [
-  { key: "embed", label: "Embed question", detail: "gemini · text-embedding-004 → 768d vector" },
+  { key: "embed", label: "Embed question", detail: "gemini · gemini-embedding-001 → 768d" },
   { key: "search", label: "Vector search", detail: "$vectorSearch · cosine · numCandidates 100" },
   { key: "rank", label: "Rank top-k", detail: "5 chunks · scores 0.63–0.84" },
-  { key: "generate", label: "Generate", detail: "gemini-2.5-flash · grounded + cited" },
+  { key: "generate", label: "Generate", detail: "gemini flash · grounded + cited" },
 ] as const;
 
 const SOURCES = [

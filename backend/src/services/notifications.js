@@ -11,6 +11,7 @@ const PREF_BY_TYPE = {
   plan_changed: "productUpdates",
   welcome: null, // always
   system: null,
+  announcement: null, // admin broadcast — always delivered in-app
 };
 
 /**

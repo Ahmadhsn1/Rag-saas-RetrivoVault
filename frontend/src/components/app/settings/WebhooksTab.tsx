@@ -16,7 +16,8 @@ import type { Webhook } from "@/types/api";
 
 export function WebhooksTab() {
   const { user } = useAuth();
-  const locked = user?.plan !== "max";
+  // Resolve from server-computed entitlements (a Max trial unlocks this too).
+  const locked = !user?.features?.apiAccess;
   const [hooks, setHooks] = useState<Webhook[]>([]);
   const [events, setEvents] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);

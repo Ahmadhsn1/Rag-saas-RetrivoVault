@@ -15,7 +15,9 @@ export function requireAuth(req, _res, next) {
 
   try {
     const payload = jwt.verify(token, env.jwt.accessSecret);
-    req.user = { id: payload.sub };
+    // `fam` ties the request to a UserSession (device). Optional — tokens issued
+    // before this change simply won't carry it.
+    req.user = { id: payload.sub, family: payload.fam ?? null };
     req.authMethod = "jwt";
     next();
   } catch {
@@ -36,7 +38,7 @@ export async function authenticateFlexible(req, _res, next) {
       if (!doc) return next(ApiError.unauthorized("Invalid API key"));
       doc.lastUsedAt = new Date();
       await doc.save();
-      req.user = { id: String(doc.userId) };
+      req.user = { id: String(doc.userId), family: null };
       req.authMethod = "apikey";
       return next();
     } catch (err) {
@@ -46,8 +48,10 @@ export async function authenticateFlexible(req, _res, next) {
   return requireAuth(req, _res, next);
 }
 
-export function signAccessToken(userId) {
-  return jwt.sign({ sub: String(userId) }, env.jwt.accessSecret, {
+export function signAccessToken(userId, family = null) {
+  const payload = { sub: String(userId) };
+  if (family) payload.fam = String(family);
+  return jwt.sign(payload, env.jwt.accessSecret, {
     expiresIn: env.jwt.accessTtl,
   });
 }

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { UploadCloud, Loader2, X, Link2, FileText } from "lucide-react";
+import { UploadCloud, Loader2, X, Link2, FileText, Plus, Check } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { notifyApiError } from "@/lib/notifyApiError";
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppState } from "@/context/AppContext";
-import type { VaultDocument } from "@/types/api";
+import type { Collection, VaultDocument } from "@/types/api";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const ACCEPT_EXT = /\.(pdf|txt|md|markdown|csv|docx|html?)$/i;
@@ -25,20 +25,48 @@ const MAX_FILES = 20;
 export function UploadDialog({
   onUploaded,
   trigger,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
 }: {
   onUploaded: (doc: VaultDocument) => void;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const { collections, activeCollectionId, refetchCollections, refetchUsage } =
     useAppState();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = setControlledOpen ?? setUncontrolledOpen;
   const [mode, setMode] = useState<"files" | "url">("files");
   const [files, setFiles] = useState<File[]>([]);
   const [url, setUrl] = useState("");
   const [collectionId, setCollectionId] = useState<string>(activeCollectionId ?? "");
+  const [newCollection, setNewCollection] = useState<string | null>(null); // null = not creating
+  const [creatingCollection, setCreatingCollection] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const createCollection = async () => {
+    const name = (newCollection ?? "").trim();
+    if (!name) return;
+    setCreatingCollection(true);
+    try {
+      const { data } = await api.post<{ collection: Collection }>("/collections", {
+        name,
+      });
+      await refetchCollections();
+      const created = data?.collection;
+      if (created?._id) setCollectionId(created._id);
+      setNewCollection(null);
+      toast.success(`Collection "${name}" created.`);
+    } catch (err) {
+      notifyApiError(err, "Could not create collection");
+    } finally {
+      setCreatingCollection(false);
+    }
+  };
 
   const addFiles = (list: FileList | null) => {
     if (!list) return;
@@ -61,6 +89,7 @@ export function UploadDialog({
     setFiles([]);
     setUrl("");
     setBusy(false);
+    setNewCollection(null);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -117,7 +146,7 @@ export function UploadDialog({
         if (!o) reset();
       }}
     >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add documents</DialogTitle>
@@ -229,20 +258,71 @@ export function UploadDialog({
         )}
 
         <div className="space-y-1.5">
-          <Label htmlFor="collection">Collection</Label>
-          <select
-            id="collection"
-            value={collectionId}
-            onChange={(e) => setCollectionId(e.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            <option value="">No collection</option>
-            {collections.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="collection">Collection</Label>
+            {newCollection === null ? (
+              <button
+                type="button"
+                onClick={() => setNewCollection("")}
+                className="inline-flex items-center gap-1 font-mono text-2xs text-primary hover:underline"
+              >
+                <Plus className="h-3 w-3" /> New collection
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setNewCollection(null)}
+                className="font-mono text-2xs text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {newCollection === null ? (
+            <select
+              id="collection"
+              value={collectionId}
+              onChange={(e) => setCollectionId(e.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <option value="">No collection</option>
+              {collections.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                autoFocus
+                placeholder="Collection name"
+                value={newCollection}
+                maxLength={80}
+                onChange={(e) => setNewCollection(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void createCollection();
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void createCollection()}
+                disabled={creatingCollection || !newCollection.trim()}
+              >
+                {creatingCollection ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+                Create
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-2">
@@ -252,7 +332,11 @@ export function UploadDialog({
           <Button
             variant="brand"
             onClick={mode === "files" ? submitFiles : submitUrl}
-            disabled={busy || (mode === "files" ? files.length === 0 : !url.trim())}
+            disabled={
+              busy ||
+              Boolean(newCollection?.trim()) ||
+              (mode === "files" ? files.length === 0 : !url.trim())
+            }
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
             {busy

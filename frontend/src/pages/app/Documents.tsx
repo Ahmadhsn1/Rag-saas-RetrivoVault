@@ -7,9 +7,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { api, apiErrorMessage } from "@/lib/api";
+import { api, apiErrorCode, apiErrorMessage } from "@/lib/api";
 import { formatBytes, formatNumber, formatRelativeTime } from "@/lib/utils";
 import { useDocuments } from "@/hooks/useDocuments";
 import { useAppState } from "@/context/AppContext";
@@ -83,6 +84,31 @@ export default function Documents() {
     }
   };
 
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const retry = async (doc: VaultDocument) => {
+    setRetrying(doc._id);
+    try {
+      const { data } = await api.post<{ document: VaultDocument }>(
+        `/documents/${doc._id}/retry`,
+      );
+      setDocuments((d) => d.map((x) => (x._id === doc._id ? data.document : x)));
+      toast.success("Retrying — reprocessing now.");
+      void refetch();
+    } catch (err) {
+      if (apiErrorCode(err) === "reupload_required") {
+        toast.error("The original file isn't stored — re-upload it to retry.", {
+          action: { label: "Upload", onClick: () => setUploadOpen(true) },
+          duration: 8000,
+        });
+      } else {
+        toast.error(apiErrorMessage(err, "Retry failed"));
+      }
+    } finally {
+      setRetrying(null);
+    }
+  };
+  const [uploadOpen, setUploadOpen] = useState(false);
+
   const uploadTrigger = (
     <Button variant="brand" size="sm">
       <UploadCloud className="h-4 w-4" />
@@ -109,7 +135,12 @@ export default function Documents() {
             {formatNumber(total)} document{total === 1 ? "" : "s"}
           </p>
         </div>
-        <UploadDialog onUploaded={onUploaded} trigger={uploadTrigger} />
+        <UploadDialog
+          onUploaded={onUploaded}
+          trigger={uploadTrigger}
+          open={uploadOpen}
+          onOpenChange={setUploadOpen}
+        />
       </div>
 
       {!showEmpty && (
@@ -195,9 +226,26 @@ export default function Documents() {
                           {doc.filename}
                         </span>
                       </button>
-                      {doc.status === "failed" && doc.error && (
-                        <span className="mt-1 block truncate font-mono text-2xs text-destructive">
-                          {doc.error}
+                      {doc.status === "failed" && (
+                        <span className="mt-1 flex items-center gap-2">
+                          {doc.error && (
+                            <span className="block min-w-0 truncate font-mono text-2xs text-destructive">
+                              {doc.error}
+                            </span>
+                          )}
+                          <button
+                            onClick={() => void retry(doc)}
+                            disabled={retrying === doc._id}
+                            className="inline-flex shrink-0 items-center gap-1 rounded border border-border px-1.5 py-0.5 font-mono text-2xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-50"
+                          >
+                            <RotateCw
+                              className={cn(
+                                "h-3 w-3",
+                                retrying === doc._id && "animate-spin",
+                              )}
+                            />
+                            {doc.sourceUrl ? "Retry" : "Re-upload"}
+                          </button>
                         </span>
                       )}
                     </TableCell>
@@ -220,6 +268,12 @@ export default function Documents() {
                           <span className="sr-only">Actions</span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {doc.status === "failed" && (
+                            <DropdownMenuItem onSelect={() => void retry(doc)}>
+                              <RotateCw className="h-4 w-4" />
+                              {doc.sourceUrl ? "Retry ingestion" : "Re-upload to retry"}
+                            </DropdownMenuItem>
+                          )}
                           <ConfirmDialog
                             title="Delete document?"
                             description={`"${doc.filename}" and its ${doc.chunkCount} chunks will be permanently removed.`}

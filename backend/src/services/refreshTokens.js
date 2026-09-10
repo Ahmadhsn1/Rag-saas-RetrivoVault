@@ -2,6 +2,12 @@ import crypto from "node:crypto";
 import ms from "../utils/ms.js";
 import { env } from "../config/env.js";
 import { RefreshToken, hashRefreshToken } from "../models/RefreshToken.js";
+import {
+  openSession,
+  touchSession,
+  closeSession,
+  closeAllSessions,
+} from "./presence.js";
 
 // A replayed just-rotated token within this window is treated as a client retry
 // (StrictMode double-mount, network retry), not theft.
@@ -29,11 +35,12 @@ export async function startSession(userId, req) {
     expiresAt: new Date(Date.now() + ms(env.jwt.refreshTtl)),
     ...reqMeta(req),
   });
+  await openSession(userId, family, req);
   return { raw, family };
 }
 
 /**
- * Rotate a presented refresh token. Returns { userId, raw } on success.
+ * Rotate a presented refresh token. Returns { userId, raw, family } on success.
  * Throws { code } on failure: "invalid" | "expired" | "reuse".
  */
 export async function rotate(rawPresented, req) {
@@ -77,7 +84,12 @@ export async function rotate(rawPresented, req) {
     ...reqMeta(req),
   });
 
-  return { userId: String(current.userId), raw };
+  await touchSession(
+    { family: current.family, userId: String(current.userId) },
+    req
+  );
+
+  return { userId: String(current.userId), raw, family: current.family };
 }
 
 /** Revoke just the family of the presented token (single-device logout). */
@@ -91,12 +103,24 @@ export async function revokeByToken(rawPresented) {
     { family: doc.family, revokedAt: null },
     { revokedAt: new Date() }
   );
+  await closeSession(doc.family, "logout");
 }
 
 /** Revoke every active session for a user (sign out everywhere / delete account). */
-export async function revokeAllForUser(userId) {
+export async function revokeAllForUser(userId, reason = "logout_all") {
   await RefreshToken.updateMany(
     { userId, revokedAt: null },
     { revokedAt: new Date() }
   );
+  await closeAllSessions(userId, reason);
+}
+
+/** Revoke a single device by its family id (admin force-logout / user device list). */
+export async function revokeFamily(userId, family, reason = "revoked") {
+  if (!family) return;
+  await RefreshToken.updateMany(
+    { userId, family, revokedAt: null },
+    { revokedAt: new Date() }
+  );
+  await closeSession(family, reason);
 }
