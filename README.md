@@ -548,3 +548,11 @@ Please also read the [Code of Conduct](./CODE_OF_CONDUCT.md). Release notes live
 ## License
 
 MIT — see [`LICENSE`](./LICENSE). Copyright © 2026 Retrivo Vault contributors.
+
+## Case study
+
+The engineering decisions, metrics and screenshots for Retrivo Vault are written up in the [Retrivo Vault case study](https://ahmadhsn1.github.io/work/retrivo-vault/).
+
+Related writing:
+
+- [RAG Tenant Isolation Inside the Vector Index](https://ahmadhsn1.github.io/blog/rag-tenant-isolation-vector-index/)
