@@ -10,7 +10,8 @@
     "create-index": "node src/scripts/createVectorIndex.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke:retrieval": "node src/scripts/smokeRetrieval.js"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",
