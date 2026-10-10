@@ -1,6 +1,6 @@
 export type PlanId = "free" | "pro" | "max";
 
-export type SubscriptionStatus =
+type SubscriptionStatus =
   | "none"
   | "active"
   | "trialing"
@@ -15,7 +15,7 @@ export interface NotificationPrefs {
   productUpdates: boolean;
 }
 
-export interface CompGrant {
+interface CompGrant {
   plan: "pro" | "max" | null;
   expiresAt: string | null;
   reason?: string | null;
@@ -60,7 +60,7 @@ export interface SessionInfo {
   online: boolean;
 }
 
-export interface PlanLimits {
+interface PlanLimits {
   documents: number;
   storageBytes: number;
   queriesPerMonth: number;
@@ -239,7 +239,7 @@ export interface ActivityEntry {
   createdAt: string;
 }
 
-export interface AdminHealth {
+interface AdminHealth {
   db: "up" | "down";
   queue: Record<string, unknown>;
   features: { billing: boolean; mail: boolean; push: boolean; gemini: boolean };
