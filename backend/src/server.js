@@ -5,6 +5,7 @@ import { logger } from "./config/logger.js";
 import { startScheduler, stopScheduler } from "./services/scheduler.js";
 import { bootstrapAdmin } from "./services/adminBootstrap.js";
 import { resumeInterruptedIngestion } from "./services/ingestionService.js";
+import { ensureVectorIndex } from "./services/vectorIndex.js";
 
 let memoryMongo = null;
 
@@ -29,6 +30,14 @@ async function resolveMongoUri() {
 async function main() {
   env.mongoUri = await resolveMongoUri();
   await connectDB();
+  await ensureVectorIndex()
+    .then((created) => created && logger.info("created the vector search index"))
+    .catch((e) =>
+      logger.warn(
+        { err: e.message },
+        "vector search is unavailable on this database (needs MongoDB Atlas) — answers use keyword search only"
+      )
+    );
   await resumeInterruptedIngestion()
     .then((r) => {
       if (r.resumed || r.failed) logger.warn(r, "resumed interrupted ingestion");

@@ -1,7 +1,7 @@
 {
   "name": "retrivo-vault-backend",
   "version": "1.0.0",
-  "description": "Retrivo Vault — multi-user RAG platform API",
+  "description": "Retrivo Vault \u2014 multi-user RAG platform API",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
@@ -11,7 +11,8 @@
     "seed:admin": "node src/scripts/seedAdmin.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke:retrieval": "node src/scripts/smokeRetrieval.js"
+    "smoke:retrieval": "node src/scripts/smokeRetrieval.js",
+    "smoke:api": "node src/scripts/smokeApi.js"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

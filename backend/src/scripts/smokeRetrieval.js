@@ -4,39 +4,17 @@
  * and asserts semantic search, keyword search and per-user isolation.
  * Your real data is never touched; the scratch database is dropped at the end.
  *
- *   MONGO_URI=... node src/scripts/smokeRetrieval.js           # real Gemini embeddings
- *   MONGO_URI=... node src/scripts/smokeRetrieval.js --offline # built-in embedder, no API key
+ *   MONGO_URI=... npm run smoke:retrieval                  # real Gemini embeddings
+ *   MONGO_URI=... AI_OFFLINE=true npm run smoke:retrieval  # built-in embedder, no API key
  */
 import mongoose from "mongoose";
 import { env } from "../config/env.js";
-import { vectorIndex } from "../config/vectorIndex.js";
+import { ensureVectorIndex, vectorIndex } from "../services/vectorIndex.js";
 import { modelsFor } from "../config/gemini.js";
 import { Chunk } from "../models/Chunk.js";
 import { Document } from "../models/Document.js";
 import { embedDocumentBatch } from "../services/embeddingService.js";
 import { retrieveChunks } from "../services/retrievalService.js";
-
-const offline = process.argv.includes("--offline");
-
-// A deterministic bag-of-words embedder: enough signal to prove the index,
-// its filters and the ranking work, without calling a model.
-const offlineModel = {
-  async embed(text) {
-    const words = text
-      .replace(/^(task:.*?query:|title:.*?text:)/, "")
-      .toLowerCase()
-      .match(/[a-z0-9]+/g) || [];
-    const v = new Array(env.gemini.embeddingDim).fill(0);
-    for (const word of words) {
-      const stem = word.replace(/(ing|ed|s)$/, "");
-      let h = 2166136261;
-      for (const ch of stem) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-      v[(h >>> 0) % v.length] += 1;
-    }
-    const norm = Math.hypot(...v) || 1;
-    return v.map((x) => x / norm);
-  },
-};
 
 const CORPUS = {
   alice: {
@@ -71,11 +49,12 @@ async function run() {
   if (!env.mongoUri) throw new Error("Set MONGO_URI to an Atlas deployment");
   const dbName = `retrivo_smoke_${Date.now()}`;
   await mongoose.connect(env.mongoUri, { dbName });
-  const model = offline ? offlineModel : modelsFor().embeddingModel;
-  console.log(`database ${dbName} · embeddings: ${offline ? "offline" : env.gemini.embeddingModel}`);
+  const model = modelsFor().embeddingModel;
+  console.log(
+    `database ${dbName} · embeddings: ${env.aiOffline ? "offline" : env.gemini.embeddingModel}`
+  );
 
   try {
-    await Chunk.init(); // builds the keyword index
     const users = {};
     for (const [name, files] of Object.entries(CORPUS)) {
       users[name] = new mongoose.Types.ObjectId();
@@ -101,7 +80,7 @@ async function run() {
       }
     }
 
-    await Chunk.collection.createSearchIndex(vectorIndex);
+    await ensureVectorIndex();
     await waitUntilQueryable(Chunk.collection);
     // The index reports queryable slightly before the first documents land.
     await new Promise((r) => setTimeout(r, 3000));

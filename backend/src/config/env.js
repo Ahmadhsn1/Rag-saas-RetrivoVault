@@ -70,6 +70,9 @@ export const env = {
     llmModel: process.env.GEMINI_LLM_MODEL || "gemini-flash-latest",
   },
   geminiConfigured: Boolean(clean("GEMINI_API_KEY")),
+  // Run the pipeline on a built-in stand-in instead of Gemini (config/offlineAi.js).
+  // For local runs and end-to-end tests only; ignored in production.
+  aiOffline: process.env.AI_OFFLINE === "true" && !isProdEnv,
 
   rag: {
     chunkSize: Number(process.env.CHUNK_SIZE || 1000),

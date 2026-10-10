@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { env } from "./env.js";
+import { offlineModels } from "./offlineAi.js";
 
 /**
  * Thin adapter over the Google Gen AI SDK. The rest of the codebase only sees
@@ -65,6 +66,7 @@ const cache = new Map();
  * Falls back to the platform key when `apiKey` is empty.
  */
 export function modelsFor(apiKey) {
+  if (env.aiOffline) return offlineModels;
   if (!apiKey) return shared;
   const hit = cache.get(apiKey);
   if (hit) return hit;
