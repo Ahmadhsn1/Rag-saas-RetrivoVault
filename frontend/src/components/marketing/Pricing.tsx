@@ -39,7 +39,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
             <button
               onClick={() => setAnnual(false)}
               className={cn(
-                "rounded-sm px-3 py-1.5 transition-colors",
+                "rounded-sm px-4 py-2.5 transition-colors",
                 !annual ? "bg-secondary text-foreground" : "text-muted-foreground",
               )}
             >
@@ -48,7 +48,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
             <button
               onClick={() => setAnnual(true)}
               className={cn(
-                "flex items-center gap-1.5 rounded-sm px-3 py-1.5 transition-colors",
+                "flex items-center gap-1.5 rounded-sm px-4 py-2.5 transition-colors",
                 annual ? "bg-secondary text-foreground" : "text-muted-foreground",
               )}
             >

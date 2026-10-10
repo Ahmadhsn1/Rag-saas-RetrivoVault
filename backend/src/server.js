@@ -23,7 +23,8 @@ async function resolveMongoUri() {
     "no MONGO_URI set — starting an in-memory MongoDB (dev only; add backend/.env with a MongoDB Atlas URI for real vector search)"
   );
   const { MongoMemoryServer } = await import("mongodb-memory-server");
-  memoryMongo = await MongoMemoryServer.create();
+  // The default 10s launch window is too short on a busy laptop.
+  memoryMongo = await MongoMemoryServer.create({ instance: { launchTimeout: 90_000 } });
   return memoryMongo.getUri("retrivo_vault");
 }
 
