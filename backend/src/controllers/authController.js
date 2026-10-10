@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
@@ -155,6 +156,88 @@ export const login = asyncHandler(async (req, res) => {
   logActivity(user._id, "auth.login", null, req);
 
   res.json({ user: user.toJSON(), accessToken });
+});
+
+// A password nobody knows, for accounts that only ever sign in with Google.
+const unusablePassword = () =>
+  bcrypt.hash(crypto.randomBytes(32).toString("base64url"), 12);
+
+/** Asks Google to validate an ID token; returns its claims or null. */
+async function verifyGoogleCredential(credential) {
+  try {
+    const res = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+    if (!res.ok) return null;
+    const claims = await res.json();
+    const valid =
+      claims.aud === env.google.clientId &&
+      String(claims.email_verified) === "true" &&
+      claims.sub &&
+      claims.email;
+    return valid ? claims : null;
+  } catch {
+    return null;
+  }
+}
+
+// POST /api/auth/google  { credential } — sign in, or create the account.
+export const googleSignIn = asyncHandler(async (req, res) => {
+  if (!env.google.clientId) throw ApiError.notFound("Google sign-in is not enabled");
+  const claims = await verifyGoogleCredential(str(req.body?.credential));
+  if (!claims) throw ApiError.unauthorized("Google sign-in failed — please try again");
+
+  const email = String(claims.email).toLowerCase().slice(0, 254);
+  let user =
+    (await User.findOne({ googleId: claims.sub })) || (await User.findOne({ email }));
+  let created = false;
+
+  if (!user) {
+    const name = str(claims.name).trim().slice(0, 120) || email.split("@")[0];
+    user = await User.create({
+      name,
+      email,
+      googleId: claims.sub,
+      passwordHash: await unusablePassword(),
+      emailVerified: true,
+      trialPlan: TRIAL_PLAN,
+      trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000),
+    });
+    created = true;
+    logActivity(user._id, "auth.signup", `${email} (google)`, req);
+    void notify(user._id, {
+      type: "welcome",
+      title: `Your vault is ready, ${name.split(" ")[0]}`,
+      body: `Add a few documents, then ask a real question — every answer comes with the passage it came from. Your ${TRIAL_DAYS}-day ${TRIAL_PLAN.toUpperCase()} trial is running.`,
+      link: "/app/documents",
+    });
+  } else {
+    if (user.isSuspended()) {
+      throw ApiError.forbidden(
+        "This account has been suspended. Contact support if you think this is a mistake."
+      );
+    }
+    if (!user.googleId) {
+      // Linking by email. If nobody ever proved they own this address, whoever
+      // registered it may not be its owner: drop their password and sessions.
+      if (!user.emailVerified) {
+        user.passwordHash = await unusablePassword();
+        await revokeAllForUser(user._id);
+      }
+      user.googleId = claims.sub;
+    }
+    user.emailVerified = true;
+    await user.save();
+  }
+
+  const { raw, family } = await startSession(user._id, req);
+  setRefreshCookie(res, raw);
+  if (!created) logActivity(user._id, "auth.login", "google", req);
+
+  res
+    .status(created ? 201 : 200)
+    .json({ user: user.toJSON(), accessToken: signAccessToken(user._id, family) });
 });
 
 export const refresh = asyncHandler(async (req, res) => {

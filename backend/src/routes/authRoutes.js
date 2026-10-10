@@ -4,6 +4,7 @@ import { authLimiter, refreshLimiter } from "../middleware/rateLimiter.js";
 import {
   signup,
   login,
+  googleSignIn,
   refresh,
   logout,
   logoutAll,
@@ -20,6 +21,7 @@ const router = Router();
 
 router.post("/signup", authLimiter, signup);
 router.post("/login", authLimiter, login);
+router.post("/google", authLimiter, googleSignIn);
 router.post("/refresh", refreshLimiter, refresh);
 router.post("/logout", logout);
 router.post("/logout-all", requireAuth, logoutAll);

@@ -97,6 +97,9 @@ export const env = {
     priceMaxAnnual: optional("STRIPE_PRICE_MAX_ANNUAL"),
   },
 
+  // "Continue with Google". Unset = the button is hidden and the route 404s.
+  google: { clientId: optional("GOOGLE_CLIENT_ID") },
+
   // Emails granted admin access to /api/admin/* (legacy / additional admins).
   adminEmails: (process.env.ADMIN_EMAILS || "")
     .split(",")

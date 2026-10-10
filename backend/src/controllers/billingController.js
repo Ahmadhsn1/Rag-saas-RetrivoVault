@@ -2,6 +2,7 @@ import { User } from "../models/User.js";
 import { env, billingEnabled } from "../config/env.js";
 import { PLANS, planFor, priceIsKnown } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
+import { notify } from "../services/notifications.js";
 import {
   getStripe,
   createCheckoutSession,
@@ -97,6 +98,19 @@ export const handleWebhook = asyncHandler(async (req, res) => {
     case "customer.subscription.deleted":
       await syncSubscription(event.data.object);
       break;
+    case "invoice.payment_failed": {
+      const user = await User.findOne({ stripeCustomerId: event.data.object.customer });
+      if (user) {
+        void notify(user._id, {
+          type: "system",
+          title: "Your payment didn't go through",
+          body: "We couldn't charge your card for your Retrivo Vault plan. Update your payment method to keep your plan — we'll retry automatically.",
+          link: "/app/settings?tab=billing",
+          email: true,
+        });
+      }
+      break;
+    }
     case "checkout.session.completed": {
       const session = event.data.object;
       if (session.subscription) {

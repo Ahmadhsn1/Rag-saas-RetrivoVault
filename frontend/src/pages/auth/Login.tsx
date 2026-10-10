@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiErrorMessage } from "@/lib/api";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { FormError } from "@/components/auth/FormError";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,8 @@ export default function Login() {
           {busy ? "Signing in…" : "Sign in"}
         </Button>
       </form>
+
+      <GoogleButton onError={setError} />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         No account?{" "}

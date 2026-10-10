@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema(
       index: true,
     },
     passwordHash: { type: String, required: true },
+    // Google account id ("sub") once the user has signed in with Google.
+    googleId: { type: String, default: null },
 
     emailVerified: { type: Boolean, default: false },
 
