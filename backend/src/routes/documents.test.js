@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "supertest";
 import { app, makeUser, auth } from "../test/helpers.js";
 import { Document } from "../models/Document.js";
@@ -103,5 +103,107 @@ describe("chat session rename", () => {
       .set(auth(a.token))
       .send({ title: "   " });
     expect(blank.status).toBe(400);
+  });
+});
+
+describe("POST /api/documents/:id/retry", () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it("re-ingests a failed URL document", async () => {
+    const { drain } = await import("../services/jobQueue.js");
+    const ctx = await makeUser();
+    const doc = await Document.create({
+      userId: ctx.user._id,
+      filename: "example.com",
+      mimeType: "text/html",
+      sizeBytes: 10,
+      status: "failed",
+      error: "boom",
+      sourceUrl: "https://example.com/post",
+    });
+
+    globalThis.fetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      headers: new Map([["content-type", "text/html; charset=utf-8"]]),
+      body: {
+        getReader() {
+          let sent = false;
+          return {
+            read: async () =>
+              sent
+                ? { done: true }
+                : ((sent = true), {
+                    done: false,
+                    value: Buffer.from(
+                      "<html><body><p>Recovered content for the retry test, long enough to chunk.</p></body></html>"
+                    ),
+                  }),
+            cancel: async () => {},
+          };
+        },
+      },
+    }));
+
+    const res = await request(app)
+      .post(`/api/documents/${doc._id}/retry`)
+      .set(auth(ctx.token));
+    expect(res.status).toBe(202);
+    expect(res.body.document.status).toBe("processing");
+
+    await drain();
+    const fresh = await Document.findById(doc._id);
+    expect(fresh.status).toBe("ready");
+  });
+
+  it("tells the client to re-upload a failed file document", async () => {
+    const ctx = await makeUser();
+    const doc = await Document.create({
+      userId: ctx.user._id,
+      filename: "broken.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: 100,
+      status: "failed",
+      error: "parse error",
+    });
+
+    const res = await request(app)
+      .post(`/api/documents/${doc._id}/retry`)
+      .set(auth(ctx.token));
+    expect(res.status).toBe(422);
+    expect(res.body.details?.code).toBe("reupload_required");
+  });
+
+  it("rejects retrying a document that hasn't failed", async () => {
+    const ctx = await makeUser();
+    const doc = await Document.create({
+      userId: ctx.user._id,
+      filename: "fine.txt",
+      mimeType: "text/plain",
+      sizeBytes: 10,
+      status: "ready",
+    });
+    const res = await request(app)
+      .post(`/api/documents/${doc._id}/retry`)
+      .set(auth(ctx.token));
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("user entitlements in the auth payload", () => {
+  it("exposes effectivePlan + resolved features (trial counts)", async () => {
+    const res = await request(app).post("/api/auth/signup").send({
+      name: "Trial User",
+      email: `trial-${Date.now()}@example.com`,
+      password: "supersecret1",
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.user.effectivePlan).toBe("pro"); // 14-day signup trial
+    expect(res.body.user.features.byoKey).toBe(true);
+    expect(res.body.user.features.apiAccess).toBe(false);
+    expect(res.body.user.planLimits.documents).toBe(500);
   });
 });

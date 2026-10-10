@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { api, apiErrorMessage, streamChat } from "@/lib/api";
 import { notifyApiError } from "@/lib/notifyApiError";
+import { chatToMarkdown, downloadMarkdown } from "@/lib/documents";
 import { useChatSessions } from "@/hooks/useChatSessions";
 import { useDocuments } from "@/hooks/useDocuments";
 import { useAppState } from "@/context/AppContext";
@@ -161,6 +162,15 @@ export default function Chat() {
     [refetchSessions, activeId, newSession],
   );
 
+  const exportSession = useCallback(async (s: ChatSessionSummary) => {
+    try {
+      const { data } = await api.get<{ session: ChatSession }>(`/chat/${s._id}`);
+      downloadMarkdown(s.title, chatToMarkdown(s.title, data.session.messages ?? []));
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Export failed"));
+    }
+  }, []);
+
   const send = useCallback(
     async (content: string) => {
       let sessionId = activeId;
@@ -293,6 +303,7 @@ export default function Chat() {
       onRename={renameSession}
       onPatch={patchSession}
       onShare={(s) => setShareTarget(s)}
+      onExport={exportSession}
       onToggleArchivedView={() => setArchivedView((v) => !v)}
     />
   );
@@ -383,7 +394,7 @@ export default function Chat() {
                             className="max-w-[14rem]"
                           >
                             <span className="truncate">
-                              [{s.index}] {s.filename ?? s.score.toFixed(2)}
+                              [{s.index}] {s.filename ?? "source"}
                             </span>
                           </Badge>
                         ))}

@@ -6,6 +6,8 @@ import {
   setGeminiKey,
   clearGeminiKey,
   getActivity,
+  getSessions,
+  revokeSession,
   exportData,
 } from "../controllers/accountController.js";
 
@@ -17,6 +19,8 @@ router.patch("/notification-prefs", updateNotificationPrefs);
 router.put("/gemini-key", setGeminiKey);
 router.delete("/gemini-key", clearGeminiKey);
 router.get("/activity", getActivity);
+router.get("/sessions", getSessions);
+router.delete("/sessions/:family", revokeSession);
 router.get("/export", exportData);
 
 export default router;

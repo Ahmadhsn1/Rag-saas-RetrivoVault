@@ -3,6 +3,7 @@ import { connectDB, disconnectDB } from "./config/db.js";
 import { env, billingEnabled, mailEnabled } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { startScheduler, stopScheduler } from "./services/scheduler.js";
+import { bootstrapAdmin } from "./services/adminBootstrap.js";
 import { resumeInterruptedIngestion } from "./services/ingestionService.js";
 
 let memoryMongo = null;
@@ -33,6 +34,10 @@ async function main() {
       if (r.resumed || r.failed) logger.warn(r, "resumed interrupted ingestion");
     })
     .catch((e) => logger.error({ err: e }, "ingestion resume failed"));
+  await bootstrapAdmin().catch((e) => {
+    logger.fatal({ err: e }, "admin bootstrap failed");
+    process.exit(1);
+  });
 
   if (!env.geminiConfigured) {
     logger.warn(

@@ -7,10 +7,13 @@ import { AppTopbar } from "@/components/app/AppTopbar";
 import { VerifyEmailBanner } from "@/components/app/VerifyEmailBanner";
 import { TrialBanner } from "@/components/app/TrialBanner";
 import { CommandPalette } from "@/components/app/CommandPalette";
+import { MustChangePasswordGate } from "@/components/app/MustChangePasswordGate";
+import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
 
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
+  usePresenceHeartbeat();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -57,6 +60,7 @@ export function AppShell() {
       </div>
 
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
+      <MustChangePasswordGate />
     </AppProvider>
   );
 }

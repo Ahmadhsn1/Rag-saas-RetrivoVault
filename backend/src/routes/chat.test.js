@@ -101,16 +101,16 @@ describe("chat answers", () => {
 
 describe("secrets at rest", () => {
   it("round-trips a sealed value and never stores it in the clear", () => {
-    const sealed = seal("AIza-super-secret-key-000000");
-    expect(sealed).not.toContain("AIza");
-    expect(open(sealed)).toBe("AIza-super-secret-key-000000");
+    const sealed = seal("plain-secret-value-000000");
+    expect(sealed).not.toContain("plain-secret");
+    expect(open(sealed)).toBe("plain-secret-value-000000");
     expect(open(sealed.slice(0, -4) + "AAAA")).toBeNull(); // tampered
     expect(open("legacy-plain-key")).toBe("legacy-plain-key");
   });
 
   it("stores a bring-your-own Gemini key encrypted", async () => {
     const ctx = await makeUser({ keepTrial: true });
-    const key = "AIzaSyD-example-key-0123456789";
+    const key = "not-a-real-key-0123456789abcdef";
     const res = await request(app)
       .put("/api/account/gemini-key")
       .set(auth(ctx.token))

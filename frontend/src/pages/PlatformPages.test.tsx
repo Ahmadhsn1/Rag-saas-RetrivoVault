@@ -69,6 +69,28 @@ function signedIn(role: "user" | "admin" = "user") {
         planCounts: { free: 4, pro: 1 },
         estimatedMrr: 12,
         plans: ["free", "pro", "max"],
+        onlineNow: 1,
+        activeToday: 2,
+        active7d: 3,
+        compedUsers: 0,
+        suspendedUsers: 0,
+        admins: 1,
+        pushSubscribers: 0,
+        health: {
+          db: "up",
+          queue: {},
+          features: { billing: false, mail: false, push: false, gemini: true },
+        },
+      });
+    if (url === "/admin/timeseries")
+      return ok({
+        days: 30,
+        series: Array.from({ length: 30 }, (_, i) => ({
+          date: `2026-09-${String(i + 1).padStart(2, "0")}`,
+          signups: 0,
+          queries: 0,
+          ingests: 0,
+        })),
       });
     if (url === "/admin/users")
       return ok({
@@ -124,7 +146,13 @@ describe("platform pages render without runtime errors", () => {
     signedIn("admin");
     renderWithProviders(<App />, { route: "/app/admin" });
     expect(await screen.findByText(/est\. mrr/i)).toBeInTheDocument();
-    expect(screen.getByText("bob@x.com")).toBeInTheDocument();
+    expect(screen.getByText(/online now/i)).toBeInTheDocument();
+  });
+
+  it("/app/admin?tab=users lists users for an admin", async () => {
+    signedIn("admin");
+    renderWithProviders(<App />, { route: "/app/admin?tab=users" });
+    expect(await screen.findByText("bob@x.com")).toBeInTheDocument();
   });
 
   it("/app/settings?tab=notifications renders the preferences", async () => {

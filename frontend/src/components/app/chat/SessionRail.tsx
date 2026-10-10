@@ -12,6 +12,7 @@ import {
   Archive,
   ArchiveRestore,
   Share2,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ interface SessionRailProps {
   onRename: (id: string, title: string) => void;
   onPatch: (id: string, patch: { pinned?: boolean; archived?: boolean }) => void;
   onShare: (session: ChatSessionSummary) => void;
+  onExport: (session: ChatSessionSummary) => void;
   onToggleArchivedView: () => void;
 }
 
@@ -49,6 +51,7 @@ export function SessionRail({
   onRename,
   onPatch,
   onShare,
+  onExport,
   onToggleArchivedView,
 }: SessionRailProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -157,6 +160,9 @@ export function SessionRail({
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => onShare(s)}>
                       <Share2 className="h-4 w-4" /> Share
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onExport(s)}>
+                      <Download className="h-4 w-4" /> Export (.md)
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => onPatch(s._id, { archived: !s.archived })}

@@ -9,11 +9,11 @@ import { Reveal } from "@/components/motion/Reveal";
 const ITEMS = [
   {
     q: "What can I put in my vault?",
-    a: "PDF, Word (.docx), spreadsheets (.csv), Markdown and plain text, up to 10 MB each — plus web pages by URL. Drop in a batch at once and they process in the background.",
+    a: "PDF, Word (.docx), spreadsheets (.csv), Markdown and plain text, up to 25 MB each — plus web pages by URL. Drop in a batch at once and they process in the background.",
   },
   {
     q: "How do I know the answer is right?",
-    a: "Every claim carries a citation. Click it and you're looking at the exact passage Retrivo used, with a match score. If your documents don't contain an answer, it tells you that instead of making one up.",
+    a: "Every claim carries a citation. Click it and you're looking at the exact passage Retrivo used — the document, the page, and a button to open the original there. If your documents don't contain an answer, it tells you that instead of making one up.",
   },
   {
     q: "Is anyone else able to see my documents?",

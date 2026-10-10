@@ -15,20 +15,49 @@ export interface NotificationPrefs {
   productUpdates: boolean;
 }
 
+export interface CompGrant {
+  plan: "pro" | "max" | null;
+  expiresAt: string | null;
+  reason?: string | null;
+  grantedAt?: string | null;
+}
+
 export interface User {
   _id: string;
   name: string;
   email: string;
   emailVerified: boolean;
   role: "user" | "admin";
+  isRootAdmin?: boolean;
+  adminSince?: string | null;
+  mustChangePassword?: boolean;
+  suspendedAt?: string | null;
   plan: PlanId;
+  /** Plan actually in force: paid > admin comp grant > live trial > free. */
+  effectivePlan: PlanId;
+  /** Resolved entitlements for `effectivePlan` — gate features on these, not `plan`. */
+  features: { byoKey: boolean; apiAccess: boolean; priorityQueue: boolean };
+  planLimits: PlanLimits;
   trialPlan: PlanId | null;
   trialEndsAt: string | null;
+  comp?: CompGrant;
   subscriptionStatus: SubscriptionStatus;
   planRenewsAt: string | null;
   hasGeminiKey: boolean;
   notificationPrefs: NotificationPrefs;
   createdAt: string;
+}
+
+export interface SessionInfo {
+  id: string;
+  family: string;
+  device: string | null;
+  ip: string | null;
+  startedAt: string;
+  lastSeenAt: string;
+  endedAt: string | null;
+  current: boolean;
+  online: boolean;
 }
 
 export interface PlanLimits {
@@ -125,6 +154,9 @@ export interface RetrievedSource {
   documentId: string;
   /** Absent on answers saved before sources carried the document name. */
   filename?: string;
+  /** 1-based page in the source PDF, when the format has pages. */
+  page?: number | null;
+  /** Cosine similarity; 0 when the passage matched by keyword only. */
   score: number;
   /** Short excerpt, used in hovers and public shares. */
   preview: string;
@@ -175,7 +207,8 @@ export type NotificationType =
   | "trial_ending"
   | "plan_changed"
   | "welcome"
-  | "system";
+  | "system"
+  | "announcement";
 
 export interface AppNotification {
   _id: string;
@@ -206,6 +239,12 @@ export interface ActivityEntry {
   createdAt: string;
 }
 
+export interface AdminHealth {
+  db: "up" | "down";
+  queue: Record<string, unknown>;
+  features: { billing: boolean; mail: boolean; push: boolean; gemini: boolean };
+}
+
 export interface AdminStats {
   users: number;
   documents: number;
@@ -215,6 +254,21 @@ export interface AdminStats {
   planCounts: Record<string, number>;
   estimatedMrr: number;
   plans: string[];
+  onlineNow: number;
+  activeToday: number;
+  active7d: number;
+  compedUsers: number;
+  suspendedUsers: number;
+  admins: number;
+  pushSubscribers: number;
+  health: AdminHealth;
+}
+
+export interface AdminTimeseriesPoint {
+  date: string;
+  signups: number;
+  queries: number;
+  ingests: number;
 }
 
 export interface AdminUser {
@@ -223,9 +277,80 @@ export interface AdminUser {
   email: string;
   plan: PlanId;
   role: "user" | "admin";
+  isRootAdmin?: boolean;
   subscriptionStatus: SubscriptionStatus;
   emailVerified: boolean;
   lockedUntil: string | null;
   trialEndsAt: string | null;
+  suspendedAt?: string | null;
+  comp?: CompGrant;
+  online?: boolean;
+  createdAt: string;
+}
+
+export interface AdminUserDetail {
+  user: AdminUser & {
+    notificationPrefs?: NotificationPrefs;
+    suspendedReason?: string | null;
+    adminSince?: string | null;
+  };
+  stats: { documents: number; chats: number; queries: number };
+  presence: {
+    online: boolean;
+    openSessions: number;
+    lastSeenAt: string | null;
+    lastDevice: string | null;
+  };
+  activity: ActivityEntry[];
+}
+
+export interface AdminSession {
+  id: string;
+  userId: string;
+  user?: { name: string; email: string };
+  device: string | null;
+  ip: string | null;
+  startedAt: string;
+  lastSeenAt: string;
+  endedAt: string | null;
+  endReason: string | null;
+  durationMs: number;
+  online: boolean;
+}
+
+export interface PresenceUser {
+  userId: string;
+  name: string;
+  email: string;
+  plan: PlanId;
+  role: "user" | "admin";
+  device: string | null;
+  ip: string | null;
+  since: string;
+  lastSeenAt: string;
+}
+
+export interface AdminAuditEntry {
+  _id: string;
+  adminEmail: string | null;
+  action: string;
+  targetEmail: string | null;
+  meta?: Record<string, unknown>;
+  ip: string | null;
+  createdAt: string;
+}
+
+export interface Broadcast {
+  _id: string;
+  sentByEmail: string | null;
+  title: string;
+  body: string;
+  link: string | null;
+  audience: string;
+  audienceLabel: string | null;
+  channels: { inApp: boolean; email: boolean; push: boolean };
+  recipientCount: number;
+  delivered: { inApp: number; email: number; push: number };
+  status: "sending" | "sent" | "failed";
   createdAt: string;
 }

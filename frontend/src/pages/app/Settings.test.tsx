@@ -86,4 +86,32 @@ describe("Settings", () => {
       await screen.findByText(/api keys are a max feature/i),
     ).toBeInTheDocument();
   });
+
+  it("offers the BYO Gemini key input to a trial user (effective Pro)", async () => {
+    const trialUser = {
+      ...fakeUser,
+      effectivePlan: "pro" as const,
+      features: { byoKey: true, apiAccess: false, priorityQueue: true },
+    };
+    mockApi.post.mockImplementation((url: string) =>
+      url === "/auth/refresh"
+        ? Promise.resolve({ data: { user: trialUser, accessToken: "t" } })
+        : Promise.reject(new Error("no")),
+    );
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === "/collections") return Promise.resolve({ data: { collections: [] } });
+      if (url === "/auth/me") return Promise.resolve({ data: { user: trialUser } });
+      return Promise.reject(new Error(`unstubbed ${url}`));
+    });
+
+    renderWithProviders(
+      <AppProvider>
+        <Settings />
+      </AppProvider>,
+      { route: "/app/settings?tab=profile" },
+    );
+    expect(
+      await screen.findByLabelText(/gemini api key/i),
+    ).toBeInTheDocument();
+  });
 });

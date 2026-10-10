@@ -18,6 +18,7 @@ const notificationSchema = new mongoose.Schema(
         "plan_changed",
         "welcome",
         "system",
+        "announcement",
       ],
       required: true,
     },

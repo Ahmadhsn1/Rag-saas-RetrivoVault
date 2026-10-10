@@ -6,6 +6,7 @@ import {
   FileCheck2,
   FileX2,
   Gauge,
+  Megaphone,
   Sparkles,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const ICON: Record<NotificationType, React.ComponentType<{ className?: string }>
   plan_changed: Sparkles,
   welcome: Sparkles,
   system: Bell,
+  announcement: Megaphone,
 };
 
 export function NotificationBell() {

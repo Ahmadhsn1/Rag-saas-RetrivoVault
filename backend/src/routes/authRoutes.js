@@ -12,6 +12,7 @@ import {
   resendVerification,
   forgotPassword,
   resetPassword,
+  changePassword,
   deleteAccount,
 } from "../controllers/authController.js";
 
@@ -28,6 +29,7 @@ router.post("/verify-email", verifyEmail);
 router.post("/resend-verification", requireAuth, authLimiter, resendVerification);
 router.post("/forgot-password", authLimiter, forgotPassword);
 router.post("/reset-password", authLimiter, resetPassword);
+router.post("/change-password", requireAuth, authLimiter, changePassword);
 
 router.delete("/account", requireAuth, deleteAccount);
 

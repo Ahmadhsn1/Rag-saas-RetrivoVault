@@ -11,18 +11,16 @@ Dark-locked SaaS UI: a marketing landing page and the authenticated application.
 | `npm run build` | `tsc -b` then `vite build` → `dist/` |
 | `npm run typecheck` | type check only |
 | `npm run lint` | eslint (flat config) |
-| `npm run test` | Vitest (jsdom) — 27 tests |
+| `npm run test` | Vitest (jsdom) — 38 tests |
 | `npm run preview` | serve the production build locally |
 
 `VITE_API_BASE` (default `/api`) sets the API root; `VITE_API_TARGET` sets the dev proxy target.
 
 ## Design system
 
-`design-system/retrivo-vault/MASTER.md` is the source of truth (tokens, motion, component
-specs, anti-patterns, checklist). Per-page overrides live in `pages/`. It captures a dark
-developer-tool aesthetic (OLED canvas, warm bone accent, monospace status chips), refined
-against the covis.ai reference. Token values are mirrored into `tailwind.config.ts` and
-`src/index.css` (CSS custom properties, HSL triplets).
+Dark-locked developer-tool aesthetic — OLED canvas, warm bone accent, monospace status
+chips, JetBrains Mono + IBM Plex Sans. Token values live in `tailwind.config.ts` and
+`src/index.css` (CSS custom properties, HSL triplets); match the existing components.
 
 ## Layout
 
@@ -40,22 +38,24 @@ src/
 │   ├── AuthContext.tsx      # session: silent refresh on load, login/signup/logout
 │   └── AppContext.tsx       # collections + active-collection selection (shared shell↔pages)
 ├── hooks/                   # useCollections, useDocuments (polls while processing),
-│                            #   useChatSessions, useGsapReveal, useMediaQuery
+│                            #   useChatSessions, useNotifications, usePresenceHeartbeat, useMediaQuery
 ├── components/
 │   ├── ui/                  # shadcn primitives (button, dialog, sheet, table, tabs, accordion, …)
 │   ├── marketing/           # SiteNav, Hero, AuroraBackground, TrustStrip, StatsBand,
 │   │                        #   BentoFeatures, RetrievalDemo, HowItWorks, SecurityPanel,
 │   │                        #   Pricing, FAQ, CTASection, SiteFooter, HashScroll
 │   ├── auth/                # AuthLayout (terminal side-panel), FormError (a11y summary)
-│   ├── app/                 # AppShell, AppSidebar, AppTopbar, UserMenu, VerifyEmailBanner,
-│   │                        #   UploadDialog, ConfirmDialog, EmptyState, chat/{SessionRail,Composer},
-│   │                        #   settings/{Profile,Billing,ApiKeys,Account}Tab, settings/{UsageBars,UsageChart}
+│   ├── app/                 # AppShell, AppSidebar, AppTopbar, UserMenu, NotificationBell,
+│   │                        #   VerifyEmailBanner, MustChangePasswordGate, UploadDialog, ConfirmDialog,
+│   │                        #   chat/{SessionRail,Composer}, settings/{Profile,Billing,Notifications,
+│   │                        #   ApiKeys,Webhooks,Activity,Account}Tab, settings/{UsageBars,UsageChart}
 │   ├── rag/                 # PipelineStrip, CitationBadge, AnswerText, SourceDrawer, StatusChip
 │   └── Logo.tsx
 └── pages/
-    ├── marketing/{MarketingLayout,Landing,PricingPage}.tsx
+    ├── marketing/{MarketingLayout,Landing,PricingPage,DocsPage,AboutPage,LegalPage}.tsx
     ├── auth/{Login,Signup,ForgotPassword,ResetPassword,VerifyEmail}.tsx
-    └── app/{Chat,Documents,Collections,Settings}.tsx
+    ├── app/{Chat,Documents,Collections,Settings,Admin}.tsx
+    └── app/admin/{Overview,Users,UserDrawer,Presence,Broadcasts,Audit}Panel.tsx
 ```
 
 ## Notable behavior

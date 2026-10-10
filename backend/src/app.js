@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import pinoHttp from "pino-http";
 
-import { env, billingEnabled, mailEnabled, isTestEnv } from "./config/env.js";
+import { env, billingEnabled, mailEnabled, pushEnabled, isTestEnv } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import { mongoSanitize } from "./middleware/sanitize.js";
@@ -23,6 +23,8 @@ import accountRoutes from "./routes/accountRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import presenceRoutes from "./routes/presenceRoutes.js";
+import pushRoutes from "./routes/pushRoutes.js";
 import publicRoutes from "./routes/publicRoutes.js";
 
 export function createApp() {
@@ -71,7 +73,7 @@ export function createApp() {
       ok: dbUp,
       db: dbUp ? "up" : "down",
       queue: queueStats(),
-      features: { billing: billingEnabled, mail: mailEnabled },
+      features: { billing: billingEnabled, mail: mailEnabled, push: pushEnabled },
       ts: Date.now(),
     });
   });
@@ -87,6 +89,8 @@ export function createApp() {
   app.use("/api/account", accountRoutes);
   app.use("/api/notifications", notificationRoutes);
   app.use("/api/webhooks", webhookRoutes);
+  app.use("/api/presence", presenceRoutes);
+  app.use("/api/push", pushRoutes);
   app.use("/api/admin", adminRoutes);
 
   app.use(notFoundHandler);

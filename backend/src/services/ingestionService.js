@@ -6,7 +6,7 @@ import { chunkText, MAX_CHUNKS } from "./chunkingService.js";
 import { embedDocumentBatch } from "./embeddingService.js";
 import { summarizeDocument, transcribePdf } from "./generationService.js";
 import { registerHandler, enqueue, queueIsFull } from "./jobQueue.js";
-import { saveFile, readFile, hasFile } from "./fileStore.js";
+import { saveFile, readFile, hasFile, deleteFile } from "./fileStore.js";
 import { ApiError } from "../utils/ApiError.js";
 import { recordEvent } from "./usage.js";
 import { notify } from "./notifications.js";
@@ -169,11 +169,20 @@ export async function queueIngestion(doc, buffer) {
     });
     throw new ApiError(503, "Ingestion is busy right now — please retry shortly.");
   }
+  await deleteFile(doc._id); // a retry replaces the stored bytes
   await saveFile(doc._id, buffer, {
     userId: doc.userId,
     filename: doc.filename,
     mimeType: doc.mimeType,
   });
+  await enqueueDocument(doc);
+}
+
+/** Re-run the pipeline for a document whose original is already stored. */
+export async function requeueStored(doc) {
+  if (queueIsFull()) {
+    throw new ApiError(503, "Ingestion is busy right now — please retry shortly.");
+  }
   await enqueueDocument(doc);
 }
 

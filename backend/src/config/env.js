@@ -66,7 +66,8 @@ export const env = {
     embeddingModel: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-2",
     // Must match numDimensions of the Atlas vector index (scripts/createVectorIndex.js).
     embeddingDim: Number(process.env.GEMINI_EMBEDDING_DIM || 768),
-    llmModel: process.env.GEMINI_LLM_MODEL || "gemini-2.5-flash",
+    // A rolling alias rather than a dated name, which Google eventually retires.
+    llmModel: process.env.GEMINI_LLM_MODEL || "gemini-flash-latest",
   },
   geminiConfigured: Boolean(clean("GEMINI_API_KEY")),
 
@@ -96,11 +97,32 @@ export const env = {
     priceMaxAnnual: optional("STRIPE_PRICE_MAX_ANNUAL"),
   },
 
-  // Emails granted admin access to /api/admin/*.
+  // Emails granted admin access to /api/admin/* (legacy / additional admins).
   adminEmails: (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean),
+
+  // The root admin, provisioned at boot from these two vars (see
+  // services/adminBootstrap.js). Never commit real values — each deployment
+  // sets its own. `ADMIN_PASSWORD` is read once at startup and never logged.
+  admin: {
+    email: clean("ADMIN_EMAIL")?.trim().toLowerCase() || null,
+    password: clean("ADMIN_PASSWORD") || null,
+    name: process.env.ADMIN_NAME || "Administrator",
+  },
+
+  // Web Push (VAPID). Without both keys, push is disabled and broadcasts fall
+  // back to in-app + email only (see services/pushService.js).
+  push: {
+    vapidPublic: optional("VAPID_PUBLIC_KEY"),
+    vapidPrivate: optional("VAPID_PRIVATE_KEY"),
+    subject: process.env.VAPID_SUBJECT || "mailto:admin@retrivo.local",
+  },
+
+  // A session counts as "online" if its last heartbeat was within this window.
+  presenceWindowMs:
+    Math.max(1, Number(process.env.PRESENCE_WINDOW_MIN || 2)) * 60 * 1000,
 
   // Auto-on in local dev when there's no real DB or no Gemini key. In
   // production it is only ever on when DEMO_MODE=true is set explicitly.
@@ -114,3 +136,6 @@ export const isProd = isProdEnv;
 export const isTestEnv = isTest;
 export const billingEnabled = Boolean(env.stripe.secretKey);
 export const mailEnabled = Boolean(env.mail.smtpUrl);
+export const pushEnabled = Boolean(
+  env.push.vapidPublic && env.push.vapidPrivate
+);

@@ -1,11 +1,11 @@
 # Retrivo Vault — developer notes
 
 Individual-focused RAG SaaS. **No teams / workspaces / org roles — never add them.**
-See `retrivo-vault-architecture.md` and `features.md` for the full picture.
+See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the full picture.
 
-**All user-facing copy** (marketing, app text, emails, notifications, meta) follows
-`BRAND.md` — positioning, voice, naming. Never call it a "portfolio project" in
-user copy; "open source, built by one person" is the pitch and lives on `/about`.
+Keep user-facing copy (marketing, app text, emails, notifications, meta) consistent
+in voice and naming. Never call it a "portfolio project" in user copy;
+"open source, built by one person" is the pitch and lives on `/about`.
 
 ## Layout
 
@@ -13,8 +13,8 @@ user copy; "open source, built by one person" is the pitch and lives on `/about`
   Tests: Vitest + `mongodb-memory-server` + `supertest`.
 - `frontend/` — React + Vite + TS + Tailwind + shadcn/ui + GSAP + Recharts.
   Tests: Vitest + Testing Library (jsdom).
-- `frontend/design-system/retrivo-vault/MASTER.md` — visual source of truth
-  (tokens, motion, component specs). Follow it for any UI work.
+- Design tokens live in `frontend/src/index.css` and the Tailwind config; match
+  the existing components (dark-only, mono display type, token classes).
 
 ## Commands
 
@@ -29,8 +29,9 @@ CI (`.github/workflows/ci.yml`) runs all of the above.
 
 - **Every DB query is scoped by `req.user.id`.** Quota checks in `middleware/quota.js`
   return `402`/`403` with `details.code` (`quota_exceeded` / `feature_locked`).
-- **Plan in force = `user.effectivePlan()`** (respects the 14-day Pro trial). Use
-  `planFor(user)` from `config/plans.js`, never `getPlan(user.plan)`.
+- **Plan in force = `user.effectivePlan()`** — resolves paid → admin comp grant
+  → 14-day Pro trial → free. Use `planFor(user)` from `config/plans.js`, never
+  `getPlan(user.plan)`.
 - **User input**: coerce strings with `str()` and validate ids with the local
   `asId()` before touching Mongo. The global `mongoSanitize` middleware strips
   `$`/dotted keys but string-method calls on objects still crash — always `str()`.
@@ -50,14 +51,29 @@ CI (`.github/workflows/ci.yml`) runs all of the above.
   `MagneticButton`; tokens in `lib/anim.ts`); **GSAP** (`lib/motion.ts`) only for
   the hero headline / count-up / aurora; **CSS** `animate-in` for app rows. The
   motion components check `useReducedMotion()`; `framer-motion` is mocked in
-  `src/test/setup.ts`. See `design-system/retrivo-vault/MASTER.md` §Motion.
+  `src/test/setup.ts`.
 - Frontend data hooks tolerate malformed responses (`Array.isArray(...) ? ... : []`).
 
 ## Local dev
 
 `cd backend && npm run dev` boots with **zero config** (no `.env` → in-memory Mongo
 + demo mode). Vector retrieval and AI calls return a clean `502` until `MONGO_URI`
-(Atlas) and `GEMINI_API_KEY` are set. `ADMIN_EMAILS=you@x.com` grants `/app/admin`.
+(Atlas) and `GEMINI_API_KEY` are set.
+
+**Admin access:** set `ADMIN_EMAIL` + `ADMIN_PASSWORD` (12+ chars) and the root
+admin is created/repaired at boot; `npm run seed:admin` does the same on demand
+and rotates the password. `ADMIN_EMAILS=a@x.com,b@x.com` promotes existing
+accounts as extra admins. Only the root admin can change roles, and the root
+account can't be suspended/demoted/deleted through the API.
+
+**Admin console conventions:** every mutating `/api/admin/*` handler goes through
+`loadTarget(req, …)` (guards root + self) and writes an `AdminAudit` row via
+`audit(req, action, target, meta)` (fire-and-forget). Presence lifecycle lives in
+`services/presence.js` and is driven from `services/refreshTokens.js` — never
+write `UserSession` directly from a controller. Broadcast fan-out
+(`services/broadcast.js`) is in-process and chunked, like the scheduler. Web Push
+(`services/pushService.js`) and the whole broadcast "push" channel no-op unless
+`VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` are set (`pushEnabled`).
 
 ## Known limitations
 

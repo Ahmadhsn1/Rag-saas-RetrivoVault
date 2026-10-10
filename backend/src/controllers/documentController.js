@@ -3,7 +3,7 @@ import { Document } from "../models/Document.js";
 import { Chunk } from "../models/Chunk.js";
 import { Collection } from "../models/Collection.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
-import { queueIngestion } from "../services/ingestionService.js";
+import { queueIngestion, requeueStored } from "../services/ingestionService.js";
 import { openFile, deleteFile, hasFile } from "../services/fileStore.js";
 import { queueIsFull } from "../services/jobQueue.js";
 import { fetchUrlForIngest } from "../services/urlFetch.js";
@@ -130,6 +130,52 @@ export const listDocuments = asyncHandler(async (req, res) => {
     pageSize,
     pages: Math.max(Math.ceil(total / pageSize), 1),
   });
+});
+
+/**
+ * Retry a failed ingestion.
+ *  - URL-sourced docs: re-fetch the page and re-run the pipeline.
+ *  - Uploaded files: re-run from the stored original. Documents uploaded
+ *    before originals were kept have nothing to re-run, so the client
+ *    re-uploads instead (422).
+ */
+export const retryDocument = asyncHandler(async (req, res) => {
+  if (queueIsFull()) {
+    throw new ApiError(503, "Ingestion is busy right now — please retry shortly.");
+  }
+
+  const doc = await Document.findOne({
+    _id: req.params.id,
+    userId: req.user.id,
+  });
+  if (!doc) throw ApiError.notFound("Document not found");
+  if (doc.status !== "failed") {
+    throw ApiError.badRequest("Only a failed document can be retried");
+  }
+
+  const fresh = doc.sourceUrl ? await fetchUrlForIngest(doc.sourceUrl) : null;
+  if (!fresh && !(await hasFile(doc._id))) {
+    throw new ApiError(
+      422,
+      "Re-upload this file to retry — the original isn't stored for this document.",
+      { code: "reupload_required" }
+    );
+  }
+
+  doc.status = "processing";
+  doc.error = null;
+  doc.chunkCount = 0;
+  if (fresh) {
+    doc.mimeType = fresh.mimeType;
+    doc.filename = fresh.filename;
+    doc.sizeBytes = fresh.buffer.length;
+  }
+  await doc.save();
+
+  if (fresh) await queueIngestion(doc, fresh.buffer);
+  else await requeueStored(doc);
+
+  res.status(202).json({ document: doc });
 });
 
 export const getDocument = asyncHandler(async (req, res) => {

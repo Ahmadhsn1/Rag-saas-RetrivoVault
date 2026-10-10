@@ -22,7 +22,8 @@ export function ApiKeysTab() {
   const [reveal, setReveal] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const locked = user?.plan !== "max";
+  // Resolve from server-computed entitlements (a Max trial unlocks this too).
+  const locked = (user?.planLimits?.apiKeys ?? 0) === 0;
 
   const load = () =>
     api
