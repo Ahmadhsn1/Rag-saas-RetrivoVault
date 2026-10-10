@@ -36,8 +36,6 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border">
       <Stagger
-        wrapChildren={false}
-        stagger={0.06}
         className="container grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)]"
       >
         <RevealItem>

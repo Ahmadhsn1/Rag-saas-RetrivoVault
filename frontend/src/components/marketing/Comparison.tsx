@@ -52,7 +52,7 @@ export function Comparison() {
           </h2>
         </Reveal>
 
-        <Reveal className="mx-auto mt-12 max-w-3xl" delay={0.05}>
+        <Reveal className="mx-auto mt-12 max-w-3xl">
           <div className="overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full text-sm">
               <thead>

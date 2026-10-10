@@ -60,6 +60,9 @@ export function OnboardingChecklist({
     },
   ];
 
+  // Once every step is done the checklist has nothing left to say.
+  const allDone = steps.every((step) => step.done);
+
   return (
     <div className="mx-auto flex max-w-lg flex-col py-12">
       <div className="w-full">
@@ -71,39 +74,41 @@ export function OnboardingChecklist({
             ? "Your documents are indexed. Every answer will point at the passage it came from."
             : "Add a document, ask a question, and check the source behind the answer."}
         </p>
-        <ul className="mt-8 space-y-2">
-          {steps.map((step, i) => (
-            <li
-              key={step.title}
-              style={{ animationDelay: `${i * 70}ms` }}
-              className={cn(
-                "flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-300",
-                step.done ? "border-border bg-surface" : "border-border bg-card",
-              )}
-            >
-              {step.done ? (
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok" aria-hidden="true" />
-              ) : (
-                <Circle
-                  className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <p
-                  className={cn(
-                    "text-sm font-medium",
-                    step.done && "text-muted-foreground line-through",
-                  )}
-                >
-                  {step.title}
-                </p>
-                <p className="mt-0.5 text-sm text-muted-foreground">{step.body}</p>
-              </div>
-              {step.action && <div className="shrink-0">{step.action}</div>}
-            </li>
-          ))}
-        </ul>
+        {!allDone && (
+          <ul className="mt-8 space-y-2">
+            {steps.map((step, i) => (
+              <li
+                key={step.title}
+                style={{ animationDelay: `${i * 70}ms` }}
+                className={cn(
+                  "flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-300",
+                  step.done ? "border-border bg-surface" : "border-border bg-card",
+                )}
+              >
+                {step.done ? (
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok" aria-hidden="true" />
+                ) : (
+                  <Circle
+                    className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={cn(
+                      "text-sm font-medium",
+                      step.done && "text-muted-foreground line-through",
+                    )}
+                  >
+                    {step.title}
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{step.body}</p>
+                </div>
+                {step.action && <div className="shrink-0">{step.action}</div>}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

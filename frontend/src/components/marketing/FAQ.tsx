@@ -50,7 +50,7 @@ export function FAQ() {
           </p>
         </Reveal>
 
-        <Reveal delay={0.08}>
+        <Reveal>
           <Accordion type="single" collapsible className="w-full">
             {ITEMS.map((item, i) => (
               <AccordionItem key={i} value={`item-${i}`}>

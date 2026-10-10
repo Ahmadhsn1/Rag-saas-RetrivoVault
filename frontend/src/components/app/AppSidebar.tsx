@@ -127,21 +127,24 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
       </div>
 
       <div className="border-t border-sidebar-border p-3">
-        <NavLink
-          to="/app/settings?tab=billing"
-          onClick={onClose}
-          className="mb-3 block rounded-md px-1 py-1 transition-colors hover:bg-sidebar-accent"
-        >
-          <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
-            <span className="uppercase">{planLabel} · questions</span>
-            <span>
-              {queriesUsed} / {queriesLimit}
-            </span>
-          </div>
-          <Progress
-            value={Math.min((queriesUsed / queriesLimit) * 100, 100)}
-          />
-        </NavLink>
+        {/* Shown once usage has loaded, so the plan never flashes as "free". */}
+        {usage && (
+          <NavLink
+            to="/app/settings?tab=billing"
+            onClick={onClose}
+            className="mb-3 block rounded-md px-1 py-1 transition-colors hover:bg-sidebar-accent"
+          >
+            <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
+              <span className="uppercase">{planLabel} · questions</span>
+              <span>
+                {queriesUsed} / {queriesLimit}
+              </span>
+            </div>
+            <Progress
+              value={Math.min((queriesUsed / queriesLimit) * 100, 100)}
+            />
+          </NavLink>
+        )}
         <UserMenu />
       </div>
     </div>

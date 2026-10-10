@@ -151,8 +151,8 @@ export function UploadDialog({
         <DialogHeader>
           <DialogTitle>Add documents</DialogTitle>
           <DialogDescription>
-            PDF, text, Markdown, DOCX, CSV or a web page — parsed, chunked and
-            embedded in the background.
+            PDF, Word, Markdown, text, CSV or a web page. Each one is read and
+            indexed in the background.
           </DialogDescription>
         </DialogHeader>
 

@@ -14,7 +14,7 @@ const TABS = ["overview", "users", "presence", "broadcasts", "audit"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function Admin() {
-  const { user, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const [params, setParams] = useSearchParams();
   const [state, setState] = useState<"checking" | "ok" | "denied">("checking");
 
@@ -37,7 +37,9 @@ export default function Admin() {
     };
   }, [refreshUser]);
 
-  if (state === "denied" || (user && user.role !== "admin" && state !== "checking")) {
+  // The server check is the authority. `user.role` can still read "user" for a
+  // moment after an ADMIN_EMAILS account is promoted on its first admin call.
+  if (state === "denied") {
     return <Navigate to="/app" replace />;
   }
 

@@ -59,8 +59,6 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
         </Reveal>
 
         <Stagger
-          wrapChildren={false}
-          stagger={0.1}
           className="mx-auto mt-14 grid max-w-5xl gap-5 lg:grid-cols-3"
         >
           {PLANS.map((plan) => {
