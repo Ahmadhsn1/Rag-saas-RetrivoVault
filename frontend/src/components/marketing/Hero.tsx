@@ -213,8 +213,8 @@ export function Hero() {
             animate={reduce ? undefined : { y: [0, -7, 0] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
           >
-            <p className="font-mono text-2xs text-muted-foreground">retrieval</p>
-            <p className="font-mono text-sm text-ok">142ms</p>
+            <p className="font-mono text-2xs text-muted-foreground">every claim</p>
+            <p className="font-mono text-sm text-ok">sourced</p>
           </motion.div>
           <motion.div
             className="absolute -bottom-6 -left-4 hidden -rotate-2 rounded-lg border border-border bg-card px-3 py-2 shadow-md sm:block"

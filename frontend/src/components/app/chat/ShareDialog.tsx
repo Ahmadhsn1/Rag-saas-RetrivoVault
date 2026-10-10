@@ -58,8 +58,9 @@ export function ShareDialog({
             Share this chat
           </DialogTitle>
           <DialogDescription>
-            Anyone with the link can read this conversation (questions and
-            answers only — not your documents). Turn it off any time.
+            Anyone with the link can read this conversation: the questions,
+            the answers and a short excerpt of each cited passage — never your
+            full documents. Turn it off any time.
           </DialogDescription>
         </DialogHeader>
 

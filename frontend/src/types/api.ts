@@ -12,7 +12,6 @@ export type SubscriptionStatus =
 export interface NotificationPrefs {
   ingestComplete: boolean;
   quotaWarnings: boolean;
-  weeklyDigest: boolean;
   productUpdates: boolean;
 }
 
@@ -124,8 +123,13 @@ export interface RetrievedSource {
   index: number;
   chunkId: string;
   documentId: string;
+  /** Absent on answers saved before sources carried the document name. */
+  filename?: string;
   score: number;
+  /** Short excerpt, used in hovers and public shares. */
   preview: string;
+  /** The full retrieved passage. */
+  text?: string;
 }
 
 export interface ChatMessage {

@@ -2,11 +2,11 @@ import { useEffect, useRef } from "react";
 import { countUp, gsap } from "@/lib/motion";
 import { Stagger, RevealItem } from "@/components/motion/Reveal";
 
-const STATS = [
-  { value: 768, suffix: "d", label: "embedding dimensions" },
-  { value: 142, suffix: "ms", label: "median retrieval time" },
+const STATS: { value: number; prefix?: string; suffix?: string; label: string }[] = [
   { value: 100, suffix: "%", label: "answers cited to source" },
-  { value: 4, prefix: "≤", suffix: " MB/s", label: "ingestion throughput" },
+  { value: 6, label: "formats — PDF, Word, CSV, Markdown, text, web" },
+  { value: 14, suffix: " days", label: "of Pro, free, no card" },
+  { value: 0, label: "documents used to train a model" },
 ];
 
 export function StatsBand() {

@@ -65,7 +65,7 @@ export function SessionRail({
   };
 
   return (
-    <div className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-surface/30">
+    <div className="flex h-full w-full shrink-0 flex-col border-r border-border bg-surface/30 lg:w-60">
       <div className="p-3">
         <Button variant="outline" size="sm" className="w-full" onClick={onNew}>
           <Plus className="h-4 w-4" />

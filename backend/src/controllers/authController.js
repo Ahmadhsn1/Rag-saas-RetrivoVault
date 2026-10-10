@@ -13,6 +13,7 @@ import { Notification } from "../models/Notification.js";
 import { ActivityLog } from "../models/ActivityLog.js";
 import { Webhook } from "../models/Webhook.js";
 import { env, isProd, isTestEnv } from "../config/env.js";
+import { logger } from "../config/logger.js";
 import ms from "../utils/ms.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { str } from "../middleware/sanitize.js";
@@ -33,6 +34,7 @@ import {
   resetPasswordTemplate,
 } from "../services/mailer.js";
 import { cancelSubscriptionForUser } from "../services/billing.js";
+import { deleteFilesForUser } from "../services/fileStore.js";
 
 const REFRESH_COOKIE = "rv_refresh";
 
@@ -85,7 +87,7 @@ export const signup = asyncHandler(async (req, res) => {
 
   if (!user.emailVerified) {
     await sendVerificationEmail(user).catch((err) =>
-      console.error("[auth] verification email failed:", err.message)
+      logger.error({ err: err.message }, "verification email failed")
     );
   }
 
@@ -224,7 +226,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     const url = `${env.appUrl}/reset-password?token=${raw}`;
     const tpl = resetPasswordTemplate({ name: user.name, url });
     await sendMail({ to: user.email, ...tpl }).catch((err) =>
-      console.error("[auth] reset email failed:", err.message)
+      logger.error({ err: err.message }, "reset email failed")
     );
   }
   res.json({ ok: true });
@@ -261,7 +263,7 @@ export const deleteAccount = asyncHandler(async (req, res) => {
   if (!ok) throw ApiError.unauthorized("Password is incorrect");
 
   await cancelSubscriptionForUser(user).catch((err) =>
-    console.error("[auth] stripe cancel on delete failed:", err.message)
+    logger.error({ err: err.message }, "stripe cancel on account delete failed")
   );
 
   const uid = new mongoose.Types.ObjectId(req.user.id);
@@ -277,6 +279,7 @@ export const deleteAccount = asyncHandler(async (req, res) => {
     Notification.deleteMany({ userId: uid }),
     ActivityLog.deleteMany({ userId: uid }),
     Webhook.deleteMany({ userId: uid }),
+    deleteFilesForUser(uid),
   ]);
   await User.deleteOne({ _id: uid });
 

@@ -33,8 +33,8 @@ export function CitationBadge({ index, source, onSelect }: CitationBadgeProps) {
     <Tooltip>
       <TooltipTrigger asChild>{badge}</TooltipTrigger>
       <TooltipContent side="top">
-        <p className="font-mono text-2xs uppercase text-muted-foreground">
-          match {source.score.toFixed(3)}
+        <p className="max-w-xs truncate font-mono text-2xs text-muted-foreground">
+          {source.filename ?? `match ${source.score.toFixed(2)}`}
         </p>
         <p className="mt-1 line-clamp-3 text-xs">{source.preview}…</p>
       </TooltipContent>

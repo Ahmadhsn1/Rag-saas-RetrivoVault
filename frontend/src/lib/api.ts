@@ -14,9 +14,6 @@ let onAuthLost: (() => void) | null = null;
 export function setAccessToken(token: string | null) {
   accessToken = token;
 }
-export function getAccessToken() {
-  return accessToken;
-}
 export function registerAuthLostHandler(fn: () => void) {
   onAuthLost = fn;
 }
@@ -39,10 +36,6 @@ export function apiErrorCode(err: unknown): string | null {
     return details?.code ?? null;
   }
   return null;
-}
-
-export function apiErrorStatus(err: unknown): number | null {
-  return axios.isAxiosError(err) ? (err.response?.status ?? null) : null;
 }
 
 api.interceptors.request.use((config) => {

@@ -1,4 +1,4 @@
-import { assertPublicHttpsUrl } from "../utils/safeUrl.js";
+import { assertPublicHttpsUrl, assertResolvesPublic } from "../utils/safeUrl.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -17,6 +17,7 @@ const ALLOWED_TYPES = [
  */
 export async function fetchUrlForIngest(rawUrl) {
   const url = assertPublicHttpsUrl(rawUrl);
+  await assertResolvesPublic(url);
 
   let res;
   try {

@@ -35,8 +35,6 @@ export function htmlToText(html) {
     .trim();
 }
 
-export const SUPPORTED_EXT = [".pdf", ".txt", ".md", ".markdown", ".csv", ".docx"];
-
 function csvToText(raw) {
   // Flatten CSV to readable "col: value" lines so retrieval has real sentences.
   const lines = raw.split(/\r?\n/).filter((l) => l.trim());
@@ -53,24 +51,56 @@ function csvToText(raw) {
     .join("\n");
 }
 
-// Extracts raw UTF-8 text from an uploaded buffer.
-export async function extractText({ buffer, mimeType, filename }) {
-  let text;
+const clean = (text) =>
+  (text || "")
+    .replace(/\r\n/g, "\n")
+    .replace(NBSP, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+// One string per PDF page, in order, so citations can point at a page.
+async function pdfPages(buffer) {
+  const pdfParse = require("pdf-parse");
+  const pages = [];
+  await pdfParse(buffer, {
+    pagerender: async (page) => {
+      const content = await page.getTextContent();
+      let lastY;
+      let text = "";
+      for (const item of content.items) {
+        const y = item.transform[5];
+        text += lastY === undefined || lastY === y ? item.str : `\n${item.str}`;
+        lastY = y;
+      }
+      pages.push(text);
+      return text;
+    },
+  });
+  return pages;
+}
+
+/**
+ * Extracts text from an uploaded buffer as ordered segments
+ * `[{ page, text }]`. `page` is a 1-based PDF page number, or null for formats
+ * without pages.
+ */
+export async function extractSegments({ buffer, mimeType, filename }) {
+  let segments;
   const kind = SUPPORTED_MIME[mimeType];
 
   if (kind === "pdf") {
-    const pdfParse = require("pdf-parse");
-    const parsed = await pdfParse(buffer);
-    text = parsed.text;
+    const pages = await pdfPages(buffer);
+    segments = pages.map((text, i) => ({ page: i + 1, text }));
   } else if (kind === "docx") {
     const { value } = await mammoth.extractRawText({ buffer });
-    text = value;
+    segments = [{ page: null, text: value }];
   } else if (kind === "csv") {
-    text = csvToText(buffer.toString("utf-8"));
+    segments = [{ page: null, text: csvToText(buffer.toString("utf-8")) }];
   } else if (kind === "html") {
-    text = htmlToText(buffer.toString("utf-8"));
+    segments = [{ page: null, text: htmlToText(buffer.toString("utf-8")) }];
   } else if (kind === "txt" || kind === "md") {
-    text = buffer.toString("utf-8");
+    let text = buffer.toString("utf-8");
     if (kind === "md") {
       // strip the noisiest markdown syntax; keep the prose
       text = text
@@ -79,25 +109,32 @@ export async function extractText({ buffer, mimeType, filename }) {
         .replace(/[*_>#-]{1,}/g, " ")
         .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
     }
+    segments = [{ page: null, text }];
   } else {
     throw ApiError.badRequest(`Cannot extract text from ${mimeType}`);
   }
 
-  text = (text || "")
-    .replace(/\r\n/g, "\n")
-    .replace(NBSP, " ")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-
-  if (!text) {
-    throw ApiError.badRequest(`No extractable text found in "${filename}"`);
-  }
-
   // Cap extracted text (a small file can expand to gigabytes; e.g. a PDF bomb).
-  const MAX_CHARS = Number(process.env.MAX_EXTRACTED_CHARS || 5_000_000);
-  if (text.length > MAX_CHARS) {
-    text = text.slice(0, MAX_CHARS);
+  let budget = Number(process.env.MAX_EXTRACTED_CHARS || 5_000_000);
+  const out = [];
+  for (const segment of segments) {
+    const text = clean(segment.text).slice(0, budget);
+    if (!text) continue;
+    budget -= text.length;
+    out.push({ page: segment.page, text });
+    if (budget <= 0) break;
   }
-  return text;
+
+  if (out.length === 0) {
+    throw ApiError.badRequest(`No extractable text found in "${filename}"`, {
+      code: "no_text",
+    });
+  }
+  return out;
+}
+
+/** The whole document as one string. */
+export async function extractText(file) {
+  const segments = await extractSegments(file);
+  return segments.map((s) => s.text).join("\n\n");
 }

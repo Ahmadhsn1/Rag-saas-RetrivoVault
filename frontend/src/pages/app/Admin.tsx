@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Users, FileText, MessagesSquare, DollarSign, Loader2 } from "lucide-react";
+import { Users, FileText, MessagesSquare, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
 import { formatNumber, formatRelativeTime } from "@/lib/utils";
@@ -61,9 +61,8 @@ export default function Admin() {
       ]);
       setStats(s.data);
       setUsers(u.data.users);
-    } catch (err) {
+    } catch {
       setForbidden(true);
-      void err;
     } finally {
       setLoading(false);
     }
@@ -219,7 +218,6 @@ export default function Admin() {
           </div>
         </>
       )}
-      {loading && <Loader2 className="sr-only" />}
     </div>
   );
 }

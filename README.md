@@ -25,7 +25,7 @@ and [`features.md`](./features.md) for the feature list.
 | Design system | `frontend/design-system/retrivo-vault/` — dark developer-tool aesthetic (OLED canvas, warm bone accent, monospace status chips). Dark, JetBrains Mono + IBM Plex Sans. |
 | Backend | Node.js + Express (ESM), SSE streaming, pino logging |
 | Database | MongoDB Atlas + Atlas Vector Search (`$vectorSearch`, 768-dim cosine) |
-| AI | Google Gemini `text-embedding-004` + `gemini-2.5-flash` |
+| AI | Google Gemini `gemini-embedding-2` + `gemini-2.5-flash` |
 | Auth | JWT access + **rotating** httpOnly refresh cookie · bcrypt · login lockout · `x-api-key` |
 | Email | Nodemailer (SMTP; console fallback in dev) |
 | Billing | Stripe Checkout + Customer Portal + webhooks (degrades gracefully when unset) |

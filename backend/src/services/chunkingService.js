@@ -2,7 +2,7 @@ import { env } from "../config/env.js";
 
 // Hard ceiling on chunks produced from one document — protects the embedder
 // and the DB from a pathological input (e.g. a huge single-line file).
-const MAX_CHUNKS = Number(process.env.MAX_CHUNKS_PER_DOC || 4000);
+export const MAX_CHUNKS = Number(process.env.MAX_CHUNKS_PER_DOC || 4000);
 
 // Split a run of text with no usable boundary into fixed-size pieces.
 function hardSplit(s, size) {

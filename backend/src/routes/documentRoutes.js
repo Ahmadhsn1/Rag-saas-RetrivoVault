@@ -9,6 +9,7 @@ import {
   listDocuments,
   getDocument,
   deleteDocument,
+  downloadDocument,
 } from "../controllers/documentController.js";
 
 const router = Router();
@@ -19,6 +20,7 @@ router.post("/", uploadLimiter, uploadSingle, enforceDocumentQuota, uploadDocume
 router.post("/url", uploadLimiter, enforceDocumentQuota, ingestUrl);
 router.get("/", listDocuments);
 router.get("/:id", getDocument);
+router.get("/:id/file", downloadDocument);
 router.delete("/:id", deleteDocument);
 
 export default router;

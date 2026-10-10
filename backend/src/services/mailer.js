@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { env, isTestEnv } from "../config/env.js";
+import { logger } from "../config/logger.js";
 
 let transporter = null;
 
@@ -30,9 +31,7 @@ export async function sendMail({ to, subject, text, html }) {
   });
 
   if (!env.mail.smtpUrl) {
-    console.log(
-      `\n[mailer:console] to=${to} subject="${subject}"\n${text}\n`,
-    );
+    logger.info({ to, subject, text }, "email not sent (no SMTP configured)");
   }
   return info;
 }

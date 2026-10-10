@@ -7,32 +7,6 @@ export const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/**
- * Scroll-triggered stagger reveal for a group of elements.
- * Under reduced-motion the final state is rendered immediately.
- */
-export function revealOnScroll(
-  targets: gsap.TweenTarget,
-  opts: { y?: number; stagger?: number; start?: string } = {},
-) {
-  const { y = 16, stagger = 0.06, start = "top 85%" } = opts;
-
-  if (prefersReducedMotion()) {
-    gsap.set(targets, { opacity: 1, y: 0, scale: 1, clearProps: "all" });
-    return;
-  }
-
-  return gsap.from(targets, {
-    opacity: 0,
-    y,
-    scale: 0.97,
-    duration: 0.42,
-    ease: "back.out(1.4)",
-    stagger: { each: stagger, from: "start" },
-    scrollTrigger: { trigger: targets as gsap.DOMTarget, start, once: true },
-  });
-}
-
 /** Word-by-word headline reveal. Expects children spans already split by the caller. */
 export function splitReveal(words: Element[], opts: { start?: string } = {}) {
   if (prefersReducedMotion()) {
@@ -49,21 +23,6 @@ export function splitReveal(words: Element[], opts: { start?: string } = {}) {
     scrollTrigger: opts.start
       ? { trigger: words[0], start: opts.start, once: true }
       : undefined,
-  });
-}
-
-/** Gentle parallax on a decorative layer. Never use on text or controls. */
-export function parallax(layer: Element, distance = 60) {
-  if (prefersReducedMotion()) return;
-  return gsap.to(layer, {
-    yPercent: distance / 10,
-    ease: "none",
-    scrollTrigger: {
-      trigger: (layer as HTMLElement).parentElement ?? layer,
-      start: "top bottom",
-      end: "bottom top",
-      scrub: 0.5,
-    },
   });
 }
 

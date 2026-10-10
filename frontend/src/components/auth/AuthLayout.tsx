@@ -4,11 +4,10 @@ import { Logo } from "@/components/Logo";
 import { PipelineStrip } from "@/components/rag/PipelineStrip";
 
 const SIGNALS = [
-  "conn atlas://cluster0 · ok",
-  "index chunks_vector_index · ready",
-  "embed text-embedding-004 · 768d",
-  "model gemini-2.5-flash · streaming",
-  "auth jwt · access 15m / refresh 7d",
+  "your documents · private to your account",
+  "every answer · cited to the passage",
+  "not in your documents · it says so",
+  "export or delete everything · any time",
 ];
 
 export function AuthLayout({
@@ -50,7 +49,7 @@ export function AuthLayout({
           <PipelineStrip animated />
           <div className="terminal-panel p-4">
             <p className="font-mono text-2xs uppercase tracking-wide text-muted-foreground">
-              boot sequence
+              what you get
             </p>
             <ul className="mt-3 space-y-1.5 font-mono text-xs text-muted-foreground">
               {SIGNALS.map((s) => (

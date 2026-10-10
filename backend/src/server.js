@@ -2,9 +2,8 @@ import { createApp } from "./app.js";
 import { connectDB, disconnectDB } from "./config/db.js";
 import { env, billingEnabled, mailEnabled } from "./config/env.js";
 import { logger } from "./config/logger.js";
-import { Document } from "./models/Document.js";
 import { startScheduler, stopScheduler } from "./services/scheduler.js";
-import "./services/ingestionService.js"; // registers the ingest job handler
+import { resumeInterruptedIngestion } from "./services/ingestionService.js";
 
 let memoryMongo = null;
 
@@ -26,22 +25,14 @@ async function resolveMongoUri() {
   return memoryMongo.getUri("retrivo_vault");
 }
 
-async function requeueStuckDocuments() {
-  const stuck = await Document.updateMany(
-    { status: "processing", updatedAt: { $lt: new Date(Date.now() - 5 * 60_000) } },
-    { status: "failed", error: "Ingestion interrupted by a restart — re-upload to retry." }
-  );
-  if (stuck.modifiedCount) {
-    logger.warn(`marked ${stuck.modifiedCount} stuck document(s) as failed`);
-  }
-}
-
 async function main() {
   env.mongoUri = await resolveMongoUri();
   await connectDB();
-  await requeueStuckDocuments().catch((e) =>
-    logger.error({ err: e }, "stuck-doc sweep failed")
-  );
+  await resumeInterruptedIngestion()
+    .then((r) => {
+      if (r.resumed || r.failed) logger.warn(r, "resumed interrupted ingestion");
+    })
+    .catch((e) => logger.error({ err: e }, "ingestion resume failed"));
 
   if (!env.geminiConfigured) {
     logger.warn(

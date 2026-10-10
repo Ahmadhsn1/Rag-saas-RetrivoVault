@@ -5,12 +5,15 @@ import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { retrieveChunks } from "../services/retrievalService.js";
 import {
   streamAnswer,
+  condenseQuestion,
   generateSessionTitle,
 } from "../services/generationService.js";
 import { incrementQueryCount, recordEvent } from "../services/usage.js";
 import { dispatchWebhook } from "../services/webhooks.js";
 import { modelsFor } from "../config/gemini.js";
 import { str } from "../middleware/sanitize.js";
+import { logger } from "../config/logger.js";
+import { open } from "../utils/secretBox.js";
 
 // A path/body value that must be a plain ObjectId-shaped string, else null.
 const asId = (v) => (typeof v === "string" && /^[a-f\d]{24}$/i.test(v) ? v : null);
@@ -107,7 +110,10 @@ export const getSharedSession = asyncHandler(async (req, res) => {
       messages: (session.messages || []).map((m) => ({
         role: m.role,
         content: m.content,
-        sources: m.sources,
+        sources: (m.sources || []).map(({ text, ...rest }) => {
+          void text; // readers of a public link get the short excerpt only
+          return rest;
+        }),
       })),
     },
   });
@@ -136,6 +142,11 @@ export const messageFeedback = asyncHandler(async (req, res) => {
   res.json({ ok: true });
 });
 
+// The [n] markers the model actually used in its answer, de-duplicated.
+const citedIndexes = (answer) => [
+  ...new Set([...answer.matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1]))),
+];
+
 // POST /api/chat/:sessionId/message  — Server-Sent Events stream.
 export const sendMessage = asyncHandler(async (req, res) => {
   const question = str(req.body?.content).trim().slice(0, 8000);
@@ -163,20 +174,23 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
   // Use the user's own Gemini key when they've provided one.
   const keyed = await User.findById(req.user.id).select("+geminiApiKey").lean();
-  const { embeddingModel, llmModel } = modelsFor(keyed?.geminiApiKey);
+  const { embeddingModel, llmModel } = modelsFor(open(keyed?.geminiApiKey));
 
   let retrieved;
   try {
+    // Follow-ups ("and the second one?") only retrieve well once rewritten
+    // into a standalone query.
+    const searchQuery = await condenseQuestion(question, session.messages, llmModel);
     retrieved = await retrieveChunks({
       userId: req.user.id,
-      question,
+      question: searchQuery,
       collectionId,
       embeddingModel,
     });
   } catch (err) {
     throw new ApiError(
       502,
-      "Retrieval is temporarily unavailable. Check your Gemini API key and Atlas Vector Search index.",
+      "Search is temporarily unavailable. Please try again in a moment.",
       { cause: err.message }
     );
   }
@@ -185,8 +199,11 @@ export const sendMessage = asyncHandler(async (req, res) => {
     index: i + 1,
     chunkId: c._id,
     documentId: c.documentId,
+    filename: c.filename || "Deleted document",
+    page: c.page ?? null,
     score: c.score,
     preview: c.text.slice(0, 240),
+    text: c.text,
   }));
 
   res.set({
@@ -220,7 +237,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
       send("token", { delta });
     }
   } catch (err) {
-    console.error("[chat] generation error:", err.message);
+    (req.log || logger).warn({ err: err.message }, "chat generation failed");
     send("error", { message: "Generation failed. Please retry." });
     return res.end();
   }
@@ -229,7 +246,9 @@ export const sendMessage = asyncHandler(async (req, res) => {
   session.messages.push({
     role: "assistant",
     content: answer,
-    citedChunkIds: retrieved.map((c) => c._id),
+    citedChunkIds: citedIndexes(answer)
+      .map((n) => retrieved[n - 1]?._id)
+      .filter(Boolean),
     sources,
   });
   if (session.messages.length === 2 || session.title === "New chat") {

@@ -49,7 +49,7 @@ export const PLANS = {
   },
 };
 
-export const getPlan = (id) => PLANS[id] || PLANS.free;
+const getPlan = (id) => PLANS[id] || PLANS.free;
 
 // The plan config in force for a user right now (respects an active trial).
 export const planFor = (user) =>

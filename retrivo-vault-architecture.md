@@ -20,7 +20,7 @@ console.
 | Backend | Node.js + Express (ESM) | REST API + SSE, middleware auth/quota |
 | Database | MongoDB Atlas | Documents, vectors, users, billing state in one place |
 | Vector search | MongoDB Atlas Vector Search | Native `$vectorSearch`; `userId` filter enforces isolation |
-| Embeddings | Google Gemini `text-embedding-004` | 768-dim, free tier; per-user key supported |
+| Embeddings | Google Gemini `gemini-embedding-2` | 768-dim, free tier; per-user key supported |
 | LLM | Google Gemini `gemini-2.5-flash` | Fast, streaming |
 | Auth | JWT access + httpOnly refresh cookie; bcrypt; personal API keys (`x-api-key`) | Stateless web + programmatic access |
 | Email | Nodemailer (SMTP), console fallback in dev | Verification + password reset |

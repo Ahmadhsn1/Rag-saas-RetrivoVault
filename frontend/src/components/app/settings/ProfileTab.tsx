@@ -3,6 +3,7 @@ import { Loader2, KeyRound, Check } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useAppState } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +17,9 @@ export function ProfileTab() {
   const [geminiKey, setGeminiKey] = useState("");
   const [savingKey, setSavingKey] = useState(false);
 
-  const paid = user?.plan !== "free";
+  const { usage } = useAppState();
+  // `usage.plan` is the plan in force, so a live Pro trial counts.
+  const paid = (usage?.plan ?? user?.plan) !== "free";
 
   const saveName = async (e: FormEvent) => {
     e.preventDefault();

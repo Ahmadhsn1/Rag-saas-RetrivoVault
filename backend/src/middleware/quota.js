@@ -65,18 +65,3 @@ export const enforceQueryQuota = asyncHandler(async (req, _res, next) => {
   req.planUser = user;
   next();
 });
-
-/** Gate a feature (e.g. API access, BYO key) behind a plan capability. */
-export const requireFeature = (feature) =>
-  asyncHandler(async (req, _res, next) => {
-    const user = req.planUser || (await User.findById(req.user.id));
-    if (!user) throw ApiError.unauthorized();
-    if (!planFor(user).features[feature]) {
-      throw new ApiError(
-        403,
-        `The "${feature}" capability requires a higher plan.`,
-        { code: "feature_locked" }
-      );
-    }
-    next();
-  });

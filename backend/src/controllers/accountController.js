@@ -7,6 +7,7 @@ import { planFor } from "../config/plans.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { str } from "../middleware/sanitize.js";
 import { listActivity, logActivity } from "../services/activityLog.js";
+import { seal } from "../utils/secretBox.js";
 
 export const updateProfile = asyncHandler(async (req, res) => {
   const name = str(req.body?.name).trim();
@@ -23,12 +24,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
 });
 
 export const updateNotificationPrefs = asyncHandler(async (req, res) => {
-  const allowed = [
-    "ingestComplete",
-    "quotaWarnings",
-    "weeklyDigest",
-    "productUpdates",
-  ];
+  const allowed = ["ingestComplete", "quotaWarnings", "productUpdates"];
   const patch = {};
   for (const k of allowed) {
     if (typeof req.body?.[k] === "boolean") patch[`notificationPrefs.${k}`] = req.body[k];
@@ -53,7 +49,7 @@ export const setGeminiKey = asyncHandler(async (req, res) => {
     });
   }
 
-  user.geminiApiKey = key;
+  user.geminiApiKey = seal(key);
   user.hasGeminiKey = true;
   await user.save();
   logActivity(user._id, "account.gemini_key_set", null, req);

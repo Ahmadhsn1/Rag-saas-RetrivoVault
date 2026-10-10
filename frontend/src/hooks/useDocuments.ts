@@ -20,11 +20,8 @@ interface Result {
   setDocuments: React.Dispatch<React.SetStateAction<VaultDocument[]>>;
 }
 
-export function useDocuments(opts: Options | string | null = {}): Result {
-  // Back-compat: a bare collectionId string/null still works.
-  const o: Options =
-    typeof opts === "string" || opts === null ? { collectionId: opts } : opts;
-  const { collectionId, q = "", status = "all", page = 1, limit = 25 } = o;
+export function useDocuments(opts: Options = {}): Result {
+  const { collectionId, q = "", status = "all", page = 1, limit = 25 } = opts;
 
   const [documents, setDocuments] = useState<VaultDocument[]>([]);
   const [total, setTotal] = useState(0);

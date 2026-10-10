@@ -1,6 +1,6 @@
-export type PlanId = "free" | "pro" | "max";
+import type { PlanId } from "@/types/api";
 
-export interface Plan {
+interface Plan {
   id: PlanId;
   name: string;
   tagline: string;
@@ -85,6 +85,3 @@ export const PLANS: Plan[] = [
     ],
   },
 ];
-
-export const planById = (id: PlanId) =>
-  PLANS.find((p) => p.id === id) ?? PLANS[0];

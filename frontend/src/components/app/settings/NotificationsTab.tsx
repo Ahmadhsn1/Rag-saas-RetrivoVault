@@ -18,11 +18,6 @@ const ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[] = [
     hint: "When you've used 85% of your monthly questions.",
   },
   {
-    key: "weeklyDigest",
-    label: "Weekly digest",
-    hint: "A short summary of your vault activity, once a week.",
-  },
-  {
     key: "productUpdates",
     label: "Product updates",
     hint: "Trial reminders and occasional feature announcements.",
@@ -35,7 +30,6 @@ export function NotificationsTab() {
     user?.notificationPrefs ?? {
       ingestComplete: true,
       quotaWarnings: true,
-      weeklyDigest: false,
       productUpdates: true,
     },
   );

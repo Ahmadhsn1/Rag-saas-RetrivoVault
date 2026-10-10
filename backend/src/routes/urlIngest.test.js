@@ -5,6 +5,11 @@ import { Document } from "../models/Document.js";
 import { drain } from "../services/jobQueue.js";
 import { htmlToText } from "../utils/textExtractor.js";
 
+// The SSRF gate resolves the host before fetching; keep tests offline.
+vi.mock("node:dns/promises", () => ({
+  default: { lookup: vi.fn(async () => [{ address: "93.184.215.14", family: 4 }]) },
+}));
+
 const realFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = realFetch;

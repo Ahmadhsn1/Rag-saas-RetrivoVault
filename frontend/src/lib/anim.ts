@@ -12,16 +12,6 @@ import type { Transition, Variants } from "framer-motion";
 
 // Expo-out: fast start, long gentle settle. The house easing for reveals.
 export const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
-// Symmetric ease for loops / hovers that return.
-export const EASE_IN_OUT: [number, number, number, number] = [0.45, 0, 0.55, 1];
-
-export const springSoft: Transition = {
-  type: "spring",
-  stiffness: 260,
-  damping: 30,
-  mass: 0.9,
-};
-
 export const springSnappy: Transition = {
   type: "spring",
   stiffness: 420,
@@ -62,6 +52,5 @@ export const staggerItem: Variants = {
 /** Default viewport config: fire once, a little before the block is centred. */
 export const viewportOnce = { once: true, amount: 0.2 } as const;
 
-/** Hover/tap feel for primary controls. Displacement stays under 2px. */
-export const buttonHover = { y: -1.5 } as const;
+/** Tap feel for primary controls. */
 export const buttonTap = { y: 0, scale: 0.97 } as const;

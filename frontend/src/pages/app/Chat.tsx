@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Sparkles, RotateCcw, Square } from "lucide-react";
+import { Sparkles, RotateCcw, Square, History, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { api, apiErrorMessage, streamChat } from "@/lib/api";
@@ -19,6 +19,7 @@ import { SuggestedQuestions } from "@/components/app/chat/SuggestedQuestions";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import type {
   ChatMessage,
   ChatSession,
@@ -45,6 +46,7 @@ export default function Chat() {
   const [selected, setSelected] = useState<RetrievedSource | null>(null);
   const [failedQuestion, setFailedQuestion] = useState<string | null>(null);
   const [shareTarget, setShareTarget] = useState<ChatSessionSummary | null>(null);
+  const [railOpen, setRailOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const skipHistoryFor = useRef<string | null>(null);
@@ -274,24 +276,49 @@ export default function Chat() {
 
   const showEmpty = !activeId && messages.length === 0 && !streaming;
 
+  const rail = (
+    <SessionRail
+      sessions={sessions}
+      activeId={activeId}
+      archivedView={archivedView}
+      onSelect={(id) => {
+        selectSession(id);
+        setRailOpen(false);
+      }}
+      onNew={() => {
+        newSession();
+        setRailOpen(false);
+      }}
+      onDelete={deleteSession}
+      onRename={renameSession}
+      onPatch={patchSession}
+      onShare={(s) => setShareTarget(s)}
+      onToggleArchivedView={() => setArchivedView((v) => !v)}
+    />
+  );
+
   return (
     <div className="flex h-full">
-      <div className="hidden lg:block">
-        <SessionRail
-          sessions={sessions}
-          activeId={activeId}
-          archivedView={archivedView}
-          onSelect={selectSession}
-          onNew={newSession}
-          onDelete={deleteSession}
-          onRename={renameSession}
-          onPatch={patchSession}
-          onShare={(s) => setShareTarget(s)}
-          onToggleArchivedView={() => setArchivedView((v) => !v)}
-        />
-      </div>
+      <div className="hidden lg:block">{rail}</div>
+
+      <Sheet open={railOpen} onOpenChange={setRailOpen}>
+        <SheetContent side="left" className="w-64 p-0 lg:hidden">
+          <SheetTitle className="sr-only">Chat history</SheetTitle>
+          {rail}
+        </SheetContent>
+      </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-center justify-between border-b border-border px-3 py-1.5 lg:hidden">
+          <Button size="sm" variant="ghost" onClick={() => setRailOpen(true)}>
+            <History className="h-4 w-4" />
+            History
+          </Button>
+          <Button size="sm" variant="ghost" onClick={newSession}>
+            <Plus className="h-4 w-4" />
+            New chat
+          </Button>
+        </div>
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-4 py-6">
             {showEmpty ? (
@@ -350,8 +377,14 @@ export default function Chat() {
                     {liveSources.length > 0 && (
                       <div className="mb-2 flex flex-wrap gap-1">
                         {liveSources.map((s) => (
-                          <Badge key={s.index} variant="primary">
-                            [{s.index}] {s.score.toFixed(2)}
+                          <Badge
+                            key={s.index}
+                            variant="primary"
+                            className="max-w-[14rem]"
+                          >
+                            <span className="truncate">
+                              [{s.index}] {s.filename ?? s.score.toFixed(2)}
+                            </span>
                           </Badge>
                         ))}
                       </div>
@@ -365,7 +398,7 @@ export default function Chat() {
                     ) : (
                       <span className="inline-flex items-center gap-1.5 font-mono text-2xs uppercase text-muted-foreground">
                         <Sparkles className="h-3 w-3 animate-pulse-dot" />
-                        retrieving &amp; generating…
+                        searching your documents…
                       </span>
                     )}
                   </div>

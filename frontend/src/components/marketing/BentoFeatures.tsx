@@ -68,9 +68,9 @@ export function BentoFeatures() {
               Automated ingestion
             </h3>
             <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Drop a PDF or text file. Retrivo extracts, cleans, chunks with
-              overlap, and embeds every passage — status tracked from processing
-              to ready.
+              Drop in PDFs, Word files, spreadsheets, notes or a web link.
+              Retrivo reads, cleans and indexes every passage in the background
+              — status tracked from processing to ready.
             </p>
             <div className="mt-auto pt-5">
               <PipelineStrip compact />

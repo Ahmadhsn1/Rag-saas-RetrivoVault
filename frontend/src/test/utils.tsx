@@ -20,7 +20,6 @@ export const fakeUser: User = {
   notificationPrefs: {
     ingestComplete: true,
     quotaWarnings: true,
-    weeklyDigest: false,
     productUpdates: true,
   },
   createdAt: new Date("2026-01-01").toISOString(),

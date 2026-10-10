@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { env, billingEnabled } from "../config/env.js";
 import { User } from "../models/User.js";
-import { PLANS, planForPrice } from "../config/plans.js";
+import { planForPrice } from "../config/plans.js";
 
 let stripe = null;
 export function getStripe() {
@@ -11,7 +11,7 @@ export function getStripe() {
 }
 
 /** Ensure the user has a Stripe customer; returns the customer id. */
-export async function ensureCustomer(user) {
+async function ensureCustomer(user) {
   const s = getStripe();
   if (!s) throw new Error("Billing is not configured");
   if (user.stripeCustomerId) return user.stripeCustomerId;
@@ -84,8 +84,4 @@ export async function syncSubscription(subscription) {
     ? new Date(subscription.current_period_end * 1000)
     : null;
   await user.save();
-}
-
-export function planLimits(planId) {
-  return (PLANS[planId] || PLANS.free).limits;
 }

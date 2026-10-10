@@ -4,6 +4,7 @@ import { Chunk } from "../models/Chunk.js";
 import { Collection } from "../models/Collection.js";
 import { ApiError, asyncHandler } from "../utils/ApiError.js";
 import { queueIngestion } from "../services/ingestionService.js";
+import { openFile, deleteFile, hasFile } from "../services/fileStore.js";
 import { queueIsFull } from "../services/jobQueue.js";
 import { fetchUrlForIngest } from "../services/urlFetch.js";
 import { str } from "../middleware/sanitize.js";
@@ -62,12 +63,7 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     status: "processing",
   });
 
-  await queueIngestion({
-    documentId: doc._id,
-    userId: req.user.id,
-    collectionId,
-    file: { ...req.file, mimetype: mimeType },
-  });
+  await queueIngestion(doc, req.file.buffer);
 
   res.status(202).json({ document: doc });
 });
@@ -98,12 +94,7 @@ export const ingestUrl = asyncHandler(async (req, res) => {
     status: "processing",
   });
 
-  await queueIngestion({
-    documentId: doc._id,
-    userId: req.user.id,
-    collectionId,
-    file: { buffer, mimetype: mimeType, originalname: filename },
-  });
+  await queueIngestion(doc, buffer);
 
   res.status(202).json({ document: doc });
 });
@@ -158,5 +149,29 @@ export const deleteDocument = asyncHandler(async (req, res) => {
   if (!document) throw ApiError.notFound("Document not found");
 
   await Chunk.deleteMany({ documentId: document._id, userId: req.user.id });
+  await deleteFile(document._id);
   res.status(204).end();
+});
+
+// GET /api/documents/:id/file — the original upload.
+export const downloadDocument = asyncHandler(async (req, res) => {
+  const document = await Document.findOne({
+    _id: req.params.id,
+    userId: req.user.id,
+  }).lean();
+  if (!document || !(await hasFile(document._id))) {
+    throw ApiError.notFound("The original file isn't available for this document");
+  }
+
+  // Only PDFs may render in the browser. Everything else (HTML above all) is
+  // forced to download so stored content can never run as a page of this app.
+  const inline = document.mimeType === "application/pdf";
+  res.set({
+    "Content-Type": inline ? "application/pdf" : "application/octet-stream",
+    "Content-Disposition": `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(document.filename)}`,
+    "Cache-Control": "private, no-store",
+  });
+  openFile(document._id)
+    .once("error", () => res.destroy())
+    .pipe(res);
 });

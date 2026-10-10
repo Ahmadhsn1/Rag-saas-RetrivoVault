@@ -11,25 +11,16 @@ process.env.NODE_ENV = "test";
 
 // The Gemini SDK must never be hit in tests.
 const stubEmbeddingModel = {
-  embedContent: vi.fn(async () => ({
-    embedding: { values: Array.from({ length: 768 }, () => 0.01) },
-  })),
+  embed: vi.fn(async () => Array.from({ length: 768 }, () => 0.01)),
 };
 const stubLlmModel = {
-  generateContent: vi.fn(async () => ({
-    response: { text: () => "stub answer [1]" },
-  })),
-  generateContentStream: vi.fn(async () => ({
-    stream: (async function* () {
-      yield { text: () => "stub " };
-      yield { text: () => "answer [1]" };
-    })(),
-  })),
+  generate: vi.fn(async () => "stub answer [1]"),
+  stream: vi.fn(async function* () {
+    yield "stub ";
+    yield "answer [1]";
+  }),
 };
 vi.mock("../config/gemini.js", () => ({
-  genAI: {},
-  embeddingModel: stubEmbeddingModel,
-  llmModel: stubLlmModel,
   modelsFor: () => ({
     embeddingModel: stubEmbeddingModel,
     llmModel: stubLlmModel,

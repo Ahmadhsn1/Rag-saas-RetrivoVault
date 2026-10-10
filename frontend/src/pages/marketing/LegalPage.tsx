@@ -87,7 +87,3 @@ export function LegalPage({ kind }: { kind: "terms" | "privacy" }) {
     </div>
   );
 }
-
-export default function TermsPage() {
-  return <LegalPage kind="terms" />;
-}

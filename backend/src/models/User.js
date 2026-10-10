@@ -32,7 +32,6 @@ const userSchema = new mongoose.Schema(
     notificationPrefs: {
       ingestComplete: { type: Boolean, default: true },
       quotaWarnings: { type: Boolean, default: true },
-      weeklyDigest: { type: Boolean, default: false },
       productUpdates: { type: Boolean, default: true },
     },
     subscriptionStatus: {
@@ -52,7 +51,7 @@ const userSchema = new mongoose.Schema(
     stripeCustomerId: { type: String, default: null, index: true },
     stripeSubscriptionId: { type: String, default: null },
 
-    // Bring-your-own Gemini key (paid plans). Stored as-is; treat as a secret.
+    // Bring-your-own Gemini key (paid plans). Encrypted at rest (utils/secretBox.js).
     // Never selected by default; load explicitly with .select("+geminiApiKey").
     geminiApiKey: { type: String, default: null, select: false },
     hasGeminiKey: { type: Boolean, default: false },

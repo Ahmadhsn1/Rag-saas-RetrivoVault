@@ -6,29 +6,22 @@
  * public surface (`enqueue`, `registerHandler`, `queueStats`) is deliberately small.
  */
 
+import { logger } from "../config/logger.js";
+
 const handlers = new Map();
 const queue = []; // { type, data, priority, attempts, maxAttempts, id }
 let activeCount = 0;
-let concurrency = Number(process.env.INGEST_CONCURRENCY || 2);
+const concurrency = Number(process.env.INGEST_CONCURRENCY || 2);
 let seq = 0;
 
 export function registerHandler(type, fn) {
   handlers.set(type, fn);
 }
 
-export function setConcurrency(n) {
-  concurrency = Math.max(1, n);
-  pump();
-}
-
 const MAX_PENDING = Number(process.env.MAX_QUEUE_DEPTH || 500);
 
 export function queueIsFull() {
   return queue.length >= MAX_PENDING;
-}
-
-export function pendingForType(type) {
-  return queue.filter((j) => j.type === type).length;
 }
 
 export function enqueue(type, data, { priority = 0, maxAttempts = 3 } = {}) {
@@ -61,7 +54,7 @@ function pump() {
     const job = queue.shift();
     const handler = handlers.get(job.type);
     if (!handler) {
-      console.error(`[jobQueue] no handler for "${job.type}"`);
+      logger.error({ type: job.type }, "no handler registered for job type");
       continue;
     }
     activeCount++;
@@ -70,20 +63,16 @@ function pump() {
     Promise.resolve(handler(job.data))
       .catch((err) => {
         if (job.attempts < job.maxAttempts) {
-          console.warn(
-            `[jobQueue] ${job.id} failed (attempt ${job.attempts}), retrying: ${err.message}`
+          logger.warn(
+            { job: job.id, attempt: job.attempts, err: err.message },
+            "job failed, retrying"
           );
           setTimeout(() => {
             queue.unshift(job);
             pump();
           }, backoff(job.attempts)).unref?.();
         } else {
-          console.error(
-            `[jobQueue] ${job.id} permanently failed: ${err.message}`
-          );
-          if (typeof job.data?.onPermanentFailure === "function") {
-            job.data.onPermanentFailure(err).catch(() => {});
-          }
+          logger.error({ job: job.id, err: err.message }, "job permanently failed");
         }
       })
       .finally(() => {

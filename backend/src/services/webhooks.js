@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { Webhook } from "../models/Webhook.js";
 import { logger } from "../config/logger.js";
 import { withRetry } from "../utils/retry.js";
+import { assertResolvesPublic } from "../utils/safeUrl.js";
 
 function sign(secret, payload) {
   return crypto.createHmac("sha256", secret).update(payload).digest("hex");
@@ -37,6 +38,7 @@ export async function dispatchWebhook(userId, event, data) {
       try {
         const res = await withRetry(
           async () => {
+            await assertResolvesPublic(hook.url);
             const r = await fetch(hook.url, {
               method: "POST",
               headers,

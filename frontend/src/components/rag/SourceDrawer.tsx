@@ -16,32 +16,32 @@ interface SourceDrawerProps {
 }
 
 export function SourceDrawer({ source, onOpenChange }: SourceDrawerProps) {
+  // Answers saved before sources carried the full passage only have the excerpt.
+  const passage = source?.text ?? (source ? `${source.preview}…` : "");
+
   return (
     <Sheet open={!!source} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-sm bg-primary/15 text-primary">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-primary/15 text-primary">
               {source?.index}
             </span>
-            Retrieved passage
+            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="truncate">{source?.filename ?? "Source passage"}</span>
           </SheetTitle>
           <SheetDescription className="flex items-center gap-2">
-            <Badge variant="primary">match {source?.score.toFixed(3)}</Badge>
-            <span className="inline-flex items-center gap-1 font-mono text-2xs text-muted-foreground">
-              <FileText className="h-3 w-3" aria-hidden="true" />
-              doc {source?.documentId.slice(-6)}
+            <Badge variant="primary">match {source?.score.toFixed(2)}</Badge>
+            <span className="text-2xs text-muted-foreground">
+              The exact passage this answer drew on.
             </span>
           </SheetDescription>
         </SheetHeader>
         <ScrollArea className="flex-1">
           <p className="whitespace-pre-wrap p-6 text-sm leading-relaxed text-foreground/90">
-            {source?.preview}
+            {passage}
           </p>
         </ScrollArea>
-        <div className="border-t border-border p-4 font-mono text-2xs text-muted-foreground">
-          chunk {source?.chunkId.slice(-8)} · cosine similarity
-        </div>
       </SheetContent>
     </Sheet>
   );

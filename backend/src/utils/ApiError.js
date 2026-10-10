@@ -21,9 +21,6 @@ export class ApiError extends Error {
   static conflict(msg = "Conflict") {
     return new ApiError(409, msg);
   }
-  static tooMany(msg = "Too many requests") {
-    return new ApiError(429, msg);
-  }
 }
 
 // Wraps an async route handler so thrown errors reach the error middleware.

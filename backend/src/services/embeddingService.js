@@ -1,40 +1,39 @@
-import { embeddingModel as sharedEmbeddingModel } from "../config/gemini.js";
+import { env } from "../config/env.js";
 import { withRetry } from "../utils/retry.js";
 
-const EMBED_DIM = 768;
+// gemini-embedding-2 has no taskType parameter; the retrieval role is carried
+// by a text prefix instead.
+const asDocument = (text, title) => `title: ${title || "none"} | text: ${text}`;
+const asQuery = (text) => `task: search result | query: ${text}`;
 
-async function embed(text, taskType, model) {
+async function embed(text, model) {
   return withRetry(async () => {
-    const res = await (model || sharedEmbeddingModel).embedContent({
-      content: { parts: [{ text }] },
-      taskType,
-    });
-    const values = res.embedding?.values;
-    if (!Array.isArray(values) || values.length !== EMBED_DIM) {
+    const values = await model.embed(text);
+    if (!Array.isArray(values) || values.length !== env.gemini.embeddingDim) {
       throw new Error(`Unexpected embedding shape: got ${values?.length} values`);
     }
     return values;
   });
 }
 
-// For stored document chunks.
-export function embedDocument(text, model) {
-  return embed(text, "RETRIEVAL_DOCUMENT", model);
-}
-
 // For an incoming user question.
 export function embedQuery(text, model) {
-  return embed(text, "RETRIEVAL_QUERY", model);
+  return embed(asQuery(text), model);
 }
 
-// Sequential batch — Gemini free tier is rate-limited, so we avoid bursts.
-export async function embedDocumentBatch(texts, { onProgress, model } = {}) {
-  const out = [];
-  for (let i = 0; i < texts.length; i++) {
-    out.push(await embedDocument(texts[i], model));
-    onProgress?.(i + 1, texts.length);
-  }
+// For stored document chunks. Runs a few requests at a time: fast enough for
+// large documents without bursting past provider rate limits.
+export async function embedDocumentBatch(texts, { model, title, concurrency = 4 } = {}) {
+  const out = new Array(texts.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < texts.length) {
+      const i = next++;
+      out[i] = await embed(asDocument(texts[i], title), model);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, texts.length) }, worker)
+  );
   return out;
 }
-
-export { EMBED_DIM };

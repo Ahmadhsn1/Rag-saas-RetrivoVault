@@ -11,6 +11,7 @@ const PLACEHOLDERS = [
   "mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/retrivo_vault",
   "replace_with_long_random_string",
   "replace_with_another_long_random_string",
+  "replace_with_a_third_long_random_string",
   "your_gemini_api_key",
 ];
 
@@ -62,7 +63,9 @@ export const env = {
 
   gemini: {
     apiKey: clean("GEMINI_API_KEY") || "unset",
-    embeddingModel: process.env.GEMINI_EMBEDDING_MODEL || "text-embedding-004",
+    embeddingModel: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-2",
+    // Must match numDimensions of the Atlas vector index (scripts/createVectorIndex.js).
+    embeddingDim: Number(process.env.GEMINI_EMBEDDING_DIM || 768),
     llmModel: process.env.GEMINI_LLM_MODEL || "gemini-2.5-flash",
   },
   geminiConfigured: Boolean(clean("GEMINI_API_KEY")),
@@ -74,9 +77,10 @@ export const env = {
     vectorIndexName: process.env.VECTOR_INDEX_NAME || "chunks_vector_index",
   },
 
-  maxUploadBytes: Number(process.env.MAX_UPLOAD_MB || 10) * 1024 * 1024,
+  maxUploadBytes: Number(process.env.MAX_UPLOAD_MB || 25) * 1024 * 1024,
 
-  redisUrl: optional("REDIS_URL"),
+  // Encrypts secrets we must read back (users' own Gemini keys).
+  encryptionKey: required("ENCRYPTION_KEY"),
 
   mail: {
     from: process.env.MAIL_FROM || "Retrivo Vault <no-reply@retrivo.local>",
@@ -98,11 +102,11 @@ export const env = {
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean),
 
-  // Auto-on when there's no real DB or no Gemini key (local demo). Also honours DEMO_MODE=true.
+  // Auto-on in local dev when there's no real DB or no Gemini key. In
+  // production it is only ever on when DEMO_MODE=true is set explicitly.
   get demoMode() {
-    return (
-      process.env.DEMO_MODE === "true" || this.autoMongo || !this.geminiConfigured
-    );
+    if (process.env.DEMO_MODE === "true") return true;
+    return !isProdEnv && (this.autoMongo || !this.geminiConfigured);
   },
 };
 

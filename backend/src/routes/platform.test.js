@@ -183,9 +183,9 @@ describe("account: activity + export", () => {
     const r = await request(app)
       .patch("/api/account/notification-prefs")
       .set(auth(ctx.token))
-      .send({ weeklyDigest: true, ingestComplete: false });
+      .send({ quotaWarnings: false, ingestComplete: false });
     expect(r.status).toBe(200);
-    expect(r.body.notificationPrefs.weeklyDigest).toBe(true);
+    expect(r.body.notificationPrefs.quotaWarnings).toBe(false);
     expect(r.body.notificationPrefs.ingestComplete).toBe(false);
   });
 });
