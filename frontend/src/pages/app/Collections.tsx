@@ -82,7 +82,7 @@ export default function Collections() {
   return (
     <div className="mx-auto h-full max-w-4xl overflow-y-auto px-4 py-6 sm:px-6">
       <div className="mb-6">
-        <h2 className="font-mono text-lg font-semibold">Collections</h2>
+        <h2 className="text-lg font-semibold">Collections</h2>
         <p className="text-sm text-muted-foreground">
           Group documents by project or topic to keep retrieval on-subject.
         </p>
@@ -96,7 +96,7 @@ export default function Collections() {
             placeholder="New collection name"
             aria-label="New collection name"
           />
-          <Button type="submit" variant="brand" disabled={creating || !newName.trim()}>
+          <Button type="submit" variant="default" disabled={creating || !newName.trim()}>
             <Plus className="h-4 w-4" />
             Create
           </Button>
@@ -155,8 +155,8 @@ export default function Collections() {
                 <>
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-mono text-sm font-semibold">{c.name}</p>
-                      <p className="mt-1 font-mono text-2xs text-muted-foreground">
+                      <p className="text-sm font-semibold">{c.name}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {c.documentCount ?? 0} docs · created{" "}
                         {formatRelativeTime(c.createdAt)}
                       </p>
@@ -214,7 +214,7 @@ function InstructionsEditor({
     <div className="mt-3 border-t border-border pt-3">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-wide text-muted-foreground hover:text-foreground"
+        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
       >
         <Wand2 className="h-3 w-3" />
         Custom instructions

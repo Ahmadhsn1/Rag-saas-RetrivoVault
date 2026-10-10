@@ -1,55 +1,60 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Paper & ink. The product is about reading and trusting documents, so the
+ * interface is set like one: warm paper, dark ink, a serif for headings and a
+ * single restrained accent reserved for citations.
+ * Values are HSL triplets consumed as hsl(var(--x)).
+ */
 @layer base {
   :root {
-    /* Dark-locked. Values are HSL triplets consumed as hsl(var(--x)). */
-    --background: 240 6% 4%;
-    --surface: 240 8% 7%;
-    --foreground: 60 11% 96%;
+    --background: 40 30% 97%;
+    --surface: 40 24% 94%;
+    --foreground: 222 28% 13%;
 
-    --card: 240 8% 9%;
-    --card-foreground: 60 11% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 28% 13%;
 
-    --popover: 240 7% 9%;
-    --popover-foreground: 60 11% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 28% 13%;
 
-    --primary: 249 74% 64%;
-    --primary-hover: 249 82% 69%;
-    --primary-foreground: 0 0% 100%;
+    /* Ink: buttons, links, focus. */
+    --primary: 222 47% 18%;
+    --primary-hover: 222 44% 26%;
+    --primary-foreground: 40 30% 97%;
 
-    --brand: 42 40% 87%;
-    --brand-foreground: 240 6% 4%;
+    /* The one accent — citation marks and little else. */
+    --brand: 12 62% 38%;
+    --brand-foreground: 0 0% 100%;
 
-    --secondary: 240 6% 14%;
-    --secondary-foreground: 60 11% 96%;
+    --secondary: 40 20% 91%;
+    --secondary-foreground: 222 28% 13%;
 
-    --muted: 240 6% 13%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 222 10% 38%;
 
-    --accent: 240 6% 14%;
-    --accent-foreground: 60 11% 96%;
+    --accent: 40 22% 91%;
+    --accent-foreground: 222 28% 13%;
 
-    --destructive: 0 91% 71%;
+    --destructive: 2 62% 40%;
     --destructive-foreground: 0 0% 100%;
-    --ok: 142 69% 58%;
-    --warn: 43 96% 56%;
+    --ok: 152 48% 26%;
+    --warn: 30 82% 32%;
 
-    --border: 240 5% 16%;
-    --border-strong: 240 5% 27%;
-    --input: 240 5% 18%;
-    --ring: 249 83% 72%;
+    --border: 38 18% 86%;
+    --border-strong: 38 14% 74%;
+    --input: 38 16% 80%;
+    --ring: 222 47% 30%;
 
-    --radius: 0.625rem;
+    --radius: 0.5rem;
 
-    --sidebar: 240 8% 6%;
-    --sidebar-foreground: 60 11% 96%;
-    --sidebar-accent: 240 6% 13%;
-    --sidebar-accent-foreground: 60 11% 96%;
-    --sidebar-border: 240 5% 14%;
+    --sidebar: 40 26% 95%;
+    --sidebar-foreground: 222 28% 13%;
+    --sidebar-accent: 40 20% 89%;
+    --sidebar-accent-foreground: 222 28% 13%;
+    --sidebar-border: 38 18% 86%;
   }
 }
 
@@ -59,18 +64,17 @@
   }
 
   html {
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "cv11", "ss01";
     text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background: hsl(var(--primary) / 0.3);
+    background: hsl(var(--brand) / 0.18);
   }
 
   /* Visible focus everywhere */
@@ -78,9 +82,18 @@
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
-  h1, h2, h3, h4 {
-    @apply font-mono tracking-tight;
+  h1,
+  h2,
+  h3 {
+    @apply font-serif font-medium;
+    letter-spacing: -0.012em;
     text-wrap: balance;
+  }
+
+  code,
+  pre,
+  kbd {
+    @apply font-mono;
   }
 
   ::-webkit-scrollbar {
@@ -98,77 +111,15 @@
 }
 
 @layer components {
-  .glow-hero {
-    background-image: radial-gradient(
-      600px 320px at 50% -10%,
-      hsl(var(--primary) / 0.16),
-      transparent 70%
-    );
+  /* Small section label set above a heading. */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase text-brand;
+    letter-spacing: 0.14em;
   }
 
-  .grid-fade {
-    background-image:
-      linear-gradient(hsl(var(--border) / 0.6) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.6) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: radial-gradient(600px 400px at 50% 0%, #000 20%, transparent 80%);
-  }
-
-  .terminal-panel {
-    background: #0c0c0e;
-    @apply border border-border rounded-lg;
-  }
-
-  .glass {
-    background: rgba(21, 21, 24, 0.55);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .noise {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.035;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  .text-gradient {
-    background: linear-gradient(
-      120deg,
-      hsl(var(--foreground)) 0%,
-      hsl(var(--brand)) 55%,
-      hsl(var(--primary)) 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-}
-
-@layer utilities {
-  .aurora {
-    position: absolute;
-    inset: -20%;
-    pointer-events: none;
-    filter: blur(80px);
-    opacity: 0.5;
-    background:
-      radial-gradient(40% 40% at 20% 30%, hsl(249 74% 55% / 0.5), transparent 60%),
-      radial-gradient(35% 35% at 78% 22%, hsl(42 45% 70% / 0.28), transparent 60%),
-      radial-gradient(45% 45% at 60% 75%, hsl(268 60% 50% / 0.35), transparent 60%);
-    animation: aurora-drift 22s ease-in-out infinite alternate;
-  }
-
-  @keyframes aurora-drift {
-    0% {
-      transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-    }
-    100% {
-      transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.15);
-    }
+  /* Figures that line up in tables, prices and counters. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 

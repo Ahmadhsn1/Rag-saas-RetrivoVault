@@ -41,21 +41,21 @@ export default function SharedChat() {
         <Link to="/">
           <Logo />
         </Link>
-        <Button asChild variant="brand" size="sm">
+        <Button asChild variant="default" size="sm">
           <Link to="/signup">Start your own vault</Link>
         </Button>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-10">
         {state === "loading" && (
-          <p className="text-center font-mono text-2xs uppercase text-muted-foreground">
+          <p className="text-center text-xs uppercase text-muted-foreground">
             loading…
           </p>
         )}
 
         {state === "missing" && (
           <div className="py-20 text-center">
-            <p className="font-mono text-4xl font-semibold text-brand">404</p>
+            <p className="text-4xl font-semibold text-brand">404</p>
             <p className="mt-2 text-sm text-muted-foreground">
               This shared answer doesn't exist, or the owner turned off the link.
             </p>
@@ -65,7 +65,7 @@ export default function SharedChat() {
         {state === "ok" && chat && (
           <>
             <h1 className="text-2xl">{chat.title}</h1>
-            <p className="mt-1 font-mono text-2xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               shared from Retrivo Vault ·{" "}
               {new Date(chat.sharedAt).toLocaleDateString()}
             </p>
@@ -75,8 +75,8 @@ export default function SharedChat() {
                   key={i}
                   className={
                     m.role === "user"
-                      ? "ml-auto w-fit max-w-[85%] rounded-lg bg-surface px-3.5 py-2.5 text-sm"
-                      : "w-fit max-w-[92%] rounded-lg border border-border bg-card px-3.5 py-2.5"
+                      ? "ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-secondary px-4 py-2.5 text-[0.95rem]"
+                      : "w-full max-w-[46rem]"
                   }
                 >
                   {m.role === "assistant" ? (

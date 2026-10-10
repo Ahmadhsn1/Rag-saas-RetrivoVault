@@ -41,7 +41,7 @@ export function SourceDrawer({ source, onOpenChange }: SourceDrawerProps) {
       <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-primary/15 text-primary">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] bg-brand/10 text-xs font-semibold text-brand">
               {source?.index}
             </span>
             <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -54,13 +54,13 @@ export function SourceDrawer({ source, onOpenChange }: SourceDrawerProps) {
             ) : (
               <Badge>keyword match</Badge>
             )}
-            <span className="text-2xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               The exact passage this answer drew on.
             </span>
           </SheetDescription>
         </SheetHeader>
         <ScrollArea className="flex-1">
-          <p className="whitespace-pre-wrap p-6 text-sm leading-relaxed text-foreground/90">
+          <p className="whitespace-pre-wrap border-l-2 border-brand/40 mx-6 my-6 pl-4 font-serif text-base leading-relaxed text-foreground/90">
             {passage}
           </p>
         </ScrollArea>

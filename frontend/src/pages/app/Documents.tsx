@@ -110,7 +110,7 @@ export default function Documents() {
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const uploadTrigger = (
-    <Button variant="brand" size="sm">
+    <Button variant="default" size="sm">
       <UploadCloud className="h-4 w-4" />
       Upload
     </Button>
@@ -128,7 +128,7 @@ export default function Documents() {
     <div className="mx-auto h-full max-w-5xl overflow-y-auto px-4 py-6 sm:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="font-mono text-lg font-semibold">
+          <h2 className="text-lg font-semibold">
             {activeCollection ? activeCollection.name : "All documents"}
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -158,7 +158,7 @@ export default function Documents() {
               className="h-9 pl-9"
             />
           </div>
-          <div className="flex gap-1 rounded-md border border-border bg-surface p-0.5 font-mono text-2xs">
+          <div className="flex gap-1 rounded-md border border-border bg-surface p-0.5 text-xs">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
@@ -222,21 +222,21 @@ export default function Documents() {
                           className="h-4 w-4 shrink-0 text-muted-foreground"
                           aria-hidden="true"
                         />
-                        <span className="truncate font-mono text-xs">
+                        <span className="truncate text-xs">
                           {doc.filename}
                         </span>
                       </button>
                       {doc.status === "failed" && (
                         <span className="mt-1 flex items-center gap-2">
                           {doc.error && (
-                            <span className="block min-w-0 truncate font-mono text-2xs text-destructive">
+                            <span className="block min-w-0 truncate text-xs text-destructive">
                               {doc.error}
                             </span>
                           )}
                           <button
                             onClick={() => void retry(doc)}
                             disabled={retrying === doc._id}
-                            className="inline-flex shrink-0 items-center gap-1 rounded border border-border px-1.5 py-0.5 font-mono text-2xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-50"
+                            className="inline-flex shrink-0 items-center gap-1 rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-50"
                           >
                             <RotateCw
                               className={cn(
@@ -249,16 +249,16 @@ export default function Documents() {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="hidden font-mono text-xs text-muted-foreground sm:table-cell">
+                    <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
                       {collectionName(doc.collectionId)}
                     </TableCell>
                     <TableCell>
                       <StatusChip status={doc.status} chunkCount={doc.chunkCount} />
                     </TableCell>
-                    <TableCell className="hidden font-mono text-xs text-muted-foreground md:table-cell">
+                    <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
                       {formatBytes(doc.sizeBytes)}
                     </TableCell>
-                    <TableCell className="hidden font-mono text-xs text-muted-foreground lg:table-cell">
+                    <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
                       {formatRelativeTime(doc.uploadedAt)}
                     </TableCell>
                     <TableCell>
@@ -304,7 +304,7 @@ export default function Documents() {
           />
 
           {pages > 1 && (
-            <div className="mt-4 flex items-center justify-between font-mono text-2xs text-muted-foreground">
+            <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
               <span>
                 page {page} / {pages}
               </span>

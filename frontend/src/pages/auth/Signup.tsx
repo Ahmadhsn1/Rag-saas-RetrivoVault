@@ -83,7 +83,7 @@ export default function Signup() {
               value={form.password}
               onChange={update("password")}
             />
-            <p className="text-2xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               At least 8 characters.
             </p>
           </div>

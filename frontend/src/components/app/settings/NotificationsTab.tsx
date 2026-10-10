@@ -73,7 +73,7 @@ export function NotificationsTab() {
             />
           </div>
         ))}
-        <p className="pt-3 font-mono text-2xs text-muted-foreground">
+        <p className="pt-3 text-xs text-muted-foreground">
           In-app notifications always appear in the bell menu.
         </p>
       </CardContent>

@@ -74,7 +74,7 @@ export function GoogleButton({ onError }: { onError: (message: string) => void }
           },
         });
         window.google.accounts.id.renderButton(slot.current, {
-          theme: "filled_black",
+          theme: "outline",
           size: "large",
           text: "continue_with",
           shape: "rectangular",
@@ -91,7 +91,7 @@ export function GoogleButton({ onError }: { onError: (message: string) => void }
 
   return (
     <div className="mt-6">
-      <div className="mb-4 flex items-center gap-3 text-2xs uppercase tracking-wide text-muted-foreground">
+      <div className="mb-4 flex items-center gap-3 text-xs font-medium text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
         or
         <span className="h-px flex-1 bg-border" />

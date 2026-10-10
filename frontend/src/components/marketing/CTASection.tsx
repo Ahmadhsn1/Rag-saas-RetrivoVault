@@ -1,31 +1,35 @@
+import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { MagneticButton } from "@/components/motion/MagneticButton";
+import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/Reveal";
-import { PipelineStrip } from "@/components/rag/PipelineStrip";
 
 export function CTASection() {
   return (
-    <section className="py-24 md:py-32">
+    <section className="py-20 md:py-28">
       <div className="container">
-        <Reveal className="glow-hero relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-16 text-center shadow-lg">
-          <h2 className="mx-auto max-w-xl text-3xl sm:text-4xl">
-            Stop re-reading. Start asking.
+        <Reveal className="rounded-2xl bg-primary px-6 py-16 text-center text-primary-foreground sm:px-12">
+          <h2 className="mx-auto max-w-2xl text-3xl sm:text-5xl">
+            Stop re-reading. <em className="font-normal">Start asking.</em>
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-muted-foreground">
-            Add your first few documents and ask a real question in the next two
-            minutes. Free plan, or a 14-day Pro trial with no card.
+          <p className="mx-auto mt-5 max-w-md text-lg leading-relaxed text-primary-foreground/75">
+            Add a few documents and ask a real question in the next two
+            minutes. Free plan, or fourteen days of Pro with no card.
           </p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <MagneticButton to="/signup" variant="brand" size="lg">
-              Start free
-              <ArrowRight className="h-4 w-4" />
-            </MagneticButton>
-            <MagneticButton to="/pricing" variant="outline" size="lg" strength={0.18}>
-              See plans
-            </MagneticButton>
-          </div>
-          <div className="mt-12">
-            <PipelineStrip compact />
+          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button asChild size="lg" variant="secondary">
+              <Link to="/signup">
+                Start free
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="ghost"
+              className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            >
+              <Link to="/pricing">See plans</Link>
+            </Button>
           </div>
         </Reveal>
       </div>

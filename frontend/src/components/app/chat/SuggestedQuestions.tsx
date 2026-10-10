@@ -10,7 +10,7 @@ export function SuggestedQuestions({
   if (!questions.length) return null;
   return (
     <div className="mx-auto mt-6 max-w-lg">
-      <p className="mb-2 flex items-center gap-1.5 font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Lightbulb className="h-3 w-3" aria-hidden="true" />
         Try asking
       </p>

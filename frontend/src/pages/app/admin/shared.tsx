@@ -19,12 +19,12 @@ export function Stat({
   return (
     <Card className="p-4">
       <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-      <p className={`mt-3 font-mono text-2xl font-semibold ${valueColor}`}>
+      <p className={`mt-3 text-2xl font-semibold ${valueColor}`}>
         {typeof value === "number" ? value.toLocaleString("en-US") : value}
       </p>
       <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
       {hint && (
-        <p className="mt-1 font-mono text-2xs text-muted-foreground/70">{hint}</p>
+        <p className="mt-1 text-xs text-muted-foreground/70">{hint}</p>
       )}
     </Card>
   );

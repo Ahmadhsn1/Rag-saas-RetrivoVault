@@ -33,7 +33,7 @@ export function AppTopbar({
         <PanelLeft className="h-4 w-4" />
       </button>
 
-      <h1 className="font-mono text-sm font-semibold">{title}</h1>
+      <h1 className="text-sm font-semibold">{title}</h1>
 
       <div className="ml-auto flex items-center gap-2">
         {activeCollection && (
@@ -43,7 +43,7 @@ export function AppTopbar({
         )}
         <button
           onClick={onCommand}
-          className="hidden items-center gap-1.5 rounded-md border border-border px-2 py-1 font-mono text-2xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:flex"
+          className="hidden items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:flex"
           aria-label="Open command palette"
         >
           <Command className="h-3 w-3" />K

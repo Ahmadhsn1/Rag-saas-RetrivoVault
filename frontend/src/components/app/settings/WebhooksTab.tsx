@@ -93,7 +93,7 @@ export function WebhooksTab() {
             Signing secret — copy it now, it won't be shown again.
           </p>
           <div className="mt-2 flex items-center gap-2">
-            <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 font-mono text-xs">
+            <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 text-xs">
               {reveal}
             </code>
             <Button
@@ -135,7 +135,7 @@ export function WebhooksTab() {
               Add
             </Button>
           </div>
-          <p className="font-mono text-2xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             events: {events.join(" · ")}
           </p>
         </CardContent>
@@ -148,8 +148,8 @@ export function WebhooksTab() {
           {hooks.map((h) => (
             <li key={h._id} className="flex items-center justify-between gap-3 p-3">
               <div className="min-w-0">
-                <p className="truncate font-mono text-xs">{h.url}</p>
-                <p className="font-mono text-2xs text-muted-foreground">
+                <p className="truncate text-xs">{h.url}</p>
+                <p className="text-xs text-muted-foreground">
                   {h.lastDeliveryAt
                     ? `last ${h.lastStatus ?? "?"} · ${formatRelativeTime(h.lastDeliveryAt)}`
                     : "no deliveries yet"}

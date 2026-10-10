@@ -1,56 +1,31 @@
-import type { Transition, Variants } from "framer-motion";
+import type { Variants } from "framer-motion";
 
 /**
- * Shared Framer Motion tokens. Framer owns component-level motion — scroll
- * reveals, hover / tap micro-interactions, presence transitions. GSAP still
- * owns the hero headline split, the stat count-up, the pipeline flow and any
- * scrubbed parallax (see `lib/motion.ts`).
- *
- * Every consumer must also honour `useReducedMotion()` — these tokens describe
- * the full-motion path only.
+ * The product's whole motion vocabulary: content settles into place once as it
+ * scrolls into view. Nothing follows the cursor, tilts, or loops.
+ * Consumers also honour `useReducedMotion()` — these describe the full-motion path.
  */
 
-// Expo-out: fast start, long gentle settle. The house easing for reveals.
-export const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
-export const springSnappy: Transition = {
-  type: "spring",
-  stiffness: 420,
-  damping: 26,
-  mass: 0.7,
-};
+// Fast start, gentle settle.
+const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-/** A single block sliding + fading + de-blurring into place. */
+/** A single block fading up a few pixels. */
 export const revealVariants: Variants = {
-  hidden: { opacity: 0, y: 22, filter: "blur(6px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.6, ease: EASE_OUT },
-  },
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE_OUT } },
 };
 
 /** Container that releases its `RevealItem` children one after another. */
-export const staggerContainer = (stagger = 0.08, delayChildren = 0): Variants => ({
+export const staggerContainer = (stagger = 0.06, delayChildren = 0): Variants => ({
   hidden: {},
-  show: {
-    transition: { staggerChildren: stagger, delayChildren },
-  },
+  show: { transition: { staggerChildren: stagger, delayChildren } },
 });
 
-/** Child of a `staggerContainer`. Slightly shorter throw than a lone block. */
+/** Child of a `staggerContainer`. */
 export const staggerItem: Variants = {
-  hidden: { opacity: 0, y: 16, filter: "blur(4px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.5, ease: EASE_OUT },
-  },
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE_OUT } },
 };
 
-/** Default viewport config: fire once, a little before the block is centred. */
+/** Fire once, a little before the block is centred. */
 export const viewportOnce = { once: true, amount: 0.2 } as const;
-
-/** Tap feel for primary controls. */
-export const buttonTap = { y: 0, scale: 0.97 } as const;

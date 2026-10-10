@@ -46,7 +46,7 @@ export function MessageActions({
     <div className="mt-1 flex items-center gap-1 opacity-0 transition-opacity group-hover/msg:opacity-100 has-[button[data-on=true]]:opacity-100">
       <button
         onClick={copy}
-        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-2xs text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:text-foreground"
         aria-label="Copy answer"
       >
         {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}

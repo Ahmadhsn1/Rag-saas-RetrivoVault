@@ -1,240 +1,93 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
-import { MagneticButton } from "@/components/motion/MagneticButton";
-import { TiltCard } from "@/components/motion/TiltCard";
-import { PipelineStrip } from "@/components/rag/PipelineStrip";
-import { AnswerText } from "@/components/rag/AnswerText";
-import { AuroraBackground } from "@/components/marketing/AuroraBackground";
-import { useTypewriter } from "@/hooks/useTypewriter";
-import { gsap, splitReveal, prefersReducedMotion } from "@/lib/motion";
-import { EASE_OUT } from "@/lib/anim";
-import type { RetrievedSource } from "@/types/api";
+import { Link } from "react-router-dom";
+import { ArrowRight, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface Demo {
-  question: string;
-  answer: string;
-  sources: RetrievedSource[];
+/** A footnote-style citation mark, as it appears in the product. */
+function Cite({ n }: { n: number }) {
+  return (
+    <sup className="mx-0.5 rounded-[3px] bg-brand/10 px-1 py-px text-[0.68em] font-semibold text-brand">
+      {n}
+    </sup>
+  );
 }
 
-const DEMOS: Demo[] = [
-  {
-    question: "When does the Acme vendor contract renew?",
-    answer:
-      "It auto-renews for one year unless either party gives written notice at least 60 days before the term ends [1]. After the first anniversary, either side can also terminate for convenience with 90 days' notice [2].",
-    sources: [
-      {
-        index: 1,
-        chunkId: "c_8f21a0",
-        documentId: "d_11c930",
-        score: 0.842,
-        preview:
-          "The renewal clause requires written notice at least 60 days before the term expires; absent notice the agreement auto-renews for one year.",
-      },
-      {
-        index: 2,
-        chunkId: "c_4b7e15",
-        documentId: "d_11c930",
-        score: 0.791,
-        preview:
-          "Either party may terminate for convenience with 90 days' notice after the first anniversary of the effective date.",
-      },
-    ],
-  },
-  {
-    question: "Which of these studies used a control group?",
-    answer:
-      "Three of the seven did. Larsen 2023 and Okafor 2024 used randomized controls [1]; Mehta 2022 used a matched historical control and flags it as a limitation [2]. The rest are single-arm.",
-    sources: [
-      {
-        index: 1,
-        chunkId: "c_p12",
-        documentId: "d_papers",
-        score: 0.807,
-        preview:
-          "Participants were randomly assigned to the intervention or a wait-list control arm (n = 118 and n = 121 respectively).",
-      },
-      {
-        index: 2,
-        chunkId: "c_p27",
-        documentId: "d_papers",
-        score: 0.744,
-        preview:
-          "In the absence of a concurrent control, outcomes were compared against a matched historical cohort — a limitation discussed in section 5.",
-      },
-    ],
-  },
-  {
-    question: "What did the founder say about the SOC 2 timeline?",
-    answer:
-      "In the March board notes, the Type I report was expected by end of Q2 and Type II observation would run through Q4, targeting the report in January [1].",
-    sources: [
-      {
-        index: 1,
-        chunkId: "c_b04",
-        documentId: "d_board",
-        score: 0.861,
-        preview:
-          "SOC 2 Type I on track for end of June; the Type II observation window runs July–December with the report expected mid-January.",
-      },
-    ],
-  },
-];
+/**
+ * The hero shows the product's one promise as a specimen: a question, the
+ * answer, and the passage that proves it — set like a page, not a chat window.
+ */
+function AnswerSpecimen() {
+  return (
+    <figure className="relative">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-lg sm:p-8">
+        <p className="text-xs font-medium text-muted-foreground">You asked</p>
+        <p className="mt-1.5 font-serif text-xl leading-snug text-foreground">
+          When does the Northwind contract renew, and how do we get out of it?
+        </p>
 
-const HEADLINE = ["Your", "documents,", "answerable."];
+        <div className="my-6 h-px bg-border" />
+
+        <p className="text-xs font-medium text-muted-foreground">Retrivo</p>
+        <p className="mt-1.5 text-[0.95rem] leading-relaxed text-foreground/90">
+          It renews automatically for one year unless either side gives sixty
+          days&rsquo; written notice before the term ends
+          <Cite n={1} />. After the first anniversary, either party can also
+          end it for convenience with ninety days&rsquo; notice
+          <Cite n={2} />.
+        </p>
+      </div>
+
+      <figcaption className="relative -mt-3 ml-6 mr-2 rounded-lg border border-border bg-background p-4 shadow-md sm:ml-14 sm:mr-0">
+        <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+          <span className="flex h-5 w-5 items-center justify-center rounded-[4px] bg-brand/10 text-[0.7rem] font-semibold text-brand">
+            1
+          </span>
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+          northwind-msa.pdf &middot; page 4
+        </p>
+        <p className="mt-2 border-l-2 border-brand/40 pl-3 font-serif text-[0.95rem] italic leading-relaxed text-foreground/80">
+          &ldquo;This Agreement shall renew automatically for successive
+          one-year terms unless either party gives written notice of
+          non-renewal at least sixty (60) days before the end of the
+          then-current term.&rdquo;
+        </p>
+      </figcaption>
+    </figure>
+  );
+}
 
 export function Hero() {
-  const reduce = useReducedMotion();
-  const headlineRef = useRef<HTMLHeadingElement>(null);
-  const [demoIndex, setDemoIndex] = useState(0);
-  const demo = DEMOS[demoIndex];
-  const { out, done } = useTypewriter(demo.answer, true, 12);
-
-  // rotate the demo once the current answer finishes typing
-  useEffect(() => {
-    if (!done || prefersReducedMotion()) return;
-    const t = window.setTimeout(
-      () => setDemoIndex((i) => (i + 1) % DEMOS.length),
-      4200,
-    );
-    return () => window.clearTimeout(t);
-  }, [done, demoIndex]);
-
-  const sources = useMemo(() => demo.sources, [demo]);
-
-  useEffect(() => {
-    const el = headlineRef.current;
-    if (!el) return;
-    const words = gsap.utils.toArray<HTMLElement>(el.querySelectorAll(".word"));
-    const ctx = gsap.context(() => {
-      splitReveal(words);
-      if (!prefersReducedMotion()) {
-        gsap.from(".hero-fade", {
-          opacity: 0,
-          y: 14,
-          duration: 0.6,
-          stagger: 0.08,
-          delay: 0.35,
-          ease: "power2.out",
-        });
-      }
-    }, el.parentElement ?? el);
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <section className="relative overflow-hidden pt-36 pb-24 md:pt-44 md:pb-32">
-      <AuroraBackground />
-
-      <div className="container relative grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
+    <section className="pb-20 pt-36 md:pb-28 md:pt-44">
+      <div className="container grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
         <div>
-          <Badge variant="outline" className="hero-fade mb-6 gap-1.5">
-            <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-            Private · every answer sourced
-          </Badge>
-
-          <h1
-            ref={headlineRef}
-            className="text-[2.6rem] leading-[1.04] [perspective:800px] sm:text-6xl md:text-[4rem]"
-          >
-            {HEADLINE.map((w, i) => (
-              <Fragment key={i}>
-                <span className="inline-block overflow-hidden pb-1">
-                  <span
-                    className={"word inline-block " + (i === 2 ? "text-gradient" : "")}
-                  >
-                    {w}
-                  </span>
-                </span>
-                {/* the space must live outside the inline-block, or it collapses */}
-                {i < HEADLINE.length - 1 && " "}
-              </Fragment>
-            ))}
+          <p className="eyebrow">Private document Q&amp;A, with proof</p>
+          <h1 className="mt-5 text-[2.75rem] leading-[1.04] sm:text-6xl">
+            Your documents, <em className="font-normal">answerable.</em>
           </h1>
-
-          <p className="hero-fade mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Add your contracts, papers and notes to a private vault. Ask in plain
-            language and get an answer in seconds — with the exact passage it came
-            from, so you can trust it.
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
+            Add your contracts, papers and notes to a private vault. Ask in
+            plain language and get the answer in seconds — with the exact
+            passage it came from, so you can check it before you rely on it.
           </p>
 
-          <div className="hero-fade mt-8 flex flex-col gap-3 sm:flex-row">
-            <MagneticButton to="/signup" variant="brand" size="lg">
-              Start free
-              <ArrowRight className="h-4 w-4" />
-            </MagneticButton>
-            <MagneticButton href="#demo" variant="outline" size="lg" strength={0.18}>
-              See it work
-            </MagneticButton>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Button asChild size="lg">
+              <Link to="/signup">
+                Start free
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <a href="/#how">See how it works</a>
+            </Button>
           </div>
 
-          <p className="hero-fade mt-3 font-mono text-2xs text-muted-foreground">
-            14-day Pro trial · no card · your documents stay yours
+          <p className="mt-4 text-sm text-muted-foreground">
+            14-day Pro trial. No card. Your documents stay yours.
           </p>
         </div>
 
-        <motion.div
-          className="relative"
-          initial={reduce ? false : { opacity: 0, y: 28, rotate: -1 }}
-          animate={reduce ? undefined : { opacity: 1, y: 0, rotate: 0 }}
-          transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.4 }}
-        >
-          <TiltCard className="glass rounded-xl p-4 shadow-lg">
-            <div className="flex items-center gap-1.5 pb-3">
-              <span className="h-2.5 w-2.5 rounded-full bg-destructive/50" />
-              <span className="h-2.5 w-2.5 rounded-full bg-warn/50" />
-              <span className="h-2.5 w-2.5 rounded-full bg-ok/50" />
-              <span className="ml-2 font-mono text-2xs uppercase tracking-wide text-muted-foreground">
-                your vault · chat
-              </span>
-              <span className="ml-auto flex items-center gap-1 font-mono text-2xs text-ok">
-                <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-ok" />
-                live
-              </span>
-            </div>
-
-            <div className="min-h-[190px] space-y-3 border-t border-border pt-3">
-              <div className="ml-auto w-fit max-w-[85%] rounded-lg bg-surface px-3 py-2 text-sm">
-                {demo.question}
-              </div>
-              <div className="w-fit max-w-[94%] rounded-lg border border-border bg-background/70 px-3 py-2">
-                <AnswerText content={out} sources={sources} />
-                {!done && (
-                  <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-primary align-middle" />
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 border-t border-border pt-3">
-              <PipelineStrip compact animated />
-            </div>
-          </TiltCard>
-
-          <motion.div
-            className="absolute -right-3 -top-5 hidden rotate-3 rounded-lg border border-border bg-card px-3 py-2 shadow-md sm:block"
-            animate={reduce ? undefined : { y: [0, -7, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <p className="font-mono text-2xs text-muted-foreground">every claim</p>
-            <p className="font-mono text-sm text-ok">sourced</p>
-          </motion.div>
-          <motion.div
-            className="absolute -bottom-6 -left-4 hidden -rotate-2 rounded-lg border border-border bg-card px-3 py-2 shadow-md sm:block"
-            animate={reduce ? undefined : { y: [0, 7, 0] }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.6,
-            }}
-          >
-            <p className="font-mono text-2xs text-muted-foreground">matched</p>
-            <p className="font-mono text-sm text-brand">
-              {sources.length} of 1,284
-            </p>
-          </motion.div>
-        </motion.div>
+        <AnswerSpecimen />
       </div>
     </section>
   );

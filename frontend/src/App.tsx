@@ -38,7 +38,7 @@ function FullScreenLoader() {
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
       <Logo withWordmark={false} />
-      <p className="font-mono text-2xs uppercase tracking-widest text-muted-foreground">
+      <p className="text-xs font-mediumst text-muted-foreground">
         loading
       </p>
     </div>

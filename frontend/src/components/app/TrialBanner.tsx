@@ -31,7 +31,7 @@ export function TrialBanner() {
       </p>
       <Link
         to="/app/settings?tab=billing"
-        className="font-mono text-2xs uppercase tracking-wide text-primary underline underline-offset-2"
+        className="text-xs font-medium text-primary underline underline-offset-2"
       >
         Keep it
       </Link>

@@ -44,7 +44,7 @@ export function Comparison() {
     <section className="py-24 md:py-32">
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
+          <p className="eyebrow">
             Why not just…
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl">
@@ -57,14 +57,14 @@ export function Comparison() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="px-3 py-3 text-left font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">
                     Capability
                   </th>
                   {COLS.map((c) => (
                     <th
                       key={c.key}
                       className={cn(
-                        "px-3 py-3 text-center font-mono text-2xs uppercase tracking-wide",
+                        "px-3 py-3 text-center text-xs font-medium",
                         c.key === "retrivo"
                           ? "bg-primary/[0.06] text-primary"
                           : "text-muted-foreground",
@@ -101,8 +101,8 @@ export function Comparison() {
             </table>
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Enterprise RAG tools do most of this — for teams, with IT, priced per
-            seat, gated behind sales.
+            Enterprise knowledge tools do most of this — for teams, with IT,
+            priced per seat and sold through a sales call.
           </p>
         </Reveal>
       </div>

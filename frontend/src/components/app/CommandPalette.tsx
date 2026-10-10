@@ -185,13 +185,13 @@ export function CommandPalette({
         </div>
         <div ref={listRef} className="max-h-80 overflow-y-auto p-1.5">
           {filtered.length === 0 && (
-            <p className="px-3 py-6 text-center text-2xs text-muted-foreground">
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">
               No matches
             </p>
           )}
           {grouped.map(([group, groupItems]) => (
             <div key={group} className="mb-1">
-              <p className="px-2 py-1 font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+              <p className="px-2 py-1 text-xs font-medium text-muted-foreground">
                 {group}
               </p>
               {groupItems.map((item) => {
@@ -210,7 +210,7 @@ export function CommandPalette({
                     <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span className="flex-1 truncate">{item.label}</span>
                     {item.hint && (
-                      <span className="font-mono text-2xs text-muted-foreground/70">
+                      <span className="text-xs text-muted-foreground/70">
                         {item.hint}
                       </span>
                     )}

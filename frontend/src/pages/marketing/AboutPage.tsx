@@ -1,140 +1,96 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Eye, Lock, GitBranch } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
-import { PipelineStrip } from "@/components/rag/PipelineStrip";
-import { MagneticButton } from "@/components/motion/MagneticButton";
-import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
-import { SpotlightCard } from "@/components/motion/SpotlightCard";
+import { Button } from "@/components/ui/button";
 
 const PRINCIPLES = [
   {
-    icon: Eye,
-    title: "Small enough to read",
-    body: "The whole pipeline — extract, chunk, embed, retrieve, answer — is a few hundred lines. You can read it end to end and know exactly what happens to a document you upload.",
+    title: "Proof before polish",
+    body: "An answer you can’t check is a liability. Every claim Retrivo makes points at the passage and the page it came from, and opens the original file there.",
   },
   {
-    icon: Lock,
-    title: "Isolation you can verify",
-    body: "Every query, the semantic search included, is filtered by your account id in the database. It's not a setting that can be toggled off — it's how the queries are written. The code is public, so check.",
+    title: "Your documents only",
+    body: "Retrivo answers from what you have added and nothing else. When your files don’t contain the answer, it tells you — it does not improvise one.",
   },
   {
-    icon: GitBranch,
-    title: "No incentive to touch your documents",
-    body: "There's no ad model, no data resale, no training pipeline. Your text goes to Google Gemini to produce an embedding or an answer, and nowhere else. That's the entire arrangement.",
+    title: "Private by construction",
+    body: "Every search is filtered to your account inside the database. Your documents are never shared and never used to train a model.",
   },
+];
+
+const HANDLING = [
+  "Uploads are checked for type and size, read, and split into passages. The original is kept so you can open the page a citation points to.",
+  "Each passage is indexed against your account. Search runs over your passages only — by meaning and by exact wording.",
+  "Passwords are stored as hashes; API keys and session tokens only as hashes; a model key you bring is encrypted.",
+  "Export everything as one file, delete a single document, or delete your account to erase all of it at once.",
 ];
 
 export default function AboutPage() {
   useSeo(
     "About",
-    "Retrivo Vault turns the documents you've collected — and never re-read — into a research assistant you can actually ask. Open source, built by one person.",
+    "Retrivo turns the documents you have collected into something you can ask — and shows the passage behind every answer.",
   );
 
   return (
-    <div className="pt-32 pb-24">
-      <div className="container max-w-2xl">
-        <Reveal>
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
-            About
-          </p>
-          <h1 className="mt-3 text-3xl sm:text-4xl">
-            The research assistant that only knows what you've read
-          </h1>
-          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            Retrivo Vault turns the documents you've collected — and never
-            re-read — into something you can actually ask. Add your contracts,
-            papers, transcripts and notes to a private vault, ask in plain
-            language, and get an answer in seconds with the exact passage it came
-            from. It's private to you, and if the answer isn't in your documents,
-            Retrivo says so instead of guessing.
-          </p>
-        </Reveal>
+    <div className="pb-24 pt-36">
+      <article className="container max-w-3xl">
+        <p className="eyebrow">About</p>
+        <h1 className="mt-4 text-4xl leading-tight sm:text-5xl">
+          The research assistant that only knows what you&rsquo;ve read
+        </h1>
+        <p className="mt-6 text-xl leading-relaxed text-muted-foreground">
+          Most of what a professional needs to know is already written down —
+          in a contract, a paper, a transcript, a set of notes. The trouble is
+          finding it again. Retrivo makes those documents answerable, and makes
+          every answer checkable.
+        </p>
 
-        <Reveal className="mt-12" delay={0.06}>
-          <PipelineStrip />
-        </Reveal>
+        <h2 className="mt-16 text-2xl sm:text-3xl">What we hold ourselves to</h2>
+        <dl className="mt-6 divide-y divide-border border-y border-border">
+          {PRINCIPLES.map(({ title, body }) => (
+            <div key={title} className="grid gap-1 py-6 sm:grid-cols-[14rem_1fr] sm:gap-8">
+              <dt className="font-serif text-xl">{title}</dt>
+              <dd className="leading-relaxed text-muted-foreground">{body}</dd>
+            </div>
+          ))}
+        </dl>
 
-        <div className="mt-16">
-          <Reveal>
-            <h2 className="text-2xl">Open source, built by one person</h2>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              That's the pitch, not an apology. Retrivo is built and maintained
-              by a single independent developer, and the whole thing is open
-              source. When the product you trust with your contracts and
-              research is a small, readable codebase with no company behind it
-              looking for a reason to monetise your files, that's a feature.
-            </p>
-          </Reveal>
-
-          <Stagger wrapChildren={false} className="mt-8 space-y-4" stagger={0.08}>
-            {PRINCIPLES.map(({ icon: Icon, title, body }) => (
-              <RevealItem key={title}>
-                <SpotlightCard className="p-6">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary transition-colors group-hover:border-primary/60">
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <h3 className="mt-4 font-mono text-sm font-semibold">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {body}
-                  </p>
-                </SpotlightCard>
-              </RevealItem>
-            ))}
-          </Stagger>
-        </div>
-
-        <Reveal className="mt-16">
-          <h2 className="text-2xl">How your documents are handled</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
-            <li>
-              Uploads are checked for type and size, parsed in memory, and split
-              into passages — the original file is never written to disk.
+        <h2 className="mt-16 text-2xl sm:text-3xl">How your documents are handled</h2>
+        <ol className="mt-6 space-y-4">
+          {HANDLING.map((line, i) => (
+            <li key={i} className="flex gap-4 leading-relaxed text-muted-foreground">
+              <span className="font-serif text-xl leading-7 text-brand">{i + 1}</span>
+              <span>{line}</span>
             </li>
-            <li>
-              Each passage is embedded as a 768-dimension vector and stored
-              against your account. Retrieval is cosine similarity over your
-              vectors only.
-            </li>
-            <li>
-              Passwords are bcrypt hashes; API keys and session tokens are
-              stored only as hashes; sessions rotate and can be revoked from any
-              device.
-            </li>
-            <li>
-              Export everything as one JSON file, delete a single document, or
-              delete your account to erase all of it at once.
-            </li>
-          </ul>
-          <p className="mt-4 text-sm text-muted-foreground">
-            The specifics live in the{" "}
-            <Link to="/privacy" className="text-primary hover:underline">
-              privacy policy
-            </Link>{" "}
-            and{" "}
-            <Link to="/terms" className="text-primary hover:underline">
-              terms
-            </Link>
-            .
-          </p>
-        </Reveal>
+          ))}
+        </ol>
+        <p className="mt-6 text-muted-foreground">
+          The specifics are in the{" "}
+          <Link to="/privacy" className="text-primary underline underline-offset-4">
+            privacy policy
+          </Link>{" "}
+          and{" "}
+          <Link to="/terms" className="text-primary underline underline-offset-4">
+            terms
+          </Link>
+          .
+        </p>
 
-        <Reveal className="mt-16 rounded-2xl border border-border bg-card p-8 text-center">
-          <h2 className="text-2xl">Stop re-reading. Start asking.</h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-            Add your first few documents and ask a real question in the next two
-            minutes. Free plan, or a 14-day Pro trial with no card.
-          </p>
-          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <MagneticButton to="/signup" variant="brand" size="lg">
-              Start free
-              <ArrowRight className="h-4 w-4" />
-            </MagneticButton>
-            <MagneticButton to="/pricing" variant="outline" size="lg" strength={0.18}>
-              See plans
-            </MagneticButton>
+        <div className="mt-16 flex flex-col gap-3 border-t border-border pt-10 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-serif text-2xl">Ask your documents. Check the source.</p>
+          <div className="flex gap-3">
+            <Button asChild>
+              <Link to="/signup">
+                Start free
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/pricing">See plans</Link>
+            </Button>
           </div>
-        </Reveal>
-      </div>
+        </div>
+      </article>
     </div>
   );
 }

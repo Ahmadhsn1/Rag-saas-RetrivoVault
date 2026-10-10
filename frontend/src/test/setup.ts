@@ -25,29 +25,6 @@ vi.mock("@/lib/api", () => ({
     err instanceof Error ? err.message : fallback,
 }));
 
-// GSAP touches layout APIs jsdom lacks — stub the whole module.
-vi.mock("@/lib/motion", () => {
-  const noop = () => undefined;
-  return {
-    gsap: {
-      registerPlugin: noop,
-      context: () => ({ revert: noop }),
-      from: noop,
-      to: noop,
-      set: noop,
-      utils: { toArray: () => [] },
-    },
-    ScrollTrigger: { refresh: noop },
-    revealOnScroll: noop,
-    splitReveal: noop,
-    parallax: noop,
-    countUp: (el: HTMLElement, to: number) => {
-      el.textContent = String(to);
-    },
-    prefersReducedMotion: () => true,
-  };
-});
-
 // Framer Motion drives layout/transform APIs jsdom doesn't implement and gates
 // reveals on IntersectionObserver. Render motion elements as plain DOM and make
 // every hook inert so components take their reduced-motion (final-state) path.

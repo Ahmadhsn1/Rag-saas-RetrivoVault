@@ -98,12 +98,12 @@ export function BroadcastsPanel() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
       <Card className="h-fit space-y-4 p-4">
-        <p className="flex items-center gap-2 font-mono text-sm font-semibold">
+        <p className="flex items-center gap-2 text-sm font-semibold">
           <Megaphone className="h-4 w-4" /> New broadcast
         </p>
 
         <div className="space-y-1.5">
-          <Label className="text-2xs uppercase tracking-wide text-muted-foreground">
+          <Label className="text-xs font-medium text-muted-foreground">
             Audience
           </Label>
           <div className="flex flex-wrap gap-1">
@@ -111,7 +111,7 @@ export function BroadcastsPanel() {
               <button
                 key={key}
                 onClick={() => setAudience(key)}
-                className={`rounded-md border px-2 py-1 font-mono text-2xs transition-colors ${
+                className={`rounded-md border px-2 py-1 text-xs transition-colors ${
                   audience === key
                     ? "border-primary bg-primary/10 text-foreground"
                     : "border-border text-muted-foreground hover:text-foreground"
@@ -121,7 +121,7 @@ export function BroadcastsPanel() {
               </button>
             ))}
           </div>
-          <p className="font-mono text-2xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {count == null ? "…" : `${count} recipient${count === 1 ? "" : "s"}`}
           </p>
         </div>
@@ -175,11 +175,11 @@ export function BroadcastsPanel() {
       </Card>
 
       <div>
-        <p className="mb-3 font-mono text-sm font-semibold">History</p>
+        <p className="mb-3 text-sm font-semibold">History</p>
         {loading ? (
           <Skeleton className="h-64 w-full" />
         ) : history.length === 0 ? (
-          <Card className="p-6 text-center font-mono text-2xs text-muted-foreground">
+          <Card className="p-6 text-center text-xs text-muted-foreground">
             No broadcasts sent yet.
           </Card>
         ) : (
@@ -193,9 +193,9 @@ export function BroadcastsPanel() {
                   </Badge>
                 </div>
                 {b.body && (
-                  <p className="mt-1 line-clamp-2 text-2xs text-muted-foreground">{b.body}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{b.body}</p>
                 )}
-                <p className="mt-2 font-mono text-2xs text-muted-foreground/70">
+                <p className="mt-2 text-xs text-muted-foreground/70">
                   {b.audienceLabel ?? b.audience} · {b.recipientCount} recipients ·{" "}
                   in-app {b.delivered.inApp} / email {b.delivered.email} / push{" "}
                   {b.delivered.push} · {formatRelativeTime(b.createdAt)}

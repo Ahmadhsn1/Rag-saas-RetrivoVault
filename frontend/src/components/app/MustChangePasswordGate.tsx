@@ -98,7 +98,7 @@ export function MustChangePasswordGate() {
                 onChange={(e) => setConfirm(e.target.value)}
               />
               {confirm && confirm !== next && (
-                <p className="font-mono text-2xs text-destructive">
+                <p className="text-xs text-destructive">
                   Passwords don't match
                 </p>
               )}

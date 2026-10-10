@@ -53,16 +53,16 @@ export function PresencePanel() {
     <div className="space-y-6">
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 font-mono text-sm font-semibold">
+          <h3 className="flex items-center gap-2 text-sm font-semibold">
             <LiveDot on={online.length > 0} />
             Online now · {online.length}
           </h3>
-          <span className="font-mono text-2xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             auto-refresh · {formatRelativeTime(new Date(updatedAt).toISOString())}
           </span>
         </div>
         {online.length === 0 ? (
-          <Card className="p-6 text-center font-mono text-2xs text-muted-foreground">
+          <Card className="p-6 text-center text-xs text-muted-foreground">
             Nobody's online right now.
           </Card>
         ) : (
@@ -71,10 +71,10 @@ export function PresencePanel() {
               <Card key={o.userId} className="flex items-center justify-between gap-3 p-3">
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium">{o.name}</p>
-                  <p className="truncate font-mono text-2xs text-muted-foreground">
+                  <p className="truncate text-xs text-muted-foreground">
                     {o.email}
                   </p>
-                  <p className="mt-0.5 font-mono text-2xs text-muted-foreground/70">
+                  <p className="mt-0.5 text-xs text-muted-foreground/70">
                     {o.device ?? "unknown"} · since {formatRelativeTime(o.since)}
                   </p>
                 </div>
@@ -86,7 +86,7 @@ export function PresencePanel() {
       </div>
 
       <div>
-        <h3 className="mb-3 font-mono text-sm font-semibold">Recent sessions</h3>
+        <h3 className="mb-3 text-sm font-semibold">Recent sessions</h3>
         <div className="rounded-lg border border-border bg-card">
           <Table>
             <TableHeader>
@@ -107,19 +107,19 @@ export function PresencePanel() {
                         {s.user?.name ?? s.userId.slice(-6)}
                       </span>
                     </span>
-                    <span className="block truncate pl-3 font-mono text-2xs text-muted-foreground">
+                    <span className="block truncate pl-3 text-xs text-muted-foreground">
                       {s.user?.email}
                     </span>
                   </TableCell>
-                  <TableCell className="hidden font-mono text-2xs text-muted-foreground sm:table-cell">
+                  <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
                     {s.device ?? "—"}
                     <br />
                     {s.ip ?? ""}
                   </TableCell>
-                  <TableCell className="font-mono text-2xs text-muted-foreground">
+                  <TableCell className="text-xs text-muted-foreground">
                     {formatRelativeTime(s.startedAt)}
                   </TableCell>
-                  <TableCell className="font-mono text-2xs">
+                  <TableCell className="text-xs">
                     {s.online ? (
                       <span className="text-ok">active</span>
                     ) : (

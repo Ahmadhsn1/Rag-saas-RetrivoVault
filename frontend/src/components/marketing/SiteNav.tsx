@@ -4,7 +4,6 @@ import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { MagneticButton } from "@/components/motion/MagneticButton";
 import { Logo } from "@/components/Logo";
 
 const LINKS = [
@@ -38,9 +37,9 @@ export function SiteNav() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
-          "w-full max-w-5xl rounded-xl border transition-colors duration-300",
+          "w-full max-w-6xl rounded-xl border transition-colors duration-300",
           scrolled || open
-            ? "border-border bg-background/80 shadow-lg shadow-black/20 backdrop-blur-md"
+            ? "border-border bg-background/90 shadow-md backdrop-blur-md"
             : "border-transparent bg-transparent",
         )}
       >
@@ -71,9 +70,9 @@ export function SiteNav() {
             >
               <Link to="/login">Sign in</Link>
             </Button>
-            <MagneticButton to="/signup" variant="brand" size="sm" strength={0.2}>
-              Start free
-            </MagneticButton>
+            <Button asChild size="sm">
+              <Link to="/signup">Start free</Link>
+            </Button>
             <button
               onClick={() => setOpen((v) => !v)}
               className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary md:hidden"

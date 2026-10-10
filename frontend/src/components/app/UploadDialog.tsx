@@ -223,9 +223,9 @@ export function UploadDialog({
                     key={i}
                     className="flex items-center justify-between rounded bg-surface px-2.5 py-1.5"
                   >
-                    <span className="min-w-0 truncate font-mono text-xs">{f.name}</span>
+                    <span className="min-w-0 truncate text-xs">{f.name}</span>
                     <span className="flex shrink-0 items-center gap-2">
-                      <span className="font-mono text-2xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {formatBytes(f.size)}
                       </span>
                       <button
@@ -251,7 +251,7 @@ export function UploadDialog({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
-            <p className="font-mono text-2xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               HTML, text or PDF pages · https only · ≤ 8 MB
             </p>
           </div>
@@ -264,7 +264,7 @@ export function UploadDialog({
               <button
                 type="button"
                 onClick={() => setNewCollection("")}
-                className="inline-flex items-center gap-1 font-mono text-2xs text-primary hover:underline"
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
               >
                 <Plus className="h-3 w-3" /> New collection
               </button>
@@ -272,7 +272,7 @@ export function UploadDialog({
               <button
                 type="button"
                 onClick={() => setNewCollection(null)}
-                className="font-mono text-2xs text-muted-foreground hover:text-foreground"
+                className="text-xs text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -330,7 +330,7 @@ export function UploadDialog({
             Cancel
           </Button>
           <Button
-            variant="brand"
+            variant="default"
             onClick={mode === "files" ? submitFiles : submitUrl}
             disabled={
               busy ||

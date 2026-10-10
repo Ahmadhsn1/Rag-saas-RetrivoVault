@@ -88,12 +88,12 @@ export function ActivityTab() {
                   <div>
                     <p className="text-sm">{LABELS[a.action] ?? a.action}</p>
                     {a.detail && (
-                      <p className="font-mono text-2xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {a.detail}
                       </p>
                     )}
                   </div>
-                  <span className="font-mono text-2xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {formatRelativeTime(a.createdAt)}
                   </span>
                 </li>

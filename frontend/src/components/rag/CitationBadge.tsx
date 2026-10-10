@@ -18,7 +18,7 @@ export function CitationBadge({ index, source, onSelect }: CitationBadgeProps) {
       type="button"
       onClick={() => source && onSelect?.(source)}
       className={cn(
-        "mx-0.5 inline-flex h-[1.15rem] min-w-[1.15rem] translate-y-[1px] items-center justify-center rounded-[4px] border border-primary/40 bg-primary/15 px-1 font-mono text-2xs font-semibold text-primary transition-colors hover:bg-primary/25",
+        "mx-0.5 inline-flex h-[1.1rem] min-w-[1.1rem] -translate-y-[0.2em] cursor-pointer items-center justify-center rounded-[4px] bg-brand/10 px-1 text-[0.7rem] font-semibold text-brand transition-colors hover:bg-brand/20",
         !source && "opacity-50",
       )}
       aria-label={`Source ${index}`}
@@ -33,7 +33,7 @@ export function CitationBadge({ index, source, onSelect }: CitationBadgeProps) {
     <Tooltip>
       <TooltipTrigger asChild>{badge}</TooltipTrigger>
       <TooltipContent side="top">
-        <p className="max-w-xs truncate font-mono text-2xs text-muted-foreground">
+        <p className="max-w-xs truncate text-xs text-muted-foreground">
           {source.filename ?? `match ${source.score.toFixed(2)}`}
           {source.page ? ` · p. ${source.page}` : ""}
         </p>

@@ -32,7 +32,7 @@ export function UserMenu() {
           <span className="block truncate text-sm font-medium">
             {user?.name}
           </span>
-          <span className="block truncate font-mono text-2xs text-muted-foreground">
+          <span className="block truncate text-xs text-muted-foreground">
             {user?.email}
           </span>
         </span>

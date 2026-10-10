@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { Check, Circle, ArrowRight } from "lucide-react";
+import { Check, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useAppState } from "@/context/AppContext";
-import { PipelineStrip } from "@/components/rag/PipelineStrip";
 import { UploadDialog } from "@/components/app/UploadDialog";
 import { Button } from "@/components/ui/button";
 import type { VaultDocument } from "@/types/api";
@@ -47,7 +46,7 @@ export function OnboardingChecklist({
         <UploadDialog
           onUploaded={onUploaded}
           trigger={
-            <Button size="sm" variant="brand">
+            <Button size="sm" variant="default">
               Upload
             </Button>
           }
@@ -62,21 +61,24 @@ export function OnboardingChecklist({
   ];
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center gap-8 py-14 text-center">
-      <PipelineStrip />
-
-      <div className="w-full space-y-2 text-left">
-        <p className="text-center font-mono text-sm font-semibold">
+    <div className="mx-auto flex max-w-lg flex-col py-12">
+      <div className="w-full">
+        <h2 className="text-3xl">
           {hasReadyDoc ? "Ask your vault" : "Get set up in three steps"}
+        </h2>
+        <p className="mt-2 text-muted-foreground">
+          {hasReadyDoc
+            ? "Your documents are indexed. Every answer will point at the passage it came from."
+            : "Add a document, ask a question, and check the source behind the answer."}
         </p>
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-8 space-y-2">
           {steps.map((step, i) => (
             <li
               key={step.title}
               style={{ animationDelay: `${i * 70}ms` }}
               className={cn(
                 "flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-300",
-                step.done ? "border-ok/25 bg-ok/5" : "border-border bg-card hover:border-border-strong",
+                step.done ? "border-border bg-surface" : "border-border bg-card",
               )}
             >
               {step.done ? (
@@ -90,24 +92,18 @@ export function OnboardingChecklist({
               <div className="min-w-0 flex-1">
                 <p
                   className={cn(
-                    "font-mono text-xs font-medium",
+                    "text-sm font-medium",
                     step.done && "text-muted-foreground line-through",
                   )}
                 >
                   {step.title}
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{step.body}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">{step.body}</p>
               </div>
               {step.action && <div className="shrink-0">{step.action}</div>}
             </li>
           ))}
         </ul>
-        {hasReadyDoc && (
-          <p className="pt-2 text-center text-xs text-muted-foreground">
-            <ArrowRight className="mr-1 inline h-3 w-3" />
-            Your vault is ready — ask it anything.
-          </p>
-        )}
       </div>
     </div>
   );

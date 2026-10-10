@@ -18,7 +18,7 @@ function Bar({
 
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between font-mono text-2xs">
+      <div className="mb-1.5 flex items-center justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
         <span className={cn(full ? "text-destructive" : near ? "text-warn" : "text-muted-foreground")}>
           {render(used)} / {render(limit)}

@@ -32,7 +32,7 @@ export function VerifyEmailBanner() {
       <button
         onClick={resend}
         disabled={sending}
-        className="font-mono text-2xs uppercase tracking-wide text-warn underline underline-offset-2 disabled:opacity-50"
+        className="text-xs font-medium text-warn underline underline-offset-2 disabled:opacity-50"
       >
         {sending ? "sending…" : "resend"}
       </button>

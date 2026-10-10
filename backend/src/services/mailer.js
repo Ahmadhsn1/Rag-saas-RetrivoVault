@@ -37,20 +37,20 @@ export async function sendMail({ to, subject, text, html }) {
 }
 
 function shell(bodyHtml) {
-  return `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#0A0A0B;color:#F5F5F3;padding:32px">
+  return `<div style="font-family:'IBM Plex Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:#FAF8F4;color:#181D2C;padding:40px 24px">
   <div style="max-width:480px;margin:0 auto">
-    <p style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#6C5CE7;margin:0 0 24px">Retrivo Vault</p>
+    <p style="font-family:Newsreader,Georgia,'Times New Roman',serif;font-size:22px;color:#182544;margin:0 0 28px">Retrivo</p>
     ${bodyHtml}
-    <p style="font-size:11px;color:#A1A1AA;margin-top:32px;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px">
-      The research assistant that only knows what you've read. Your documents stay yours.
+    <p style="font-size:12px;line-height:1.6;color:#5A6072;margin-top:36px;border-top:1px solid #E2DDD3;padding-top:16px">
+      Ask your documents. Check the source. Your documents stay yours.
     </p>
   </div>
 </div>`;
 }
 
 function button(url, label) {
-  return `<p style="margin:24px 0"><a href="${url}" style="background:#E9E2D0;color:#0A0A0B;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;display:inline-block">${label}</a></p>
-  <p style="font-size:12px;color:#A1A1AA;word-break:break-all">${url}</p>`;
+  return `<p style="margin:28px 0"><a href="${url}" style="background:#182544;color:#FAF8F4;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;display:inline-block">${label}</a></p>
+  <p style="font-size:12px;color:#5A6072;word-break:break-all">${url}</p>`;
 }
 
 export function verifyEmailTemplate({ name, url }) {
@@ -61,7 +61,7 @@ export function verifyEmailTemplate({ name, url }) {
       `<p style="font-size:15px;line-height:1.6">Hi ${name},</p>
        <p style="font-size:15px;line-height:1.6">You're one click from your vault. Confirm your email and start adding documents.</p>
        ${button(url, "Confirm email")}
-       <p style="font-size:13px;color:#A1A1AA">The link works for 24 hours. If you didn't sign up, ignore this message.</p>`,
+       <p style="font-size:13px;color:#5A6072">The link works for 24 hours. If you didn't sign up, ignore this message.</p>`,
     ),
   };
 }
@@ -74,7 +74,7 @@ export function resetPasswordTemplate({ name, url }) {
       `<p style="font-size:15px;line-height:1.6">Hi ${name},</p>
        <p style="font-size:15px;line-height:1.6">Use this link to set a new password.</p>
        ${button(url, "Set a new password")}
-       <p style="font-size:13px;color:#A1A1AA">The link works for 1 hour. If you didn't ask for this, ignore it — nothing changes.</p>`,
+       <p style="font-size:13px;color:#5A6072">The link works for 1 hour. If you didn't ask for this, ignore it — nothing changes.</p>`,
     ),
   };
 }

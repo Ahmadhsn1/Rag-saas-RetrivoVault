@@ -92,7 +92,7 @@ export function UsersPanel() {
             <button
               key={f.key}
               onClick={() => setStatus(f.key)}
-              className={`rounded-md border px-2 py-1 font-mono text-2xs transition-colors ${
+              className={`rounded-md border px-2 py-1 text-xs transition-colors ${
                 status === f.key
                   ? "border-primary bg-primary/10 text-foreground"
                   : "border-border text-muted-foreground hover:text-foreground"
@@ -107,7 +107,7 @@ export function UsersPanel() {
         </Button>
       </div>
 
-      <p className="font-mono text-2xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {loading ? "…" : `${users.length} shown · ${total} total`}
       </p>
 
@@ -140,7 +140,7 @@ export function UsersPanel() {
                         </Badge>
                       )}
                     </span>
-                    <span className="block truncate pl-3 font-mono text-2xs text-muted-foreground">
+                    <span className="block truncate pl-3 text-xs text-muted-foreground">
                       {u.email}
                     </span>
                   </TableCell>
@@ -160,7 +160,7 @@ export function UsersPanel() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden font-mono text-2xs text-muted-foreground sm:table-cell">
+                  <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
                     {formatRelativeTime(u.createdAt)}
                   </TableCell>
                 </TableRow>

@@ -29,7 +29,7 @@ export function DocumentDrawer({
           </SheetTitle>
           <SheetDescription className="flex items-center gap-2">
             {doc && <StatusChip status={doc.status} chunkCount={doc.chunkCount} />}
-            <span className="font-mono text-2xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {doc && formatBytes(doc.sizeBytes)} · {doc && formatRelativeTime(doc.uploadedAt)}
             </span>
           </SheetDescription>
@@ -45,7 +45,7 @@ export function DocumentDrawer({
 
             {doc?.summary ? (
               <div>
-                <p className="font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground">
                   Summary
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-foreground/90">
@@ -60,7 +60,7 @@ export function DocumentDrawer({
 
             {doc?.suggestedQuestions && doc.suggestedQuestions.length > 0 && (
               <div>
-                <p className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+                <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Lightbulb className="h-3 w-3" aria-hidden="true" />
                   Starter questions
                 </p>
@@ -79,7 +79,7 @@ export function DocumentDrawer({
             )}
 
             {doc?.sourceUrl && (
-              <p className="font-mono text-2xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 source:{" "}
                 <a
                   href={doc.sourceUrl}

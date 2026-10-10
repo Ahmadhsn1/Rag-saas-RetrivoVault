@@ -49,7 +49,7 @@ export default function VerifyEmail() {
           <>
             <CheckCircle2 className="mx-auto h-7 w-7 text-ok" aria-hidden="true" />
             <p className="mt-3 text-sm">Your email is verified.</p>
-            <Button asChild variant="brand" size="sm" className="mt-4">
+            <Button asChild variant="default" size="sm" className="mt-4">
               <Link to={user ? "/app" : "/login"}>
                 {user ? "Go to your vault" : "Sign in"}
               </Link>

@@ -23,7 +23,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
     <section id="pricing" className={cn("scroll-mt-24", standalone ? "pt-36 pb-24" : "py-24 md:py-32")}>
       <div className="container">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
+          <p className="eyebrow">
             Pricing
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl">
@@ -35,7 +35,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
             Then it's free forever, or upgrade. Cancel anytime.
           </p>
 
-          <div className="mt-8 inline-flex items-center gap-3 rounded-md border border-border bg-surface p-1 font-mono text-xs">
+          <div className="mt-8 inline-flex items-center gap-3 rounded-md border border-border bg-surface p-1 text-xs">
             <button
               onClick={() => setAnnual(false)}
               className={cn(
@@ -69,10 +69,10 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
               <RevealItem key={plan.id} className="h-full">
               <div
                 className={cn(
-                  "relative flex h-full flex-col rounded-xl border bg-card p-6 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-1 motion-reduce:transform-none",
+                  "relative flex h-full flex-col rounded-xl border bg-card p-6",
                   plan.highlight
-                    ? "border-primary/50 shadow-lg ring-1 ring-primary/20 hover:shadow-[0_20px_50px_-16px_rgba(108,92,231,0.45)]"
-                    : "border-border hover:border-border-strong hover:shadow-lg",
+                    ? "border-primary shadow-md ring-1 ring-primary"
+                    : "border-border",
                 )}
               >
                 {plan.highlight && (
@@ -80,11 +80,11 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
                     Most popular
                   </Badge>
                 )}
-                <h3 className="font-mono text-lg font-semibold">{plan.name}</h3>
+                <h3 className="text-lg font-semibold">{plan.name}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
 
                 <div className="mt-5 flex items-end gap-1">
-                  <span className="font-mono text-4xl font-semibold">
+                  <span className="text-4xl font-semibold">
                     ${price}
                   </span>
                   <span className="pb-1 text-sm text-muted-foreground">
@@ -92,14 +92,14 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
                   </span>
                 </div>
                 {annual && price > 0 && (
-                  <p className="mt-1 font-mono text-2xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     billed ${price * 12}/year
                   </p>
                 )}
 
                 <Button
                   asChild
-                  variant={plan.highlight ? "brand" : "outline"}
+                  variant={plan.highlight ? "default" : "outline"}
                   className="mt-5 w-full"
                 >
                   <Link to={ctaTo(plan.id)}>
@@ -126,7 +126,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
 
         <Reveal
           as="p"
-          className="mx-auto mt-8 max-w-md text-center font-mono text-2xs text-muted-foreground"
+          className="mx-auto mt-8 max-w-md text-center text-xs text-muted-foreground"
         >
           Prices in USD, billed securely by Stripe. Switch plans or cancel any
           time — your documents stay put.

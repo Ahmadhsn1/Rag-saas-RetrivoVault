@@ -6,7 +6,7 @@ const TERMS = {
   sections: [
     [
       "What this is",
-      "Retrivo Vault is a private, sourced knowledge base for one person — an open-source project maintained by an independent developer. It's provided as-is, without warranty or a formal service-level guarantee. Keep your own copies of anything you can't afford to lose.",
+      "Retrivo is a private, sourced knowledge base for one person. We work to keep it available and correct, but it is provided as-is, without a formal service-level guarantee. Answers are an aid to your own reading, not professional advice — check the cited passage before you rely on one, and keep your own copies of anything you can't afford to lose.",
     ],
     [
       "Your account",
@@ -57,7 +57,7 @@ const PRIVACY = {
     ],
     [
       "Contact",
-      "Retrivo is open source. For anything privacy-related, open an issue on the project repository — the person who built it reads them.",
+      "For anything privacy-related, reply to any email you have received from Retrivo and it will reach a person.",
     ],
   ],
 };
@@ -70,13 +70,13 @@ export function LegalPage({ kind }: { kind: "terms" | "privacy" }) {
     <div className="pt-32 pb-24">
       <div className="container max-w-2xl">
         <h1 className="text-3xl sm:text-4xl">{doc.title}</h1>
-        <p className="mt-2 font-mono text-2xs text-muted-foreground">
+        <p className="mt-2 text-xs text-muted-foreground">
           Last updated {doc.updated}
         </p>
         <div className="mt-10 space-y-8">
           {doc.sections.map(([h, body]) => (
             <section key={h}>
-              <h2 className="font-mono text-base font-semibold">{h}</h2>
+              <h2 className="text-base font-semibold">{h}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {body}
               </p>

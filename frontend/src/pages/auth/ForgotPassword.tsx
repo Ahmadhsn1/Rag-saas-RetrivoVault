@@ -36,7 +36,7 @@ export default function ForgotPassword() {
       {sent ? (
         <div className="rounded-md border border-border bg-surface p-4 text-sm">
           <MailCheck className="mb-2 h-5 w-5 text-ok" aria-hidden="true" />
-          If an account exists for <span className="font-mono">{email}</span>,
+          If an account exists for <span className="">{email}</span>,
           a reset link is on its way. It expires in one hour.
           <div className="mt-4">
             <Button asChild variant="outline" size="sm">

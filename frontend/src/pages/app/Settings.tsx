@@ -26,7 +26,7 @@ export default function Settings() {
 
   return (
     <div className="mx-auto h-full max-w-3xl overflow-y-auto px-4 py-6 sm:px-6">
-      <h2 className="mb-6 font-mono text-lg font-semibold">Settings</h2>
+      <h2 className="mb-6 text-lg font-semibold">Settings</h2>
 
       <Tabs
         value={active}

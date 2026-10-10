@@ -20,12 +20,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-// Validated categorical pair (dataviz skill, dark surface #151518):
-// queries = blue #3987e5, ingest = orange #d95926.
-const C_QUERY = "#3987e5";
-const C_INGEST = "#d95926";
-const AXIS = "hsl(240 4% 55%)";
-const GRID = "hsl(240 5% 16%)";
+// Ink blue for questions, the citation accent for ingestion.
+const C_QUERY = "#1f3a6e";
+const C_INGEST = "#a8452a";
+const AXIS = "hsl(222 10% 38%)";
+const GRID = "hsl(38 18% 88%)";
 
 export function UsageChart() {
   const { series, loading } = useUsageChart(30);
@@ -38,9 +37,9 @@ export function UsageChart() {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
-        <p className="font-mono text-xs font-medium">Activity · last 30 days</p>
+        <p className="text-xs font-medium">Activity · last 30 days</p>
         <div className="flex items-center gap-3">
-          <div className="flex gap-3 font-mono text-2xs text-muted-foreground">
+          <div className="flex gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span
                 className="h-2 w-2 rounded-sm"
@@ -71,7 +70,7 @@ export function UsageChart() {
       </div>
 
       {empty ? (
-        <div className="flex h-56 items-center justify-center font-mono text-2xs text-muted-foreground">
+        <div className="flex h-56 items-center justify-center text-xs text-muted-foreground">
           No activity yet
         </div>
       ) : asTable ? (
@@ -90,9 +89,9 @@ export function UsageChart() {
                 .reverse()
                 .map((d) => (
                   <TableRow key={d.date}>
-                    <TableCell className="font-mono text-xs">{d.date}</TableCell>
-                    <TableCell className="font-mono text-xs">{d.query}</TableCell>
-                    <TableCell className="font-mono text-xs">{d.ingest}</TableCell>
+                    <TableCell className="text-xs">{d.date}</TableCell>
+                    <TableCell className="text-xs">{d.query}</TableCell>
+                    <TableCell className="text-xs">{d.ingest}</TableCell>
                   </TableRow>
                 ))}
             </TableBody>
@@ -118,23 +117,23 @@ export function UsageChart() {
               <CartesianGrid stroke={GRID} vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fill: AXIS, fontSize: 10, fontFamily: "JetBrains Mono" }}
+                tick={{ fill: AXIS, fontSize: 10, fontFamily: "IBM Plex Sans" }}
                 tickFormatter={(d: string) => d.slice(5)}
                 interval={6}
                 stroke={GRID}
               />
               <YAxis
-                tick={{ fill: AXIS, fontSize: 10, fontFamily: "JetBrains Mono" }}
+                tick={{ fill: AXIS, fontSize: 10, fontFamily: "IBM Plex Sans" }}
                 stroke={GRID}
                 allowDecimals={false}
                 width={40}
               />
               <Tooltip
                 contentStyle={{
-                  background: "hsl(240 7% 9%)",
-                  border: "1px solid hsl(240 5% 27%)",
+                  background: "#ffffff",
+                  border: "1px solid hsl(38 14% 74%)",
                   borderRadius: 8,
-                  fontFamily: "JetBrains Mono",
+                  fontFamily: "IBM Plex Sans",
                   fontSize: 11,
                 }}
                 labelStyle={{ color: AXIS }}

@@ -76,7 +76,7 @@ export function ShareDialog({
 
         {shareId && (
           <div className="flex items-center gap-2">
-            <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 font-mono text-2xs">
+            <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 text-xs">
               {url}
             </code>
             <Button

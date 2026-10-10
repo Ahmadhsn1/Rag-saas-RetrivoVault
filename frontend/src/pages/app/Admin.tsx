@@ -44,7 +44,7 @@ export default function Admin() {
   return (
     <div className="mx-auto h-full max-w-5xl overflow-y-auto px-4 py-6 sm:px-6">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-mono text-lg font-semibold">Admin</h2>
+        <h2 className="text-lg font-semibold">Admin</h2>
       </div>
 
       {state === "checking" ? (

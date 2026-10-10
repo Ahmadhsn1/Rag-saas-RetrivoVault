@@ -73,7 +73,7 @@ export function Composer({
           )}
         </button>
       </div>
-      <p className="mx-auto mt-1.5 max-w-3xl font-mono text-2xs text-muted-foreground">
+      <p className="mx-auto mt-1.5 max-w-3xl text-xs text-muted-foreground">
         Enter to send · Shift+Enter for a new line
       </p>
     </div>

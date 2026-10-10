@@ -199,14 +199,14 @@ export function SessionRail({
           </div>
         ))}
         {sessions.length === 0 && (
-          <p className="px-2 py-4 text-center text-2xs text-muted-foreground">
+          <p className="px-2 py-4 text-center text-xs text-muted-foreground">
             {archivedView ? "No archived chats" : "No chats yet"}
           </p>
         )}
       </div>
       <button
         onClick={onToggleArchivedView}
-        className="flex items-center gap-2 border-t border-border px-3 py-2 font-mono text-2xs text-muted-foreground hover:text-foreground"
+        className="flex items-center gap-2 border-t border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
       >
         <Archive className="h-3 w-3" />
         {archivedView ? "Back to active" : "Archived"}

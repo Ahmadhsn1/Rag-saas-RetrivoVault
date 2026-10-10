@@ -1,7 +1,9 @@
 import crypto from "node:crypto";
 import dotenv from "dotenv";
 
-dotenv.config();
+// backend/.env is the source of truth for a local run: a stale machine-wide
+// variable (an old API key, say) must not silently win over it.
+dotenv.config({ override: true });
 
 const isTest = process.env.NODE_ENV === "test";
 const isProdEnv = process.env.NODE_ENV === "production";
@@ -68,6 +70,11 @@ export const env = {
     embeddingDim: Number(process.env.GEMINI_EMBEDDING_DIM || 768),
     // A rolling alias rather than a dated name, which Google eventually retires.
     llmModel: process.env.GEMINI_LLM_MODEL || "gemini-flash-latest",
+    // Tried in order when the preferred model is overloaded or slow.
+    llmFallbacks: (process.env.GEMINI_LLM_FALLBACKS ?? "gemini-flash-lite-latest")
+      .split(",")
+      .map((m) => m.trim())
+      .filter(Boolean),
   },
   geminiConfigured: Boolean(clean("GEMINI_API_KEY")),
   // Run the pipeline on a built-in stand-in instead of Gemini (config/offlineAi.js).

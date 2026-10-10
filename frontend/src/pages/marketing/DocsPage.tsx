@@ -37,7 +37,7 @@ export default function DocsPage() {
   return (
     <div className="pt-32 pb-24">
       <div className="container max-w-3xl">
-        <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
+        <p className="eyebrow">
           Developers
         </p>
         <h1 className="mt-3 text-3xl sm:text-4xl">API reference</h1>
@@ -49,7 +49,7 @@ export default function DocsPage() {
 
         {spec && (
           <>
-            <div className="mt-8 rounded-lg border border-border bg-card p-4 font-mono text-xs">
+            <div className="mt-8 rounded-lg border border-border bg-card p-4 text-xs">
               <p className="text-muted-foreground">base url</p>
               <p className="mt-1 text-foreground">{spec.servers[0]?.url}</p>
               <p className="mt-3 text-muted-foreground">machine-readable</p>
@@ -72,7 +72,7 @@ export default function DocsPage() {
                       <Badge variant={METHOD_COLOR[method] ?? "default"}>
                         {method}
                       </Badge>
-                      <code className="font-mono text-sm text-foreground">
+                      <code className="text-sm text-foreground">
                         {path}
                       </code>
                     </div>
@@ -98,7 +98,7 @@ export default function DocsPage() {
                       key={evt}
                       className="rounded-lg border border-border bg-card p-4"
                     >
-                      <code className="font-mono text-sm text-brand">{evt}</code>
+                      <code className="text-sm text-brand">{evt}</code>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {w.description}
                       </p>

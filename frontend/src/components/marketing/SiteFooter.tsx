@@ -49,7 +49,7 @@ export function SiteFooter() {
         </RevealItem>
         {COLS.map((col) => (
           <RevealItem key={col.title}>
-            <p className="font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               {col.title}
             </p>
             <ul className="mt-3 space-y-2 text-sm">
@@ -78,12 +78,11 @@ export function SiteFooter() {
       </Stagger>
       <div className="border-t border-border">
         <div className="container flex flex-col items-center justify-between gap-3 py-6 sm:flex-row">
-          <p className="font-mono text-2xs text-muted-foreground">
-            © {new Date().getFullYear()} Retrivo Vault · Your documents stay
-            yours.
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Retrivo. Your documents stay yours.
           </p>
-          <p className="font-mono text-2xs text-muted-foreground">
-            Open source · built by one person
+          <p className="text-xs text-muted-foreground">
+            Ask your documents. Check the source.
           </p>
         </div>
       </div>

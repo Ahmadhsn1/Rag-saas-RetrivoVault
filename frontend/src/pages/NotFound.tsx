@@ -1,21 +1,20 @@
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { PipelineStrip } from "@/components/rag/PipelineStrip";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-6 text-center">
       <Logo />
       <div>
-        <p className="font-mono text-5xl font-semibold text-brand">404</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          That page isn't in the vault.
+        <p className="font-serif text-7xl text-brand">404</p>
+        <h1 className="mt-4 text-2xl">That page isn&rsquo;t in the vault</h1>
+        <p className="mt-2 text-muted-foreground">
+          The link may be old, or the page may have moved.
         </p>
       </div>
-      <PipelineStrip compact />
-      <div className="flex gap-2">
-        <Button asChild variant="brand">
+      <div className="flex gap-3">
+        <Button asChild>
           <Link to="/">Home</Link>
         </Button>
         <Button asChild variant="outline">

@@ -1,65 +1,43 @@
-import { Reveal, Stagger, RevealItem } from "@/components/motion/Reveal";
-import { SpotlightCard } from "@/components/motion/SpotlightCard";
+import { Reveal } from "@/components/motion/Reveal";
 
 const STEPS = [
   {
-    n: "01",
+    n: "1",
     title: "Add your documents",
-    body: "Drop in PDFs, Word files, spreadsheets, notes — or paste a web page. Retrivo reads, splits and indexes each one in the background. Group them into collections if you like.",
-    chip: "pdf · docx · csv · md · url",
+    body: "Drop in PDFs, Word files, spreadsheets and notes, or paste a link to a web page. Retrivo reads and indexes each one in the background.",
   },
   {
-    n: "02",
+    n: "2",
     title: "Ask in plain language",
-    body: "Open your vault and ask a real question. Retrivo matches it against your own text by meaning, not keywords — and only ever searches your documents.",
-    chip: "semantic · scoped to you",
+    body: "Ask the way you would ask a colleague. Retrivo searches everything you have added by meaning and by exact wording — and only ever your own documents.",
   },
   {
-    n: "03",
-    title: "Get a sourced answer",
-    body: "The answer streams back grounded in the passages it found, with a clickable citation and match score behind every claim. Thumbs it, copy it, or share the thread.",
-    chip: "streamed · [1] [2] · scores",
+    n: "3",
+    title: "Check the source",
+    body: "Every claim carries a numbered citation. Open it to read the passage, see the page, and jump to that page in the original file.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section
-      id="how"
-      className="scroll-mt-24 border-y border-border bg-surface/30 py-24 md:py-32"
-    >
+    <section id="how" className="scroll-mt-24 border-y border-border bg-surface/60 py-20 md:py-28">
       <div className="container">
-        <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
-            How it works
-          </p>
-          <h2 className="mt-3 text-3xl sm:text-4xl">
+        <Reveal className="max-w-2xl">
+          <p className="eyebrow">How it works</p>
+          <h2 className="mt-4 text-3xl sm:text-4xl">
             Three steps to a sourced answer
           </h2>
         </Reveal>
 
-        <Stagger
-          wrapChildren={false}
-          className="mt-14 grid gap-6 md:grid-cols-3"
-          stagger={0.09}
-        >
+        <ol className="mt-14 grid gap-10 md:grid-cols-3 md:gap-0 md:divide-x md:divide-border">
           {STEPS.map((s) => (
-            <RevealItem key={s.n} className="h-full">
-              <SpotlightCard className="flex h-full flex-col p-6" lift>
-                <span className="font-mono text-2xl font-semibold text-brand">
-                  {s.n}
-                </span>
-                <h3 className="mt-3 font-mono text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {s.body}
-                </p>
-                <p className="mt-4 inline-block w-fit rounded-sm border border-border-strong bg-surface px-2 py-0.5 font-mono text-2xs text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-foreground">
-                  {s.chip}
-                </p>
-              </SpotlightCard>
-            </RevealItem>
+            <li key={s.n} className="md:px-8 md:first:pl-0 md:last:pr-0">
+              <span className="font-serif text-5xl leading-none text-brand">{s.n}</span>
+              <h3 className="mt-5 text-xl">{s.title}</h3>
+              <p className="mt-3 leading-relaxed text-muted-foreground">{s.body}</p>
+            </li>
           ))}
-        </Stagger>
+        </ol>
       </div>
     </section>
   );

@@ -118,7 +118,7 @@ export function AccountTab() {
               <DialogHeader>
                 <DialogTitle>Delete your account?</DialogTitle>
                 <DialogDescription>
-                  Type <span className="font-mono text-foreground">DELETE</span> and
+                  Type <span className="text-foreground">DELETE</span> and
                   enter your password to confirm.
                 </DialogDescription>
               </DialogHeader>
@@ -357,13 +357,13 @@ function SessionsCard({
                   <p className="flex items-center gap-1.5 text-sm">
                     {s.device ?? "Unknown device"}
                     {s.current && (
-                      <span className="font-mono text-2xs text-primary">this device</span>
+                      <span className="text-xs text-primary">this device</span>
                     )}
                     {s.online && !s.current && (
-                      <span className="font-mono text-2xs text-ok">online</span>
+                      <span className="text-xs text-ok">online</span>
                     )}
                   </p>
-                  <p className="font-mono text-2xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {s.ip ?? "no ip"} · last active {formatRelativeTime(s.lastSeenAt)}
                   </p>
                 </div>

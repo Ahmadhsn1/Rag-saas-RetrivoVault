@@ -81,7 +81,7 @@ export function ApiKeysTab() {
         <div className="rounded-lg border border-ok/30 bg-ok/5 p-4">
           <p className="text-sm font-medium">Copy your key now — it won't be shown again.</p>
           <div className="mt-2 flex items-center gap-2">
-            <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 font-mono text-xs">
+            <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 text-xs">
               {reveal}
             </code>
             <Button
@@ -138,8 +138,8 @@ export function ApiKeysTab() {
           {keys.map((k) => (
             <li key={k._id} className="flex items-center justify-between p-3">
               <div>
-                <p className="font-mono text-sm">{k.name}</p>
-                <p className="font-mono text-2xs text-muted-foreground">
+                <p className="text-sm">{k.name}</p>
+                <p className="text-xs text-muted-foreground">
                   {k.prefix}··· · created {formatRelativeTime(k.createdAt)} ·{" "}
                   {k.lastUsedAt
                     ? `last used ${formatRelativeTime(k.lastUsedAt)}`

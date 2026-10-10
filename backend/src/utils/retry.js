@@ -6,7 +6,7 @@ const isRetryable = (err) => {
   return (
     status === 429 ||
     status === 503 ||
-    /\b(429|rate limit|quota|overloaded|deadline exceeded|ETIMEDOUT|ECONNRESET)\b/i.test(
+    /\b(429|rate limit|quota|overloaded|deadline exceeded|timed out|timeout|aborted|ETIMEDOUT|ECONNRESET)\b/i.test(
       msg
     )
   );

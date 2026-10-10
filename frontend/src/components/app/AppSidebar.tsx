@@ -83,7 +83,7 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
       </nav>
 
       <div className="mt-6 min-h-0 flex-1 overflow-y-auto px-3">
-        <p className="px-2.5 py-1.5 font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+        <p className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
           Collections
         </p>
         <ul className="space-y-0.5">
@@ -111,15 +111,15 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
                     : "border-transparent text-muted-foreground hover:bg-sidebar-accent",
                 )}
               >
-                <span className="truncate font-mono text-xs">{c.name}</span>
-                <span className="shrink-0 font-mono text-2xs text-muted-foreground">
+                <span className="truncate text-xs">{c.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">
                   {c.documentCount ?? 0}
                 </span>
               </button>
             </li>
           ))}
           {collections.length === 0 && (
-            <li className="px-2.5 py-1.5 text-2xs text-muted-foreground">
+            <li className="px-2.5 py-1.5 text-xs text-muted-foreground">
               None yet.
             </li>
           )}
@@ -132,7 +132,7 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
           onClick={onClose}
           className="mb-3 block rounded-md px-1 py-1 transition-colors hover:bg-sidebar-accent"
         >
-          <div className="mb-1.5 flex items-center justify-between font-mono text-2xs text-muted-foreground">
+          <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
             <span className="uppercase">{planLabel} · questions</span>
             <span>
               {queriesUsed} / {queriesLimit}

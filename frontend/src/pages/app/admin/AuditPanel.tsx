@@ -46,7 +46,7 @@ export function AuditPanel() {
                 <span className="text-muted-foreground"> → {a.targetEmail}</span>
               )}
             </p>
-            <p className="mt-0.5 font-mono text-2xs text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               by {a.adminEmail ?? "system"}
               {a.ip ? ` · ${a.ip}` : ""}
               {a.meta && Object.keys(a.meta).length
@@ -54,7 +54,7 @@ export function AuditPanel() {
                 : ""}
             </p>
           </div>
-          <span className="shrink-0 font-mono text-2xs text-muted-foreground">
+          <span className="shrink-0 text-xs text-muted-foreground">
             {formatRelativeTime(a.createdAt)}
           </span>
         </li>

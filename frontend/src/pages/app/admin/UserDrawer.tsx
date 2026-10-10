@@ -43,7 +43,7 @@ import { fmtDuration } from "./format";
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-2 font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+      <p className="mb-2 text-xs font-medium text-muted-foreground">
         {title}
       </p>
       {children}
@@ -127,7 +127,7 @@ export function UserDrawer({
             {u?.role === "admin" && <Badge variant="primary">admin</Badge>}
             {u?.isRootAdmin && <Badge variant="warn">root</Badge>}
           </SheetTitle>
-          <SheetDescription className="flex flex-wrap items-center gap-2 font-mono text-2xs">
+          <SheetDescription className="flex flex-wrap items-center gap-2 text-xs">
             <span className="truncate">{u?.email}</span>
             {detail && (
               <span className="flex items-center gap-1">
@@ -156,21 +156,21 @@ export function UserDrawer({
               )}
 
               <Section title="Overview">
-                <div className="grid grid-cols-3 gap-3 font-mono text-xs">
+                <div className="grid grid-cols-3 gap-3 text-xs">
                   <div>
                     <p className="text-lg font-semibold">{detail.stats.documents}</p>
-                    <p className="text-2xs text-muted-foreground">documents</p>
+                    <p className="text-xs text-muted-foreground">documents</p>
                   </div>
                   <div>
                     <p className="text-lg font-semibold">{detail.stats.chats}</p>
-                    <p className="text-2xs text-muted-foreground">chats</p>
+                    <p className="text-xs text-muted-foreground">chats</p>
                   </div>
                   <div>
                     <p className="text-lg font-semibold">{detail.stats.queries}</p>
-                    <p className="text-2xs text-muted-foreground">queries</p>
+                    <p className="text-xs text-muted-foreground">queries</p>
                   </div>
                 </div>
-                <p className="mt-3 font-mono text-2xs text-muted-foreground">
+                <p className="mt-3 text-xs text-muted-foreground">
                   Joined {formatRelativeTime(u.createdAt)} · stored plan{" "}
                   <span className="text-foreground">{u.plan}</span>
                   {detail.presence.lastSeenAt &&
@@ -185,7 +185,7 @@ export function UserDrawer({
                       <p className="font-medium">
                         Complimentary {comp.plan?.toUpperCase()}
                       </p>
-                      <p className="font-mono text-2xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {comp.expiresAt
                           ? `expires ${formatRelativeTime(comp.expiresAt)}`
                           : "no expiry"}
@@ -217,7 +217,7 @@ export function UserDrawer({
                         <button
                           key={p}
                           onClick={() => setGrantPlan(p)}
-                          className={`flex-1 rounded-md border px-2 py-1.5 font-mono text-2xs uppercase transition-colors ${
+                          className={`flex-1 rounded-md border px-2 py-1.5 text-xs uppercase transition-colors ${
                             grantPlan === p
                               ? "border-primary bg-primary/10 text-foreground"
                               : "border-border text-muted-foreground hover:text-foreground"
@@ -229,7 +229,7 @@ export function UserDrawer({
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label htmlFor="grant-days" className="text-2xs">
+                        <Label htmlFor="grant-days" className="text-xs">
                           Days (blank = forever)
                         </Label>
                         <Input
@@ -242,7 +242,7 @@ export function UserDrawer({
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="grant-reason" className="text-2xs">
+                        <Label htmlFor="grant-reason" className="text-xs">
                           Reason
                         </Label>
                         <Input
@@ -285,7 +285,7 @@ export function UserDrawer({
               <Section title={`Sessions (${sessions.length})`}>
                 <ul className="divide-y divide-border rounded-md border border-border">
                   {sessions.length === 0 && (
-                    <li className="p-3 text-2xs text-muted-foreground">No sessions recorded.</li>
+                    <li className="p-3 text-xs text-muted-foreground">No sessions recorded.</li>
                   )}
                   {sessions.map((s) => (
                     <li key={s.id} className="flex items-center justify-between gap-2 p-2.5">
@@ -294,7 +294,7 @@ export function UserDrawer({
                           <LiveDot on={s.online} />
                           {s.device ?? "Unknown device"}
                         </p>
-                        <p className="font-mono text-2xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {s.ip ?? "no ip"} · {formatRelativeTime(s.startedAt)} ·{" "}
                           {fmtDuration(s.durationMs)}
                           {s.endReason ? ` · ${s.endReason}` : ""}
@@ -308,12 +308,12 @@ export function UserDrawer({
               <Section title="Recent activity">
                 <ul className="divide-y divide-border">
                   {detail.activity.length === 0 && (
-                    <li className="py-2 text-2xs text-muted-foreground">Nothing yet.</li>
+                    <li className="py-2 text-xs text-muted-foreground">Nothing yet.</li>
                   )}
                   {detail.activity.slice(0, 12).map((a) => (
                     <li
                       key={a._id}
-                      className="flex items-center justify-between gap-2 py-1.5 font-mono text-2xs"
+                      className="flex items-center justify-between gap-2 py-1.5 text-xs"
                     >
                       <span className="truncate">{a.action}</span>
                       <span className="shrink-0 text-muted-foreground">
@@ -477,7 +477,7 @@ export function UserDrawer({
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-2">
-            <code className="flex-1 select-all rounded-md border border-border bg-surface px-3 py-2 font-mono text-sm">
+            <code className="flex-1 select-all rounded-md border border-border bg-surface px-3 py-2 text-sm">
               {tempPw}
             </code>
             <Button

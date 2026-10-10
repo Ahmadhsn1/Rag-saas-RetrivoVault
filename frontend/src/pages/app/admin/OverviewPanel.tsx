@@ -20,7 +20,7 @@ import { Stat, Sparkline } from "./shared";
 
 function HealthRow({ label, ok }: { label: string; ok: boolean }) {
   return (
-    <div className="flex items-center justify-between py-1.5 font-mono text-2xs">
+    <div className="flex items-center justify-between py-1.5 text-xs">
       <span className="text-muted-foreground">{label}</span>
       <span className={ok ? "text-ok" : "text-muted-foreground/60"}>
         {ok ? "ready" : "off"}
@@ -90,15 +90,15 @@ export function OverviewPanel() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="p-4 lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
-            <p className="font-mono text-xs font-medium">Signups · last 30 days</p>
-            <span className="font-mono text-2xs text-muted-foreground">
+            <p className="text-xs font-medium">Signups · last 30 days</p>
+            <span className="text-xs text-muted-foreground">
               {series.reduce((n, d) => n + d.signups, 0)} total
             </span>
           </div>
           <Sparkline data={series.map((d) => d.signups)} />
           <div className="mt-4 mb-2 flex items-center justify-between">
-            <p className="font-mono text-xs font-medium">Queries · last 30 days</p>
-            <span className="font-mono text-2xs text-muted-foreground">
+            <p className="text-xs font-medium">Queries · last 30 days</p>
+            <span className="text-xs text-muted-foreground">
               {series.reduce((n, d) => n + d.queries, 0)} total
             </span>
           </div>
@@ -106,7 +106,7 @@ export function OverviewPanel() {
         </Card>
 
         <Card className="p-4">
-          <p className="mb-2 flex items-center gap-1.5 font-mono text-xs font-medium">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-medium">
             <Activity className="h-3.5 w-3.5" /> System
           </p>
           <div className="divide-y divide-border">
@@ -120,7 +120,7 @@ export function OverviewPanel() {
       </div>
 
       <div>
-        <p className="mb-2 flex items-center gap-1.5 font-mono text-sm font-semibold">
+        <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
           <FileText className="h-3.5 w-3.5" /> Plan distribution
         </p>
         <div className="flex flex-wrap gap-2">

@@ -17,7 +17,7 @@ const ITEMS = [
   },
   {
     q: "Is anyone else able to see my documents?",
-    a: "No. Every read — the semantic search included — is filtered to your account in the database. Your documents are never used to train a model, and there's no company incentive to touch them: Retrivo is open source and built by one person.",
+    a: "No. Every read — the semantic search included — is filtered to your account in the database. Your documents are never shared and never used to train a model.",
   },
   {
     q: "How is it different from asking ChatGPT?",
@@ -38,7 +38,7 @@ export function FAQ() {
     <section id="faq" className="scroll-mt-24 py-24 md:py-32">
       <div className="container grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
         <Reveal>
-          <p className="font-mono text-2xs uppercase tracking-[0.2em] text-primary">
+          <p className="eyebrow">
             FAQ
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl">Questions, answered</h2>

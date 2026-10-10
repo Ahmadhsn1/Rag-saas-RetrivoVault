@@ -48,20 +48,20 @@ export function NotificationBell() {
       >
         <Bell className="h-4 w-4" />
         {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-[9px] font-semibold text-primary-foreground">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-primary-foreground">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
-          <span className="font-mono text-2xs uppercase tracking-wide text-muted-foreground">
+          <span className="text-xs font-medium text-muted-foreground">
             Notifications
           </span>
           {items.length > 0 && (
             <button
               onClick={() => void markAllRead()}
-              className="inline-flex items-center gap-1 font-mono text-2xs text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
               <CheckCheck className="h-3 w-3" />
               mark read
@@ -70,7 +70,7 @@ export function NotificationBell() {
         </div>
         <div className="max-h-96 overflow-y-auto">
           {items.length === 0 ? (
-            <p className="px-3 py-8 text-center text-2xs text-muted-foreground">
+            <p className="px-3 py-8 text-center text-xs text-muted-foreground">
               You're all caught up.
             </p>
           ) : (
@@ -92,11 +92,11 @@ export function NotificationBell() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium">{n.title}</p>
                     {n.body && (
-                      <p className="mt-0.5 line-clamp-2 text-2xs text-muted-foreground">
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                         {n.body}
                       </p>
                     )}
-                    <p className="mt-1 font-mono text-2xs text-muted-foreground/70">
+                    <p className="mt-1 text-xs text-muted-foreground/70">
                       {formatRelativeTime(n.createdAt)}
                     </p>
                   </div>

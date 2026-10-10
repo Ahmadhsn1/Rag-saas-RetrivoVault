@@ -69,6 +69,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["\"IBM Plex Sans\"", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["Newsreader", "ui-serif", "Georgia", "serif"],
         mono: [
           "\"JetBrains Mono\"",
           "ui-monospace",
@@ -81,9 +82,9 @@ const config: Config = {
         "2xs": ["0.6875rem", { lineHeight: "1rem" }],
       },
       boxShadow: {
-        sm: "0 1px 2px rgba(0,0,0,0.4)",
-        md: "0 4px 16px rgba(0,0,0,0.45)",
-        lg: "0 16px 48px rgba(0,0,0,0.55)",
+        sm: "0 1px 2px rgba(23,28,45,0.06)",
+        md: "0 6px 20px -8px rgba(23,28,45,0.14)",
+        lg: "0 24px 48px -20px rgba(23,28,45,0.22)",
       },
       keyframes: {
         "accordion-down": {
@@ -98,18 +99,11 @@ const config: Config = {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
           "50%": { opacity: "0.4", transform: "scale(0.85)" },
         },
-        "flow-dash": {
-          to: { strokeDashoffset: "-24" },
-        },
-        shimmer: {
-          "100%": { transform: "translateX(100%)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-dot": "pulse-dot 2s ease-in-out infinite",
-        "flow-dash": "flow-dash 1s linear infinite",
       },
     },
   },

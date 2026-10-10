@@ -346,7 +346,7 @@ export default function Chat() {
                 <Skeleton className="h-24 w-4/5" />
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {messages.map((msg, i) => (
                   <div
                     key={msg._id ?? i}
@@ -358,8 +358,8 @@ export default function Chat() {
                     <div
                       className={
                         msg.role === "user"
-                          ? "w-fit max-w-[85%] rounded-lg bg-surface px-3.5 py-2.5 text-sm"
-                          : "w-fit max-w-[92%] rounded-lg border border-border bg-card px-3.5 py-2.5"
+                          ? "w-fit max-w-[85%] rounded-2xl rounded-br-md bg-secondary px-4 py-2.5 text-[0.95rem]"
+                          : "w-full max-w-[46rem]"
                       }
                     >
                       {msg.role === "assistant" ? (
@@ -384,7 +384,7 @@ export default function Chat() {
                 ))}
 
                 {streaming && (
-                  <div className="w-fit max-w-[92%] rounded-lg border border-border bg-card px-3.5 py-2.5">
+                  <div className="w-full max-w-[46rem]">
                     {liveSources.length > 0 && (
                       <div className="mb-2 flex flex-wrap gap-1">
                         {liveSources.map((s) => (
@@ -407,7 +407,7 @@ export default function Chat() {
                         onSelectSource={setSelected}
                       />
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 font-mono text-2xs uppercase text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5 text-xs uppercase text-muted-foreground">
                         <Sparkles className="h-3 w-3 animate-pulse-dot" />
                         searching your documents…
                       </span>
@@ -423,7 +423,7 @@ export default function Chat() {
           <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 pb-1">
             {streaming ? (
               <>
-                <span className="font-mono text-2xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   generating…
                 </span>
                 <Button size="sm" variant="outline" onClick={stop}>
@@ -433,7 +433,7 @@ export default function Chat() {
               </>
             ) : (
               <>
-                <span className="font-mono text-2xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   That answer didn't complete.
                 </span>
                 <Button size="sm" variant="outline" onClick={retry}>
